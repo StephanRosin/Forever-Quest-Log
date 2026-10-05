@@ -730,7 +730,7 @@ local function createFooter(parent)
     Style.Fill(footer, "panel")
     horizontalLine(footer, "TOP")
     local lock = Widgets.Button(footer, { text = L.OPT_UNLOCK_FRAME, width = 160,
-        onClick = function() Settings.Set("locked", not S("locked")) end })
+        onClick = function() Settings.SetLocked(not S("locked")) end })
     lock:SetPoint("LEFT", footer, "LEFT", 12, 0)
     frame.lockButton = lock
     refreshFooter()

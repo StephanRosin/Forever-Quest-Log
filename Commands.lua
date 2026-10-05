@@ -2,7 +2,7 @@ local ADDON, ns = ...
 local L, Settings = ns.L, ns.Settings
 
 function ns.ToggleLock()
-    Settings.Set("locked", not Settings.Get("locked"))
+    Settings.SetLocked(not Settings.Get("locked"))
     ns.Print(Settings.Get("locked") and L.MSG_LOCKED or L.MSG_UNLOCKED)
 end
 
@@ -35,10 +35,10 @@ SlashCmdList["FOREVERQUESTLOG"] = function(msg)
     if cmd == "" then
         ns.Window.Toggle()
     elseif cmd == "lock" then
-        Settings.Set("locked", true)
+        Settings.SetLocked(true)
         ns.Print(L.MSG_LOCKED)
     elseif cmd == "unlock" then
-        Settings.Set("locked", false)
+        Settings.SetLocked(false)
         ns.Print(L.MSG_UNLOCKED)
     elseif cmd == "status" then
         status()

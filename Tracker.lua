@@ -241,7 +241,7 @@ local function createHeader()
     local options = headerButton("Gear", L.TIP_OPTIONS, function() ns.Window.Toggle() end)
     local lock = headerButton("Lock", function()
         return S("locked") and L.TIP_UNLOCK or L.TIP_LOCK
-    end, function() Settings.Set("locked", not S("locked")) end)
+    end, function() Settings.SetLocked(not S("locked")) end)
     local sort = headerButton("SortWatch", function()
         return S("sortBy") == "LEVEL" and L.TIP_SORT_LEVEL or L.TIP_SORT_WATCH
     end, function() Settings.Set("sortBy", S("sortBy") == "LEVEL" and "WATCH" or "LEVEL") end)

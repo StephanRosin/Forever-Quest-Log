@@ -309,6 +309,13 @@ function Settings.SetMany(values)
     Settings.Changed(nil)
 end
 
+-- Locks or unlocks the tracker and the focus frame together (the header's
+-- lock button, the minimap button, /fql lock / unlock). The focus page keeps
+-- its own checkbox for unlocking that frame alone.
+function Settings.SetLocked(locked)
+    Settings.SetMany({ locked = locked and true or false, focusLocked = locked and true or false })
+end
+
 -- A text style as one table: font, size, flag, color.
 function Settings.TextStyle(name)
     return {
