@@ -467,7 +467,14 @@ local function withFontObject(fs, object)
     fs._fontObject = object
     fs._font = { object._font[1], object._font[2], object._font[3] }
     function fs:GetFontObject() return self._fontObject end
-    function fs:SetFontObject(o) self._fontObject = o; self._font = { o._font[1], o._font[2], o._font[3] } end
+    function fs:GetShadowOffset() return (self._shadow or { 1, -1 })[1], (self._shadow or { 1, -1 })[2] end
+    function fs:GetShadowColor() return 0, 0, 0, 1 end
+    -- As in the game: the same font object again changes nothing.
+    function fs:SetFontObject(o)
+        if o == self._fontObject then return end
+        self._fontObject = o
+        self._font = { o._font[1], o._font[2], o._font[3] }
+    end
     return fs
 end
 local qsf = newWidget("QuestScrollFrame", "ScrollFrame")

@@ -45,16 +45,36 @@ local original = setmetatable({}, { __mode = "k" })
 local styled = setmetatable({}, { __mode = "k" })
 local version = 1
 
+-- What a font string looked like before we touched it.
+local function snapshot(fs)
+    local file, size, flags = fs:GetFont()
+    local sx, sy = fs:GetShadowOffset()
+    local r, g, b, a = fs:GetShadowColor()
+    return { object = fs:GetFontObject(), file = file, size = size, flags = flags or "",
+             shadow = { sx or 0, sy or 0 }, shadowColor = { r or 0, g or 0, b or 0, a or 1 } }
+end
+
+-- Back to Blizzard's font. SetFontObject alone is not enough: after
+-- SetFont the string still names the same font object, and setting that
+-- one again changes nothing (in game the custom font stayed). So the
+-- remembered font goes back explicitly.
+local function restore(fs, o)
+    if o.file then fs:SetFont(o.file, o.size, o.flags) end
+    if o.object then fs:SetFontObject(o.object) end
+    fs:SetShadowOffset(o.shadow[1], o.shadow[2])
+    fs:SetShadowColor(o.shadowColor[1], o.shadowColor[2], o.shadowColor[3], o.shadowColor[4])
+end
+
 -- Font only (family, size, outline / shadow): the colour stays Blizzard's.
 local function applyFont(fs, style)
     if not fs then return end
     if styled[fs] == version then return end
     styled[fs] = version
-    if original[fs] == nil then original[fs] = fs:GetFontObject() or false end
     if not style then
-        if original[fs] then fs:SetFontObject(original[fs]) end
+        if original[fs] then restore(fs, original[fs]) end
         return
     end
+    if original[fs] == nil then original[fs] = snapshot(fs) end
     local outline = (style.flag == "OUTLINE" or style.flag == "THICKOUTLINE") and style.flag or ""
     if not fs:SetFont(Media.FontPath(style.font), style.size, outline) then
         fs:SetFont(Media.DEFAULT.font, style.size, outline)
@@ -62,9 +82,10 @@ local function applyFont(fs, style)
     if style.flag == "SHADOW" then
         fs:SetShadowColor(0, 0, 0, 1)
         fs:SetShadowOffset(1, -1)
-    elseif original[fs] then
-        local x, y = original[fs]:GetShadowOffset()
-        fs:SetShadowOffset(x or 0, y or 0)
+    else
+        local o = original[fs]
+        fs:SetShadowOffset(o.shadow[1], o.shadow[2])
+        fs:SetShadowColor(o.shadowColor[1], o.shadowColor[2], o.shadowColor[3], o.shadowColor[4])
     end
 end
 
@@ -82,11 +103,10 @@ local PARTS = {
     headerFramePool = function(f) applyFont(headerText(f), QuestLogStyle.TextStyle("header")) end,
 }
 
-local function styleFrames(pool, fn, all)
+-- The rows on screen. Free rows (in Forever a secure stack, not a plain
+-- list) get the current font when Blizzard acquires them again.
+local function styleFrames(pool, fn)
     for f in pool:EnumerateActive() do fn(f) end
-    if all and pool.inactiveObjects then
-        for _, f in pairs(pool.inactiveObjects) do fn(f) end
-    end
 end
 
 local hooked = false
@@ -149,7 +169,7 @@ function QuestLogStyle.Apply()
     hookPools()
     version = version + 1
     for key, fn in pairs(PARTS) do
-        if scroll[key] then styleFrames(scroll[key], fn, true) end
+        if scroll[key] then styleFrames(scroll[key], fn) end
     end
     applyBackground()
 end
