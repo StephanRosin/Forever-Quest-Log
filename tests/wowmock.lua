@@ -115,8 +115,15 @@ local function newWidget(name, kind)
     function w:CreateFontString(_, _, template)
         local fs = newWidget(nil, "FontString")
         fs._parent = self
-        fs._font = { "Fonts\\FRIZQT__.TTF", 12, "" }
-        function fs:GetFont() return self._font[1], self._font[2], self._font[3] end
+        -- As in the game: without a template a font string has no font until
+        -- SetFont / SetFontObject, and SetText then raises "Font not set".
+        if template then fs._font = { "Fonts\\FRIZQT__.TTF", 12, "" } end
+        function fs:SetText(t)
+            if not self._font then error("FontString:SetText(): Font not set") end
+            self._text = t
+        end
+        function fs:SetFormattedText(fmt, ...) self:SetText(fmt:format(...)) end
+        function fs:GetFont() if self._font then return self._font[1], self._font[2], self._font[3] end end
         function fs:SetFont(p, s, f) self._font = { p, s, f }; return true end
         function fs:SetFontObject() end
         function fs:GetStringWidth() return #(tostring(self._text or "")) * 6 end

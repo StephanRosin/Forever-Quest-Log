@@ -98,7 +98,11 @@ function Focus.Layout()
         row:Hide()
         empty:SetShown(unlocked())
         Media.ApplyText(empty, cfg.text("objective"))
-        h = 16
+        empty:ClearAllPoints()
+        empty:SetPoint("TOPLEFT", frame, "TOPLEFT", pad, -pad)
+        empty:SetWidth(width - 2 * pad)
+        empty:SetJustifyH("LEFT")
+        h = math.max(16, empty:GetStringHeight())
     end
     frame:SetHeight(h + 2 * pad)
     -- Nothing focused and locked: out of the way.
@@ -204,6 +208,8 @@ function Focus.Build()
     row:HookScript("OnMouseUp", stopMove)
     empty = frame:CreateFontString(nil, "OVERLAY")
     empty:SetPoint("TOPLEFT", 8, -8)
+    -- A font string without a template has no font: set one before any text.
+    Media.ApplyText(empty, cfg.text("objective"))
     empty:SetText(L.FOCUS_EMPTY)
     createGrip()
     grip:SetPoint("BOTTOMRIGHT")
