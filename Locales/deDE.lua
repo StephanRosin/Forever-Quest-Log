@@ -189,3 +189,12 @@ L.MAPSTYLE_BLIZZARD = "Blizzards"
 L.MAPSTYLE_TRACKER = "Wie der Tracker"
 L.MAPSTYLE_OWN = "Eigene Einstellungen"
 L.TIP_MAP_DRAG = "Ziehen, um die Karte zu verschieben"
+
+-- Quest log in the world map
+L.PAGE_QUESTLOG = "Questlog"
+L.OPT_LOG_LOOK = "Questliste in der Weltkarte"
+L.OPT_LOG_STYLE = "Stil"
+L.OPT_LOG_HINT = "Hintergrund und Schriften der Liste; Farben, Zeilen und Klicks bleiben Blizzards. Wirkt, sobald sich die Liste aktualisiert (Karte öffnen)."
+L.LOGSTYLE_HEADER = "Zonen-Kopfzeilen"
+L.LOGSTYLE_TITLE = "Questtitel"
+L.LOGSTYLE_OBJECTIVE = "Ziele"

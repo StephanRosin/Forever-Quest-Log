@@ -112,6 +112,23 @@ Settings.DEFAULTS = {
     mapShadowSize = 9,
     mapShadowAlpha = 65,
 
+    -- The quest list in the world map: BLIZZARD (unchanged), TRACKER (the
+    -- tracker's background and zone / title / objective fonts) or OWN.
+    logStyle = "BLIZZARD",
+    logBgMode = "SOLID",
+    logBgColor = { 0.047, 0.047, 0.055 },
+    logBgAlpha = 90,
+    logBgTexture = "Blizzard Dialog Background Dark",
+    logHeaderFont = "Friz Quadrata",
+    logHeaderSize = 13,
+    logHeaderFlag = "",
+    logTitleFont = "Friz Quadrata",
+    logTitleSize = 13,
+    logTitleFlag = "",
+    logObjectiveFont = "Arial Narrow",
+    logObjectiveSize = 13,
+    logObjectiveFlag = "",
+
     -- Minimap button
     minimapShow = true,
     minimapAngle = 200,
@@ -138,6 +155,10 @@ Settings.RANGES = {
     barHeight = { 1, 12 },
     barBgAlpha = { 0, 100 },
     padding = { 0, 30 },
+    logBgAlpha = { 0, 100 },
+    logHeaderSize = { 8, 20 },
+    logTitleSize = { 8, 24 },
+    logObjectiveSize = { 8, 24 },
     mapX = { -4000, 4000 },
     mapY = { -3000, 3000 },
     mapBorderSize = { 1, 8 },

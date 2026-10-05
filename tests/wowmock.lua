@@ -425,6 +425,79 @@ function M.PanelManagerPlaces()
     wm:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -116)
 end
 
+-- Post-hooks as in the game: the original runs, then the hook with the
+-- same arguments.
+function hooksecurefunc(t, name, fn)
+    if type(t) == "string" then t, name, fn = _G, t, name end
+    local orig = t[name]
+    t[name] = function(...)
+        local r = { orig(...) }
+        fn(...)
+        return unpack(r)
+    end
+end
+
+-- Forever's quest log list: three pools. Acquire hands out a frame whose
+-- font string has a font object; Blizzard then sets the text and measures.
+local function fontObject(name, size)
+    local o = { _name = name, _font = { "Fonts\\FRIZQT__.TTF", size, "" } }
+    function o:GetShadowOffset() return 1, -1 end
+    return o
+end
+M.fontObjects = { GameFontNormalLeft = fontObject("GameFontNormalLeft", 12),
+    ObjectiveFont = fontObject("ObjectiveFont", 11), Header = fontObject("ListHeader", 12) }
+local function newPool(make)
+    local pool = { active = {}, inactiveObjects = {} }
+    function pool:Acquire()
+        local f = table.remove(self.inactiveObjects) or make()
+        self.active[#self.active + 1] = f
+        return f
+    end
+    function pool:ReleaseAll()
+        for _, f in ipairs(self.active) do self.inactiveObjects[#self.inactiveObjects + 1] = f end
+        self.active = {}
+    end
+    function pool:EnumerateActive()
+        local i = 0
+        return function() i = i + 1; return self.active[i] end
+    end
+    return pool
+end
+local function withFontObject(fs, object)
+    fs._fontObject = object
+    fs._font = { object._font[1], object._font[2], object._font[3] }
+    function fs:GetFontObject() return self._fontObject end
+    function fs:SetFontObject(o) self._fontObject = o; self._font = { o._font[1], o._font[2], o._font[3] } end
+    return fs
+end
+local qsf = newWidget("QuestScrollFrame", "ScrollFrame")
+qsf.Background = qsf:CreateTexture()
+qsf.titleFramePool = newPool(function()
+    local f = newWidget(nil, "Button")
+    f.Text = withFontObject(f:CreateFontString(), M.fontObjects.GameFontNormalLeft)
+    return f
+end)
+qsf.objectiveFramePool = newPool(function()
+    local f = newWidget(nil, "Frame")
+    f.Text = withFontObject(f:CreateFontString(), M.fontObjects.ObjectiveFont)
+    f.Dash = withFontObject(f:CreateFontString(), M.fontObjects.ObjectiveFont)
+    return f
+end)
+qsf.headerFramePool = newPool(function()
+    local f = newWidget(nil, "Button")
+    f.ButtonText = withFontObject(f:CreateFontString(), M.fontObjects.Header)
+    return f
+end)
+QuestScrollFrame = qsf
+-- What Blizzard's QuestLogQuests_AddQuestButton does: acquire, set the
+-- text, measure. Returns the measured height.
+function M.QuestLogAddQuest(text)
+    local b = qsf.titleFramePool:Acquire()
+    b.Text:SetText(text)
+    b.measured = b.Text:GetStringHeight()
+    return b
+end
+
 -- Secure variables: everything Blizzard's is secure in the mock.
 function issecurevariable() return true end
 

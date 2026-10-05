@@ -214,6 +214,43 @@ local function mapRows()
     }
 end
 
+local function questLogRows()
+    local function own(row) return visibleIf(row, function() return S("logStyle") == "OWN" end) end
+    local rows = {
+        { type = "header", label = "OPT_LOG_LOOK" },
+        choice("logStyle", "OPT_LOG_STYLE", { "BLIZZARD", "TRACKER", "OWN" }, "MAPSTYLE_"),
+        { type = "text", label = "OPT_LOG_HINT", height = 40 },
+        own({ type = "header", label = "OPT_BACKGROUND" }),
+        own(choice("logBgMode", "OPT_BG_MODE", { "SOLID", "GRADIENT", "TEXTURE" }, "BG_")),
+        visibleIf(colorRow("logBgColor", "OPT_BG_COLOR", true),
+            function() return S("logStyle") == "OWN" and S("logBgMode") ~= "TEXTURE" end),
+        visibleIf(media("logBgTexture", "OPT_BG_TEXTURE", "background"),
+            function() return S("logStyle") == "OWN" and S("logBgMode") == "TEXTURE" end),
+        own(num("logBgAlpha", "OPT_BG_ALPHA", "%")),
+    }
+    for _, part in ipairs({ "Header", "Title", "Objective" }) do
+        append(rows, {
+            own({ type = "header", label = "LOGSTYLE_" .. part:upper() }),
+            own(media("log" .. part .. "Font", "OPT_FONT", "font")),
+            own(num("log" .. part .. "Size", "OPT_FONT_SIZE")),
+            own({
+                type = "select", label = "OPT_OUTLINE",
+                choices = function()
+                    return {
+                        { label = L.OUTLINE_NONE, value = "" },
+                        { label = L.OUTLINE_SHADOW, value = "SHADOW" },
+                        { label = L.OUTLINE_NORMAL, value = "OUTLINE" },
+                        { label = L.OUTLINE_THICK, value = "THICKOUTLINE" },
+                    }
+                end,
+                get = function() return S("log" .. part .. "Flag") end,
+                set = function(v) Settings.Set("log" .. part .. "Flag", v) end,
+            }),
+        })
+    end
+    return rows
+end
+
 local function instanceRows()
     return {
         { type = "header", label = "OPT_INSTANCES" },
@@ -289,6 +326,7 @@ Window.PAGES = {
     { id = "bars", label = "PAGE_BARS", rows = barRows },
     { id = "instances", label = "PAGE_INSTANCES", rows = instanceRows },
     { id = "map", label = "PAGE_MAP", rows = mapRows },
+    { id = "questlog", label = "PAGE_QUESTLOG", rows = questLogRows },
     { id = "profiles", label = "PAGE_PROFILES", rows = profileRows },
 }
 

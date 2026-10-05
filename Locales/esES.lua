@@ -189,3 +189,12 @@ L.MAPSTYLE_BLIZZARD = "El de Blizzard"
 L.MAPSTYLE_TRACKER = "Como el rastreador"
 L.MAPSTYLE_OWN = "Ajustes propios"
 L.TIP_MAP_DRAG = "Arrastra para mover el mapa"
+
+-- Quest log in the world map
+L.PAGE_QUESTLOG = "Registro de misiones"
+L.OPT_LOG_LOOK = "Lista de misiones del mapa"
+L.OPT_LOG_STYLE = "Estilo"
+L.OPT_LOG_HINT = "Fondo y fuentes de la lista; los colores, las filas y los clics siguen siendo de Blizzard. Surte efecto cuando la lista se actualiza (al abrir el mapa)."
+L.LOGSTYLE_HEADER = "Cabeceras de zona"
+L.LOGSTYLE_TITLE = "Títulos de misión"
+L.LOGSTYLE_OBJECTIVE = "Objetivos"
