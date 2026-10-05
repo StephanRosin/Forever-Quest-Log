@@ -447,6 +447,9 @@ end
 -- same arguments.
 function hooksecurefunc(t, name, fn)
     if type(t) == "string" then t, name, fn = _G, t, name end
+    if type(t) == "table" and t._securePool then
+        M.violations[#M.violations + 1] = "hooksecurefunc on a secure pool (" .. name .. ")"
+    end
     local orig = t[name]
     t[name] = function(...)
         local r = { orig(...) }
@@ -465,7 +468,7 @@ end
 M.fontObjects = { GameFontNormalLeft = fontObject("GameFontNormalLeft", 12),
     ObjectiveFont = fontObject("ObjectiveFont", 11), Header = fontObject("ListHeader", 12) }
 local function newPool(make)
-    local pool = { active = {}, inactiveObjects = {} }
+    local pool = { active = {}, inactiveObjects = {}, _securePool = true }
     function pool:Acquire()
         local f = table.remove(self.inactiveObjects) or make()
         self.active[#self.active + 1] = f
@@ -522,6 +525,8 @@ function M.QuestLogAddQuest(text)
     b.measured = b.Text:GetStringHeight()
     return b
 end
+-- Blizzard's update of the whole list (the addon hooks this global).
+function QuestLogQuests_Update() end
 
 -- Secure variables: everything Blizzard's is secure in the mock.
 function issecurevariable() return true end

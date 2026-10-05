@@ -7,11 +7,16 @@ local S = Settings.Get
 -- objectives, like the tracker or set on their own. Blizzard's list stays
 -- Blizzard's: its rows, clicks, colours (difficulty, completed, hover).
 --
--- Rows come from three frame pools and are measured right after Acquire
--- (QuestLogQuests_AddQuestButton: SetText, then Text:GetHeight()). So the
--- font goes on in a hook on the pools' Acquire: before Blizzard measures,
--- and the heights fit. hooksecurefunc on a pool (a plain table, not a
--- frame) is safe in Forever; nothing of Blizzard's is written or called.
+-- Rows come from three frame pools and are measured right after Acquire.
+-- The pools are SECURE pools in Forever (CreateFramePool =
+-- CreateSecureFramePool): a hooksecurefunc on their Acquire made it nil
+-- for Blizzard's own call ("attempt to call a nil value",
+-- QuestMapFrame.lua:2045) and tainted the list. So nothing hooks the
+-- pools. The font goes on after Blizzard's update instead, in a hook on the
+-- global function QuestLogQuests_Update (safe); the rows keep that font, so
+-- from the next update on (any quest change, opening the map) Blizzard
+-- measures them with it. A row styled for the very first time can be
+-- measured once with Blizzard's font.
 local QuestLogStyle = {}
 ns.QuestLogStyle = QuestLogStyle
 
@@ -89,16 +94,18 @@ local function styleFrames(pool, fn)
     for f in pool:EnumerateActive() do fn(f) end
 end
 
-local hooked = false
-local function hookPools()
+local function styleAll()
     local scroll = _G.QuestScrollFrame
-    if hooked or not scroll then return end
+    if not scroll then return end
     for key, fn in pairs(PARTS) do
-        local pool = scroll[key]
-        if pool and pool.Acquire then
-            hooksecurefunc(pool, "Acquire", function(self) styleFrames(self, fn) end)
-        end
+        if scroll[key] then styleFrames(scroll[key], fn) end
     end
+end
+
+local hooked = false
+local function hookUpdate()
+    if hooked or type(_G.QuestLogQuests_Update) ~= "function" then return end
+    hooksecurefunc("QuestLogQuests_Update", styleAll)
     hooked = true
 end
 
@@ -133,11 +140,9 @@ end
 function QuestLogStyle.Apply()
     local scroll = _G.QuestScrollFrame
     if not scroll then return end
-    hookPools()
+    hookUpdate()
     version = version + 1
-    for key, fn in pairs(PARTS) do
-        if scroll[key] then styleFrames(scroll[key], fn) end
-    end
+    styleAll()
     applyBackground()
 end
 
