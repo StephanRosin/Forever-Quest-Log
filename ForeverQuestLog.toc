@@ -1,0 +1,40 @@
+## Interface: 16001
+## Title: Forever Quest Log
+## Notes: A quest tracker in the style of the Forever addons: zones, levels, progress bars, easy to move and resize.
+## Notes-deDE: Ein Quest-Tracker im Stil der Forever-Addons: Zonen, Level, Fortschrittsbalken, leicht zu verschieben und zu vergrößern.
+## Notes-esES: Un rastreador de misiones al estilo de los addons Forever: zonas, niveles, barras de progreso, fácil de mover y redimensionar.
+## Notes-esMX: Un rastreador de misiones al estilo de los addons Forever: zonas, niveles, barras de progreso, fácil de mover y redimensionar.
+## Notes-frFR: Un suivi de quêtes dans le style des addons Forever : zones, niveaux, barres de progression, facile à déplacer et redimensionner.
+## Version: 0.1.0
+## IconTexture: Interface\AddOns\ForeverQuestLog\Media\MinimapIcon.tga
+## AddonCompartmentFunc: ForeverQuestLog_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: ForeverQuestLog_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: ForeverQuestLog_OnAddonCompartmentLeave
+## SavedVariables: ForeverQuestLogProfiles
+## SavedVariablesPerCharacter: ForeverQuestLogChar
+
+Locales\enUS.lua
+Locales\deDE.lua
+Locales\esES.lua
+Locales\frFR.lua
+Locale.lua
+Core.lua
+Profiles.lua
+Settings.lua
+Share.lua
+Media.lua
+Corners.lua
+Border.lua
+Blizzard.lua
+Data.lua
+Sort.lua
+Actions.lua
+Items.lua
+Rows.lua
+Tracker.lua
+Options\Style.lua
+Options\Widgets.lua
+Options\Window.lua
+Options\Panel.lua
+Options\MinimapButton.lua
+Commands.lua
