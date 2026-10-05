@@ -89,7 +89,8 @@ function ns.IsPreset(name) return type(name) == "string" and name:sub(1, 1) == P
 function ns.PresetName(id) return PRESET_MARK .. id end
 function ns.PresetId(name) return ns.IsPreset(name) and name:sub(2) or nil end
 
-local OWN = { "locked", "point", "x", "y", "width", "height", "minimapShow", "minimapAngle" }
+local OWN = { "locked", "point", "x", "y", "width", "height", "minimapShow", "minimapAngle",
+    "mapPlaced", "mapPoint", "mapX", "mapY" }
 
 local function buildPreset(preset, keepFrom)
     local t = Copy(preset.values)

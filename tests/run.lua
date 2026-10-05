@@ -569,6 +569,58 @@ check("/fql unlock", S("locked"), false)
 SlashCmdList["FOREVERQUESTLOG"]("lock")
 check("/fql lock", S("locked"), true)
 
+section("World map")
+local wmf = M.worldMap
+check("built on the map", ns.WorldMap ~= nil and wmf._scripts.OnShow ~= nil, true)
+check("Blizzard's look by default: border untouched", wmf.BorderFrame.NineSlice._alpha, 1)
+M.PanelManagerPlaces()
+wmf._shown = true
+wmf._scripts.OnShow(wmf)
+check("not dragged yet: Blizzard's place", wmf._lastPoint[4], 16)
+local handle
+for _, f in ipairs(M.frames) do if f._parent == WorldMapFrame and f._scripts.OnMouseDown then handle = f end end
+check("drag handle on the title bar", handle ~= nil, true)
+handle._scripts.OnMouseDown(handle, "LeftButton")
+check("dragging moves the map", wmf._moving, true)
+wmf._rect = { 1200, 200, 1000, 700 }
+handle._scripts.OnMouseUp(handle, "LeftButton")
+check("dropped: right half, top half", S("mapPoint"), "TOPRIGHT")
+check("x from the right edge", S("mapX"), 2200 - 1920)
+check("y from the top", S("mapY"), 900 - 1080)
+M.PanelManagerPlaces()
+handle._scripts.OnUpdate(handle, 0.1)
+check("Blizzard places it: put back", wmf._lastPoint[1] .. "," .. wmf._lastPoint[4], "TOPRIGHT,280")
+local before = #M.calls
+wmf.isMaximized = true
+M.PanelManagerPlaces()
+handle._scripts.OnUpdate(handle, 0.1)
+check("maximized: left alone", wmf._lastPoint[4], 16)
+wmf.isMaximized = false
+Settings.Set("mapStyle", "OWN")
+check("own look: Blizzard's border faded", wmf.BorderFrame.NineSlice._alpha, 0)
+check("own look: portrait faded", wmf.BorderFrame.PortraitContainer._alpha, 0)
+check("own look: gold", ns.WorldMap.Look().style, "GOLD")
+check("square corners on the map", ns.WorldMap.Look().radius, 0)
+Settings.Set("mapStyle", "TRACKER")
+check("like the tracker", ns.WorldMap.Look().style, S("borderStyle"))
+Settings.Set("mapStyle", "BLIZZARD")
+check("Blizzard's again: border back", wmf.BorderFrame.NineSlice._alpha, 1)
+ns.WorldMap.ResetPosition()
+M.PanelManagerPlaces()
+handle._scripts.OnUpdate(handle, 0.1)
+check("reset: Blizzard's place stays", wmf._lastPoint[4], 16)
+Settings.Set("mapMove", false)
+handle._scripts.OnMouseDown(handle, "LeftButton")
+wmf._moving = false
+handle._scripts.OnMouseDown(handle, "LeftButton")
+check("moving off: no drag", wmf._moving, false)
+Settings.Set("mapMove", nil)
+wmf._shown = false
+ns.Window.Open()
+local okMap = pcall(ns.Window.ShowPage, "map")
+check("map options page", okMap, true)
+ns.Window.Toggle()
+
 section("Use Blizzard's tracker")
 Settings.Set("useBlizzard", true)
 M.objectiveTracker._scale, M.objectiveTracker._alpha = 1, 1
@@ -604,7 +656,7 @@ for _, f in ipairs(tocFiles()) do
     local src = io.open(ROOT .. "/" .. f):read("*a")
     check("no CVar storage in " .. f, src:find("SetCVar", 1, true), nil)
 end
-check("Blizzard's tracker still untouched", table.concat(M.violations, ","), "")
+check("Blizzard's tracker and map: no field written", table.concat(M.violations, ","), "")
 
 print(("%d passed, %d failed"):format(pass, fail))
 os.exit(fail == 0 and 0 or 1)

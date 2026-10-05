@@ -83,6 +83,7 @@ local function newWidget(name, kind)
         self._lastPoint = { p, rel, p2, x, y }
     end
     function w:ClearAllPoints() self._points = {} end
+    function w:GetNumPoints() local n = 0; for _ in pairs(self._points or {}) do n = n + 1 end; return n end
     function w:GetPoint() local a = self._lastPoint; if a then return a[1], a[2], a[3], a[4], a[5] end end
     -- Screen rectangle: tests set _rect = { left, bottom, width, height }.
     function w:GetLeft() return self._rect and self._rect[1] end
@@ -392,6 +393,37 @@ ObjectiveTrackerFrame = setmetatable({}, {
     end,
 })
 M.objectiveTracker = otf
+
+-- Blizzard's world map: C calls are fine, a field written on it or on its
+-- border frame is a violation (the addon must leave its Lua state alone).
+local wm = newWidget("WorldMapFrame", "Frame")
+wm._w, wm._h, wm._scale = 1000, 700, 1
+wm.isMaximized = false
+wm._shown = false
+wm.BorderFrame = newWidget(nil, "Frame")
+wm.BorderFrame._level = 10
+for _, k in ipairs({ "NineSlice", "PortraitContainer", "TopTileStreaks" }) do wm.BorderFrame[k] = newWidget(nil, "Frame") end
+function wm:IsMaximized() return self.isMaximized end
+local function guard(t, label)
+    return setmetatable({}, {
+        __index = function(_, k)
+            local v = t[k]
+            if type(v) == "function" then return function(_, ...) return v(t, ...) end end
+            return v
+        end,
+        __newindex = function(_, k, v)
+            M.violations[#M.violations + 1] = label .. " write " .. tostring(k)
+            t[k] = v
+        end,
+    })
+end
+WorldMapFrame = guard(wm, "WorldMapFrame")
+M.worldMap = wm
+-- Blizzard's panel manager putting it back at its place.
+function M.PanelManagerPlaces()
+    wm:ClearAllPoints()
+    wm:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -116)
+end
 
 -- Secure variables: everything Blizzard's is secure in the mock.
 function issecurevariable() return true end

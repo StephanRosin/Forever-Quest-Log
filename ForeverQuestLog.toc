@@ -33,6 +33,7 @@ Actions.lua
 Items.lua
 Rows.lua
 Tracker.lua
+WorldMap.lua
 Options\Style.lua
 Options\Widgets.lua
 Options\Window.lua

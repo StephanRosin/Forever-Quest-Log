@@ -96,6 +96,22 @@ Settings.DEFAULTS = {
     padding = 10,           -- inside the frame
     questSpacing = 11,      -- between quests
 
+    -- World map: moved by its title bar (mapPlaced once dragged), and its
+    -- frame: BLIZZARD (unchanged), TRACKER (the tracker's border and
+    -- shadow) or OWN (the map* values below).
+    mapMove = true,
+    mapPlaced = false,
+    mapPoint = "TOPLEFT",
+    mapX = 0,
+    mapY = 0,
+    mapStyle = "BLIZZARD",
+    mapBorderStyle = "GOLD",
+    mapBorderSize = 2,
+    mapBorderColor = { 0, 0, 0, 1 },
+    mapShadowEnabled = true,
+    mapShadowSize = 9,
+    mapShadowAlpha = 65,
+
     -- Minimap button
     minimapShow = true,
     minimapAngle = 200,
@@ -122,6 +138,11 @@ Settings.RANGES = {
     barHeight = { 1, 12 },
     barBgAlpha = { 0, 100 },
     padding = { 0, 30 },
+    mapX = { -4000, 4000 },
+    mapY = { -3000, 3000 },
+    mapBorderSize = { 1, 8 },
+    mapShadowSize = { 1, 24 },
+    mapShadowAlpha = { 0, 100 },
     questSpacing = { 0, 30 },
 }
 
