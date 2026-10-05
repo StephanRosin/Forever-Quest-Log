@@ -456,6 +456,8 @@ grip:GetScript("OnUpdate")(grip, 0.1)
 grip:GetScript("OnMouseUp")(grip)
 check("anchored left: the grip widens to the right", S("width"), w0 + 60)
 check("anchored at the top: dragging down grows", S("height"), h0 + 100)
+check("dragged taller than the content: the size stays", S("fitContent"), false)
+Settings.Set("fitContent", nil)
 Settings.SetMany({ point = "TOPRIGHT", x = -8, y = -330, width = 300, height = 500 })
 Settings.Set("locked", true)
 M.RunTimers()
@@ -728,6 +730,17 @@ M.state.cursorX = 340
 fgrip:GetScript("OnUpdate")(fgrip, 0.1)
 fgrip:GetScript("OnMouseUp")(fgrip)
 check("corner widens it", S("focusWidth"), 320)
+-- From the centred default: the drag makes a corner the anchor first.
+Settings.SetMany({ focusPoint = "TOP", focusX = 0, focusY = -140 })
+focus._rect = { 1700, 600, 200, 80 }
+M.state.cursorX = 100
+fgrip:GetScript("OnMouseDown")(fgrip)
+check("right half: anchored right", S("focusPoint"), "TOPRIGHT")
+M.state.cursorX = 60
+fgrip:GetScript("OnUpdate")(fgrip, 0.1)
+fgrip:GetScript("OnMouseUp")(fgrip)
+check("anchored right: dragging left widens", S("focusWidth"), 360)
+check("grip on the left then", fgrip._lastPoint[1], "BOTTOMLEFT")
 Settings.Set("focusLocked", nil)
 Settings.SetMany({ focusPoint = "TOP", focusX = 0, focusY = -140, focusWidth = 280 })
 Settings.Set("focusEnabled", false)

@@ -70,10 +70,17 @@ local function applyLook()
     })
 end
 
+-- The grip sits at the bottom corner away from the anchor's side: that
+-- edge moves, the anchored one stays. (A centred anchor is turned into a
+-- corner when resizing starts.)
 local function layoutUnlocked()
     local on = unlocked()
     for _, e in ipairs(outline) do e:SetShown(on) end
     grip:SetShown(on)
+    local right = not G("point"):find("RIGHT")
+    grip:ClearAllPoints()
+    grip:SetPoint(right and "BOTTOMRIGHT" or "BOTTOMLEFT", frame, right and "BOTTOMRIGHT" or "BOTTOMLEFT", 0, 0)
+    grip.icon:SetTexCoord(right and 0 or 1, right and 1 or 0, 0, 1)
 end
 
 function Focus.Layout()
@@ -129,7 +136,7 @@ end
 local function onResize()
     if not resizing then return end
     local dx = (cursorX() - resizing.x0) / frame:GetScale()
-    local w = resizing.w0 + (G("point"):find("LEFT") and dx or -dx)
+    local w = resizing.w0 + (G("point"):find("RIGHT") and -dx or dx)
     local range = Settings.RANGES[cfg.key("width")]
     w = math.max(range[1], math.min(range[2], math.floor(w + 0.5)))
     if w ~= resizing.w then
@@ -148,6 +155,10 @@ local function createGrip()
     grip.icon:SetTexture(Media.Icon("Resize"))
     grip.icon:SetVertexColor(ACCENT[1], ACCENT[2], ACCENT[3])
     grip:SetScript("OnMouseDown", function()
+        -- Anchored at a corner first, so one edge stays where it is (from
+        -- the centre the frame grew both ways and ran against the mouse).
+        savePosition()
+        place()
         resizing = { w0 = G("width"), x0 = cursorX() }
         grip:SetScript("OnUpdate", onResize)
     end)
@@ -212,7 +223,6 @@ function Focus.Build()
     Media.ApplyText(empty, cfg.text("objective"))
     empty:SetText(L.FOCUS_EMPTY)
     createGrip()
-    grip:SetPoint("BOTTOMRIGHT")
     createOutline()
     Focus.frame = frame
     Focus.Layout()

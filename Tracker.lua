@@ -613,8 +613,14 @@ local function createGrip()
         grip:SetScript("OnUpdate", nil)
         if not resizing then return end
         local w, h = ns.DB().width or S("width"), ns.DB().height or S("height")
+        local values = { width = w, height = h }
+        -- Dragged taller than the content: the size the player chose stays,
+        -- instead of snapping back to the content.
+        if S("fitContent") and h > content + HEADER_H + S("padding") + 2 and math.abs(h - resizing.h0) > 2 then
+            values.fitContent = false
+        end
         resizing = nil
-        Settings.SetMany({ width = w, height = h })
+        Settings.SetMany(values)
     end)
     grip:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
