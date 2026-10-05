@@ -191,29 +191,6 @@ local function barRows()
     }
 end
 
-local function mapRows()
-    local function own(row) return visibleIf(row, function() return S("mapStyle") == "OWN" end) end
-    local function ownWith(row, cond)
-        return visibleIf(row, function() return S("mapStyle") == "OWN" and cond() end)
-    end
-    return {
-        { type = "header", label = "OPT_MAP_POSITION" },
-        check("mapMove", "OPT_MAP_MOVE"),
-        { type = "text", label = "OPT_MAP_MOVE_HINT", height = 40 },
-        { type = "buttons", buttons = {
-            { label = "OPT_MAP_RESET", width = 200, onClick = function() ns.WorldMap.ResetPosition() end },
-        } },
-        { type = "header", label = "OPT_MAP_LOOK" },
-        choice("mapStyle", "OPT_MAP_STYLE", { "BLIZZARD", "TRACKER", "OWN" }, "MAPSTYLE_"),
-        own(choice("mapBorderStyle", "OPT_BORDER_STYLE", { "GOLD", "FLAT", "NONE" }, "BORDER_")),
-        ownWith(num("mapBorderSize", "OPT_BORDER_SIZE"), function() return S("mapBorderStyle") ~= "NONE" end),
-        ownWith(colorRow("mapBorderColor", "OPT_BORDER_COLOR"), function() return S("mapBorderStyle") == "FLAT" end),
-        own(check("mapShadowEnabled", "OPT_SHADOW_SHOW")),
-        ownWith(num("mapShadowSize", "OPT_SHADOW_SIZE"), function() return S("mapShadowEnabled") end),
-        ownWith(num("mapShadowAlpha", "OPT_SHADOW_ALPHA", "%"), function() return S("mapShadowEnabled") end),
-    }
-end
-
 local function questLogRows()
     local function own(row) return visibleIf(row, function() return S("logStyle") == "OWN" end) end
     local rows = {
@@ -249,6 +226,29 @@ local function questLogRows()
         })
     end
     return rows
+end
+
+local function mapRows()
+    local function own(row) return visibleIf(row, function() return S("mapStyle") == "OWN" end) end
+    local function ownWith(row, cond)
+        return visibleIf(row, function() return S("mapStyle") == "OWN" and cond() end)
+    end
+    return {
+        { type = "header", label = "OPT_MAP_POSITION" },
+        check("mapMove", "OPT_MAP_MOVE"),
+        { type = "text", label = "OPT_MAP_MOVE_HINT", height = 40 },
+        { type = "buttons", buttons = {
+            { label = "OPT_MAP_RESET", width = 200, onClick = function() ns.WorldMap.ResetPosition() end },
+        } },
+        { type = "header", label = "OPT_MAP_LOOK" },
+        choice("mapStyle", "OPT_MAP_STYLE", { "BLIZZARD", "TRACKER", "OWN" }, "MAPSTYLE_"),
+        own(choice("mapBorderStyle", "OPT_BORDER_STYLE", { "GOLD", "FLAT", "NONE" }, "BORDER_")),
+        ownWith(num("mapBorderSize", "OPT_BORDER_SIZE"), function() return S("mapBorderStyle") ~= "NONE" end),
+        ownWith(colorRow("mapBorderColor", "OPT_BORDER_COLOR"), function() return S("mapBorderStyle") == "FLAT" end),
+        own(check("mapShadowEnabled", "OPT_SHADOW_SHOW")),
+        ownWith(num("mapShadowSize", "OPT_SHADOW_SIZE"), function() return S("mapShadowEnabled") end),
+        ownWith(num("mapShadowAlpha", "OPT_SHADOW_ALPHA", "%"), function() return S("mapShadowEnabled") end),
+    }
 end
 
 local function instanceRows()
@@ -325,8 +325,7 @@ Window.PAGES = {
     { id = "text", label = "PAGE_TEXT", rows = textRows },
     { id = "bars", label = "PAGE_BARS", rows = barRows },
     { id = "instances", label = "PAGE_INSTANCES", rows = instanceRows },
-    { id = "map", label = "PAGE_MAP", rows = mapRows },
-    { id = "questlog", label = "PAGE_QUESTLOG", rows = questLogRows },
+    { id = "map", label = "PAGE_MAP", rows = function() return append(mapRows(), questLogRows()) end },
     { id = "profiles", label = "PAGE_PROFILES", rows = profileRows },
 }
 

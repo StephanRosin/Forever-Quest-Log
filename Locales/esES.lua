@@ -191,7 +191,6 @@ L.MAPSTYLE_OWN = "Ajustes propios"
 L.TIP_MAP_DRAG = "Arrastra para mover el mapa"
 
 -- Quest log in the world map
-L.PAGE_QUESTLOG = "Registro de misiones"
 L.OPT_LOG_LOOK = "Lista de misiones del mapa"
 L.OPT_LOG_STYLE = "Estilo"
 L.OPT_LOG_HINT = "Fondo y fuentes de la lista; los colores, las filas y los clics siguen siendo de Blizzard. Surte efecto cuando la lista se actualiza (al abrir el mapa)."

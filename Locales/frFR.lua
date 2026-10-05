@@ -191,7 +191,6 @@ L.MAPSTYLE_OWN = "Réglages propres"
 L.TIP_MAP_DRAG = "Glisser pour déplacer la carte"
 
 -- Quest log in the world map
-L.PAGE_QUESTLOG = "Journal de quêtes"
 L.OPT_LOG_LOOK = "Liste des quêtes de la carte"
 L.OPT_LOG_STYLE = "Style"
 L.OPT_LOG_HINT = "Fond et polices de la liste ; couleurs, lignes et clics restent ceux de Blizzard. Prend effet quand la liste se met à jour (ouverture de la carte)."

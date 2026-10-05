@@ -648,7 +648,11 @@ check("back to Blizzard's: size", row4.Text._font[2], 12)
 check("Blizzard's background back", QuestScrollFrame.Background._alpha, 1)
 Settings.Set("logTitleSize", nil)
 ns.Window.Open()
-check("quest log options page", pcall(ns.Window.ShowPage, "questlog"), true)
+check("quest log options on the world map page", pcall(ns.Window.ShowPage, "map"), true)
+check("no own quest log page", (function()
+    for _, p in ipairs(ns.Window.PAGES) do if p.id == "questlog" then return true end end
+    return false
+end)(), false)
 ns.Window.Toggle()
 
 section("Use Blizzard's tracker")
