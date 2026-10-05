@@ -223,3 +223,18 @@ L.OPT_LOG_HINT = "Background and fonts of the list; colours, rows and clicks sta
 L.LOGSTYLE_HEADER = "Zone headers"
 L.LOGSTYLE_TITLE = "Quest titles"
 L.LOGSTYLE_OBJECTIVE = "Objectives"
+
+-- Selected quest tracker
+L.FOCUS_EMPTY = "No quest focused. Click a quest's map button, or \"Focus\" in its menu."
+L.PAGE_FOCUS = "Focused quest"
+L.OPT_FOCUS = "Selected quest tracker"
+L.OPT_FOCUS_ENABLED = "Show the focused quest in a frame of its own"
+L.OPT_FOCUS_HINT = "The quest you focus (its map button, or “Focus” in its menu) with title and progress. Unlock it to drag it anywhere and to widen it at its corner."
+L.OPT_FOCUS_FALLBACK = "Nothing focused"
+L.FALLBACK_NONE = "Hide the frame"
+L.FALLBACK_FIRST = "Show the first tracked quest"
+L.OPT_FOCUS_HIDE_COMBAT = "Hide in combat"
+L.OPT_FOCUS_ALPHA = "Opacity"
+L.OPT_MAP_PORTRAIT = "Show the portrait"
+L.OPT_MAP_BACKGROUND = "Frame background"
+L.OPT_MAP_TITLE = "Title"

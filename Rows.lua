@@ -8,6 +8,11 @@ local S = Settings.Get
 local Rows = {}
 ns.Rows = Rows
 
+-- Where a row reads its settings: the tracker's own keys, or a frame's
+-- prefixed copy of them (Settings.Prefixed, e.g. the focus frame's
+-- "focusTitleSize" for "titleSize").
+Rows.TRACKER = { get = S, text = Settings.TextStyle }
+
 Rows.POI_W = 28         -- room for Blizzard's map button
 Rows.ITEM_W = 30        -- room for a quest item button
 Rows.ZONE_H = 22
@@ -44,10 +49,10 @@ end
 
 -- One line at (x, -y) of row, width w. o: { text, cur, max, done, percent }
 -- or a plain text line with a style ("done", "failed"). Returns its height.
-local function layoutLine(row, line, o, x, y, w, style)
+local function layoutLine(row, line, o, x, y, w, style, cfg)
     local isDone = o.done
-    local textStyle = Settings.TextStyle(style or "objective")
-    if style == nil and isDone then textStyle.color = S("objectiveDoneColor") end
+    local textStyle = cfg.text(style or "objective")
+    if style == nil and isDone then textStyle.color = cfg.get("objectiveDoneColor") end
     if o.color then textStyle.color = o.color end
     local countText
     if o.percent then
@@ -85,23 +90,23 @@ local function layoutLine(row, line, o, x, y, w, style)
     line.text:SetPoint("TOPLEFT", row, "TOPLEFT", left, -y)
     line.text:Show()
     local h = math.max(line.text:GetStringHeight(), countText and line.count:GetStringHeight() or 0)
-    local showBar = S("showBars") and not isDone and (o.percent or (o.max and o.max > 1))
+    local showBar = cfg.get("showBars") and not isDone and (o.percent or (o.max and o.max > 1))
     if showBar then
-        local barH = S("barHeight")
+        local barH = cfg.get("barHeight")
         local by = y + h + BAR_GAP
         line.barBg:ClearAllPoints()
         line.barBg:SetPoint("TOPLEFT", row, "TOPLEFT", left, -by)
         line.barBg:SetSize(w - (left - x), barH)
-        line.barBg:SetColorTexture(1, 1, 1, S("barBgAlpha") / 100)
+        line.barBg:SetColorTexture(1, 1, 1, cfg.get("barBgAlpha") / 100)
         line.barBg:Show()
         local share = o.percent and (o.percent / 100) or ((o.cur or 0) / o.max)
         share = math.max(0, math.min(1, share))
         if share > 0 then
-            local c = S("barColor")
+            local c = cfg.get("barColor")
             line.bar:ClearAllPoints()
             line.bar:SetPoint("TOPLEFT", line.barBg, "TOPLEFT", 0, 0)
             line.bar:SetSize(math.max(1, (w - (left - x)) * share), barH)
-            line.bar:SetTexture(Media.Path("statusbar", S("barTexture")))
+            line.bar:SetTexture(Media.Path("statusbar", cfg.get("barTexture")))
             line.bar:SetVertexColor(c[1], c[2], c[3], 1)
             line.bar:Show()
         else
@@ -163,9 +168,10 @@ local function newZoneRow(parent)
 end
 
 -- entry: { name, count, collapsed }, key: what onToggle gets.
-function Rows.LayoutZone(row, entry, width, key, onToggle)
+function Rows.LayoutZone(row, entry, width, key, onToggle, cfg)
+    cfg = cfg or Rows.TRACKER
     row.key, row.onToggle = key, onToggle
-    local style = Settings.TextStyle("zone")
+    local style = cfg.text("zone")
     Media.ApplyText(row.name, style)
     Media.ApplyText(row.count, style)
     local c = style.color
@@ -261,6 +267,10 @@ local function newQuestRow(parent)
     row.tag = newTag(row)
     row.poi = newPOI(row)
     row:SetScript("OnClick", function(self, button)
+        if self.suppressClick then
+            self.suppressClick = nil
+            return
+        end
         if self.quest then ns.Actions.QuestClick(self, self.quest, button) end
         if self.recipe then ns.Actions.RecipeClick(self, self.recipe, button) end
     end)
@@ -283,7 +293,8 @@ end
 -- (UpdateSingle): complete quests show only how to turn them in, failed
 -- ones "Failed", others the way point (super-tracked), the objectives and
 -- money still missing.
-function Rows.QuestLines(q)
+function Rows.QuestLines(q, cfg)
+    cfg = cfg or Rows.TRACKER
     local list = {}
     if q.isComplete then
         if q.isAutoComplete then
@@ -307,7 +318,7 @@ function Rows.QuestLines(q)
         list[#list + 1] = { text = fmt:format(q.waypoint) }
     end
     for _, o in ipairs(q.objectives) do
-        if not o.done or S("showDoneObjectives") then list[#list + 1] = o end
+        if not o.done or cfg.get("showDoneObjectives") then list[#list + 1] = o end
     end
     if q.money then
         local text = GetMoneyString and (GetMoneyString(q.money.have) .. " / " .. GetMoneyString(q.money.need))
@@ -318,38 +329,40 @@ function Rows.QuestLines(q)
 end
 
 -- The title text: "[34] Tiger Mastery", the level in its difficulty colour.
-function Rows.TitleText(q)
-    if not S("showLevel") or not q.level or q.level <= 0 then return q.title end
+function Rows.TitleText(q, cfg)
+    cfg = cfg or Rows.TRACKER
+    if not cfg.get("showLevel") or not q.level or q.level <= 0 then return q.title end
     local level = "[" .. q.level .. "]"
-    if S("levelColors") and q.levelColor then
+    if cfg.get("levelColors") and q.levelColor then
         level = "|cff" .. hex(q.levelColor) .. level .. "|r"
     end
     return level .. " " .. q.title
 end
 
 -- quest or recipe row. Returns height and whether it wants an item button.
-function Rows.LayoutQuest(row, q, width, index)
+function Rows.LayoutQuest(row, q, width, index, cfg)
+    cfg = cfg or Rows.TRACKER
     row.quest, row.recipe = q, nil
-    local hasItem = S("showItems") and q.item ~= nil
-    local x = S("showPOI") and Rows.POI_W or 0
+    local hasItem = cfg.get("showItems") and q.item ~= nil
+    local x = cfg.get("showPOI") and Rows.POI_W or 0
     local colW = width - x - (hasItem and Rows.ITEM_W or 0)
 
-    if S("showPOI") then
+    if cfg.get("showPOI") then
         row.poi:ClearAllPoints()
         -- Centred on the title's first line; the button itself is wider than
         -- the column (the scroll area leaves room to the left).
-        row.poi:SetPoint("CENTER", row, "TOPLEFT", Rows.POI_W / 2 - 3, -S("titleSize") / 2)
+        row.poi:SetPoint("CENTER", row, "TOPLEFT", Rows.POI_W / 2 - 3, -cfg.get("titleSize") / 2)
         layoutPOI(row.poi, q, index)
         row.poi:Show()
     else
         row.poi:Hide()
     end
 
-    local titleStyle = Settings.TextStyle("title")
+    local titleStyle = cfg.text("title")
     Media.ApplyText(row.title, titleStyle)
     row.titleColor = titleStyle.color
-    local tagW = layoutTag(row.tag, S("showTags") and q.tag or nil, titleStyle)
-    row.title:SetText(Rows.TitleText(q))
+    local tagW = layoutTag(row.tag, cfg.get("showTags") and q.tag or nil, titleStyle)
+    row.title:SetText(Rows.TitleText(q, cfg))
     local titleW = colW - (tagW > 0 and (tagW + 6) or 0)
     row.title:SetWidth(0)
     local natural = row.title:GetStringWidth()
@@ -362,11 +375,11 @@ function Rows.LayoutQuest(row, q, width, index)
     end
     local y = row.title:GetStringHeight()
 
-    local wanted = Rows.QuestLines(q)
+    local wanted = Rows.QuestLines(q, cfg)
     local pool = lines(row, #wanted)
     for i, o in ipairs(wanted) do
         y = y + LINE_GAP
-        y = y + layoutLine(row, pool[i], o, x, y, colW, o.style)
+        y = y + layoutLine(row, pool[i], o, x, y, colW, o.style, cfg)
     end
     if hasItem then y = math.max(y, ns.Items.SIZE) end
     row:SetSize(width, y)
@@ -374,11 +387,12 @@ function Rows.LayoutQuest(row, q, width, index)
 end
 
 -- A tracked recipe: its name as the title, the reagents as objectives.
-function Rows.LayoutRecipe(row, r, width)
+function Rows.LayoutRecipe(row, r, width, cfg)
+    cfg = cfg or Rows.TRACKER
     row.quest, row.recipe = nil, r
     row.poi:Hide()
     row.tag:Hide()
-    local titleStyle = Settings.TextStyle("title")
+    local titleStyle = cfg.text("title")
     Media.ApplyText(row.title, titleStyle)
     row.titleColor = titleStyle.color
     row.title:SetWidth(width)
@@ -390,7 +404,7 @@ function Rows.LayoutRecipe(row, r, width)
     for i, o in ipairs(r.reagents) do
         y = y + LINE_GAP
         local line = { text = o.text, cur = o.cur, max = o.max, done = o.done, check = o.done }
-        y = y + layoutLine(row, pool[i], line, 0, y, width)
+        y = y + layoutLine(row, pool[i], line, 0, y, width, nil, cfg)
     end
     row:SetSize(width, y)
     return y

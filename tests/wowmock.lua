@@ -32,6 +32,7 @@ local function newWidget(name, kind)
     function w:GetValue() return self._value end
     function w:SetMinMaxValues(a, b) self._min, self._max = a, b end
     function w:SetTextColor(r, g, b) self._textColor = { r, g, b } end
+    function w:GetTextColor() local c = self._textColor or { 1, 1, 1 }; return c[1], c[2], c[3], 1 end
     function w:SetChecked(v) self._checked = not not v end
     function w:GetChecked() return self._checked end
     function w:SetAttribute(k, v) self._attr[k] = v end
@@ -129,6 +130,9 @@ local function newWidget(name, kind)
         end
         function fs:SetMaxLines(n) self._maxLines = n end
         function fs:SetShadowOffset(x, y) self._shadow = { x, y } end
+        function fs:GetShadowOffset() return (self._shadow or { 0, 0 })[1], (self._shadow or { 0, 0 })[2] end
+        function fs:GetShadowColor() return 0, 0, 0, 1 end
+        function fs:GetFontObject() return self._fontObject end
         M.fontStrings[#M.fontStrings + 1] = fs
         return fs
     end
@@ -402,7 +406,10 @@ wm.isMaximized = false
 wm._shown = false
 wm.BorderFrame = newWidget(nil, "Frame")
 wm.BorderFrame._level = 10
-for _, k in ipairs({ "NineSlice", "PortraitContainer", "TopTileStreaks" }) do wm.BorderFrame[k] = newWidget(nil, "Frame") end
+for _, k in ipairs({ "NineSlice", "PortraitContainer", "TopTileStreaks", "Bg" }) do wm.BorderFrame[k] = newWidget(nil, "Frame") end
+wm.BorderFrame.TitleContainer = newWidget(nil, "Frame")
+wm.BorderFrame.TitleContainer.TitleText = wm.BorderFrame.TitleContainer:CreateFontString()
+wm.BorderFrame.TitleContainer.TitleText._textColor = { 1, 0.82, 0 }
 function wm:IsMaximized() return self.isMaximized end
 local function guard(t, label)
     return setmetatable({}, {

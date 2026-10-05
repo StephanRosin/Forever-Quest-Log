@@ -129,6 +129,68 @@ Settings.DEFAULTS = {
     logObjectiveSize = 13,
     logObjectiveFlag = "",
 
+    -- The selected quest tracker (Focus.lua): the focused quest in a frame
+    -- of its own. Its keys mirror the tracker's with the prefix "focus".
+    focusEnabled = true,
+    focusLocked = true,
+    focusFallback = "NONE",     -- nothing focused: NONE (hide) or FIRST (first tracked quest)
+    focusHideInCombat = false,
+    focusPoint = "TOP",
+    focusX = 0,
+    focusY = -140,
+    focusWidth = 280,
+    focusScale = 100,
+    focusAlpha = 100,
+    focusPadding = 8,
+    focusShowLevel = true,
+    focusLevelColors = true,
+    focusShowTags = true,
+    focusShowPOI = true,
+    focusShowItems = false,
+    focusShowDoneObjectives = true,
+    focusBorderStyle = "GOLD",
+    focusBorderSize = 2,
+    focusBorderColor = { 0, 0, 0, 1 },
+    focusCornerRadius = 10,
+    focusShadowEnabled = true,
+    focusShadowSize = 9,
+    focusShadowAlpha = 65,
+    focusBgMode = "SOLID",
+    focusBgColor = { 0.047, 0.047, 0.055 },
+    focusBgAlpha = 82,
+    focusBgTexture = "Blizzard Dialog Background Dark",
+    focusTitleFont = "Friz Quadrata",
+    focusTitleSize = 15,
+    focusTitleFlag = "SHADOW",
+    focusTitleColor = { 1, 0.82, 0 },
+    focusObjectiveFont = "Arial Narrow",
+    focusObjectiveSize = 13,
+    focusObjectiveFlag = "",
+    focusObjectiveColor = { 0.84, 0.82, 0.78 },
+    focusObjectiveDoneColor = { 0.5, 0.54, 0.5 },
+    focusDoneFont = "Arial Narrow",
+    focusDoneSize = 13,
+    focusDoneFlag = "",
+    focusDoneColor = { 0.37, 0.83, 0.42 },
+    focusShowBars = true,
+    focusBarHeight = 4,
+    focusBarTexture = "Solid",
+    focusBarColor = { 1, 0.79, 0.19 },
+    focusBarBgAlpha = 10,
+
+    -- More of the world map's own frame (mapStyle OWN): the title, the
+    -- portrait, the frame's background behind the map; and its scale.
+    mapTitleFont = "Friz Quadrata",
+    mapTitleSize = 14,
+    mapTitleFlag = "SHADOW",
+    mapTitleColor = { 1, 0.82, 0 },
+    mapPortrait = false,
+    mapBgMode = "SOLID",
+    mapBgColor = { 0.047, 0.047, 0.055 },
+    mapBgAlpha = 100,
+    mapBgTexture = "Blizzard Dialog Background Dark",
+    mapScale = 100,
+
     -- Minimap button
     minimapShow = true,
     minimapAngle = 200,
@@ -159,6 +221,25 @@ Settings.RANGES = {
     logHeaderSize = { 8, 20 },
     logTitleSize = { 8, 24 },
     logObjectiveSize = { 8, 24 },
+    focusX = { -4000, 4000 },
+    focusY = { -3000, 3000 },
+    focusWidth = { 140, 800 },
+    focusScale = { 50, 250 },
+    focusAlpha = { 10, 100 },
+    focusPadding = { 0, 30 },
+    focusBorderSize = { 1, 8 },
+    focusCornerRadius = { 0, 12 },
+    focusShadowSize = { 1, 24 },
+    focusShadowAlpha = { 0, 100 },
+    focusBgAlpha = { 0, 100 },
+    focusTitleSize = { 8, 36 },
+    focusObjectiveSize = { 8, 30 },
+    focusDoneSize = { 8, 30 },
+    focusBarHeight = { 1, 12 },
+    focusBarBgAlpha = { 0, 100 },
+    mapTitleSize = { 8, 24 },
+    mapBgAlpha = { 0, 100 },
+    mapScale = { 50, 150 },
     mapX = { -4000, 4000 },
     mapY = { -3000, 3000 },
     mapBorderSize = { 1, 8 },
@@ -235,6 +316,17 @@ function Settings.TextStyle(name)
         size = Settings.Get(name .. "Size"),
         flag = Settings.Get(name .. "Flag"),
         color = Settings.Get(name .. "Color"),
+    }
+end
+
+-- A frame's own copy of the tracker's settings under a prefix: get("titleSize")
+-- reads "<prefix>TitleSize", text("title") the style "<prefix>Title".
+function Settings.Prefixed(prefix)
+    local function key(k) return prefix .. k:sub(1, 1):upper() .. k:sub(2) end
+    return {
+        get = function(k) return Settings.Get(key(k)) end,
+        text = function(name) return Settings.TextStyle(key(name)) end,
+        key = key,
     }
 end
 

@@ -444,7 +444,9 @@ M.state.ctrl = false
 Settings.Set("locked", false)
 M.RunTimers()
 local grip
-for _, f in ipairs(M.frames) do if f.icon and f.icon._texture and f.icon._texture:find("IconResize") then grip = f end end
+for _, f in ipairs(M.frames) do
+    if f.icon and f.icon._texture and f.icon._texture:find("IconResize") and f._parent == frame then grip = f end
+end
 check("grip shown unlocked", grip and grip._shown, true)
 M.state.cursorX, M.state.cursorY = 500, 500
 local w0, h0 = S("width"), math.max(S("height"), frame._h)
@@ -462,6 +464,15 @@ ns.Tracker.SnapBelowMinimap()
 check("below the minimap", S("y"), 767 - 1080 - 16)
 check("right edges in line", S("x"), 1912 - 1920)
 Settings.SetMany({ point = "TOPRIGHT", x = -8, y = -330 })
+
+section("Scrollbar only when there is something to scroll")
+check("everything fits: no bar", frame.thumb._shown, false)
+Settings.Set("height", 120)
+relayout()
+check("taller than the frame: bar", frame.thumb._shown, true)
+Settings.Set("height", nil)
+relayout()
+check("fits again: bar gone", frame.thumb._shown, false)
 
 section("Look")
 relayout()
@@ -659,6 +670,94 @@ check("no own quest log page", (function()
 end)(), false)
 ns.Window.Toggle()
 
+section("Selected quest tracker")
+local focus = M.byName["ForeverQuestLogFocus"]
+check("built", focus ~= nil, true)
+M.superTracked = 0
+ns.Focus.Layout()
+check("nothing focused, locked: hidden", focus._shown, false)
+Settings.Set("focusFallback", "FIRST")
+ns.Focus.Layout()
+check("fallback: first tracked quest", focus._shown and ns.Focus.Quest().title, "Tiger Mastery")
+Settings.Set("focusFallback", nil)
+M.superTracked = 56
+M.Fire("SUPER_TRACKING_CHANGED")
+M.RunTimers()
+check("focused quest shown", focus._shown, true)
+local frow
+for _, f in ipairs(M.frames) do if f._parent == focus and f.title then frow = f end end
+check("its title", (frow.title._text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")), "[33] The Night Watch")
+check("its progress", frow.lines[2].count._text, "9/15")
+check("own title size", frow.title._font[2], S("focusTitleSize"))
+Settings.Set("focusTitleSize", 22)
+M.RunTimers()
+check("title size setting", frow.title._font[2], 22)
+check("tracker's titles keep theirs", questRows()[1].title._font[2] ~= 22, true)
+Settings.Set("focusTitleSize", nil)
+Settings.Set("focusAlpha", 60)
+M.RunTimers()
+check("opacity", focus._alpha, 0.6)
+Settings.Set("focusAlpha", nil)
+Settings.Set("focusShowBars", false)
+M.RunTimers()
+check("bars off for the frame only", frow.lines[2].barBg._shown, false)
+Settings.Set("focusShowBars", nil)
+M.RunTimers()
+-- Dragging (unlocked) moves it and does not open the quest.
+Settings.Set("focusLocked", false)
+M.RunTimers()
+M.calls = {}
+frow:GetScript("OnMouseDown")(frow, "LeftButton")
+check("drag on the quest moves the frame", focus._moving, true)
+focus._rect = { 100, 600, 280, 80 }
+focus._scale = 1
+frow:GetScript("OnMouseUp")(frow, "LeftButton")
+frow:GetScript("OnClick")(frow, "LeftButton")
+check("the drag's click does nothing", #M.calls, 0)
+frow:GetScript("OnClick")(frow, "LeftButton")
+check("a real click opens the quest", M.calls[1] and M.calls[1][1], "QuestMapFrame_OpenToQuestDetails")
+check("saved: top left", S("focusPoint"), "TOPLEFT")
+check("x", S("focusX"), 100)
+M.state.cursorX = 300
+local fgrip
+for _, f in ipairs(M.frames) do
+    if f._parent == focus and f.icon and f.icon._texture and f.icon._texture:find("IconResize") then fgrip = f end
+end
+fgrip:GetScript("OnMouseDown")(fgrip)
+M.state.cursorX = 340
+fgrip:GetScript("OnUpdate")(fgrip, 0.1)
+fgrip:GetScript("OnMouseUp")(fgrip)
+check("corner widens it", S("focusWidth"), 320)
+Settings.Set("focusLocked", nil)
+Settings.SetMany({ focusPoint = "TOP", focusX = 0, focusY = -140, focusWidth = 280 })
+Settings.Set("focusEnabled", false)
+M.RunTimers()
+check("switched off", focus._shown, false)
+Settings.Set("focusEnabled", nil)
+M.superTracked = 0
+M.RunTimers()
+
+section("World map: more own options")
+Settings.Set("mapStyle", "OWN")
+local titleFs = wmf.BorderFrame.TitleContainer.TitleText
+check("own: title font", titleFs._font[2], S("mapTitleSize"))
+check("own: portrait hidden", wmf.BorderFrame.PortraitContainer._alpha, 0)
+Settings.Set("mapPortrait", true)
+check("own: portrait when wanted", wmf.BorderFrame.PortraitContainer._alpha, 1)
+Settings.Set("mapPortrait", nil)
+check("own: Blizzard's background faded", wmf.BorderFrame.Bg._alpha, 0)
+Settings.Set("mapStyle", nil)
+check("back: title colour", titleFs._textColor[2], 0.82)
+check("back: Blizzard's background", wmf.BorderFrame.Bg._alpha, 1)
+Settings.Set("mapScale", 80)
+check("scaled", wmf._scale, 0.8)
+Settings.Set("mapScale", nil)
+check("scale undone", wmf._scale, 1)
+ns.Window.Open()
+check("focus options page", pcall(ns.Window.ShowPage, "focus"), true)
+check("map options page", pcall(ns.Window.ShowPage, "map"), true)
+ns.Window.Toggle()
+
 section("Use Blizzard's tracker")
 Settings.Set("useBlizzard", true)
 M.objectiveTracker._scale, M.objectiveTracker._alpha = 1, 1
@@ -687,6 +786,17 @@ for _, f in ipairs(tocFiles()) do
     local src = io.open(ROOT .. "/" .. f):read("*a")
     for key in src:gmatch("L%.([A-Z][A-Z0-9_]+)") do check(f .. " uses known L." .. key, base[key] ~= nil, true) end
     for key in src:gmatch('"((OPT|PAGE|STYLE|TIP|MSG)_[A-Z0-9_]+)"') do check(f .. " uses known " .. key, base[key] ~= nil, true) end
+end
+
+section("No accidental globals")
+local allowed = { SLASH_FOREVERQUESTLOG1 = true, SLASH_FOREVERQUESTLOG2 = true, ForeverQuestLogProfiles = true,
+    ForeverQuestLogChar = true, ForeverQuestLog_OnAddonCompartmentClick = true,
+    ForeverQuestLog_OnAddonCompartmentEnter = true, ForeverQuestLog_OnAddonCompartmentLeave = true }
+for _, f in ipairs(tocFiles()) do
+    local listing = io.popen("luac5.1 -l -p '" .. ROOT .. "/" .. f .. "' 2>/dev/null"):read("*a")
+    for name in listing:gmatch("SETGLOBAL%s+%d+%s+[%-%d]*%s*; ([%w_]+)") do
+        check(f .. " sets global " .. name, allowed[name] or false, true)
+    end
 end
 
 section("Nothing private, no CVars")

@@ -1,5 +1,5 @@
 local ADDON, ns = ...
-local L, Settings = ns.L, ns.Settings
+local L, Settings, Media = ns.L, ns.Settings, ns.Media
 local S = Settings.Get
 
 -- The world map (WorldMapFrame, with the quest log beside it): moved freely
@@ -21,7 +21,9 @@ ns.WorldMap = WorldMap
 local TITLE_H = 24
 local SIDE = 64          -- leave the portrait (left) and the buttons (right) free
 
-local map, overlay, handle
+local map, overlay, handle, backdrop
+local titleOriginal         -- Blizzard's title font, to give back
+local scaledByUs = false
 
 local function maximized()
     return map.IsMaximized and map:IsMaximized() or false
@@ -35,8 +37,24 @@ local function wanted()
     return S("mapPoint"), S("mapX"), S("mapY")
 end
 
+-- The map's scale (not while maximized: Blizzard sizes that one). Blizzard's
+-- panel manager may scale panels to fit the screen; back at 100 % we only
+-- undo what we set ourselves.
+local function applyScale()
+    if maximized() then return end
+    local want = S("mapScale") / 100
+    if want ~= 1 then
+        if math.abs(map:GetScale() - want) > 0.001 then map:SetScale(want) end
+        scaledByUs = true
+    elseif scaledByUs then
+        map:SetScale(1)
+        scaledByUs = false
+    end
+end
+
 function WorldMap.Place()
     if not map then return end
+    applyScale()
     local point, x, y = wanted()
     if not point then return end
     local s = map:GetScale()
@@ -121,20 +139,63 @@ function WorldMap.Look()
     }
 end
 
+local function own() return S("mapStyle") == "OWN" end
+
 -- Blizzard's border parts the own look replaces (alpha only: Blizzard sets
--- its border again on minimize / maximize, alpha stays).
-local function blizzardParts()
+-- its border again on minimize / maximize, alpha stays). The portrait only
+-- goes when wanted.
+local function setPart(part, shown)
+    if type(part) == "table" and part.SetAlpha then part:SetAlpha(shown and 1 or 0) end
+end
+
+local function titleText()
     local b = map.BorderFrame
-    if not b then return {} end
-    return { b.NineSlice, b.PortraitContainer, b.TopTileStreaks }
+    local container = b and b.TitleContainer
+    local fs = type(container) == "table" and container.TitleText
+    return type(fs) == "table" and fs or nil
+end
+
+-- The title in the own look's font and colour, Blizzard's otherwise.
+local function applyTitle()
+    local fs = titleText()
+    if not fs then return end
+    if own() then
+        titleOriginal = titleOriginal or Media.Snapshot(fs)
+        Media.ApplyText(fs, Settings.TextStyle("mapTitle"))
+    elseif titleOriginal then
+        Media.Restore(fs, titleOriginal, true)
+        titleOriginal = nil
+    end
+end
+
+-- Behind everything of the map: shows around the map and under the title.
+local function applyBackdrop(look)
+    local b = map.BorderFrame
+    local ownBg = own()
+    if b then setPart(b.Bg, not look) end
+    if not ownBg then
+        if backdrop then backdrop:Hide() end
+        return
+    end
+    if not backdrop then
+        backdrop = map:CreateTexture(nil, "BACKGROUND", nil, -8)
+        backdrop:SetAllPoints(map)
+    end
+    Media.ApplyBackground(backdrop, S("mapBgMode"), S("mapBgColor"), S("mapBgAlpha") / 100, S("mapBgTexture"))
+    backdrop:Show()
 end
 
 function WorldMap.ApplyLook()
     if not map then return end
     local look = WorldMap.Look()
-    for _, part in pairs(blizzardParts()) do
-        if part and part.SetAlpha then part:SetAlpha(look and 0 or 1) end
+    local b = map.BorderFrame
+    if b then
+        setPart(b.NineSlice, not look)
+        setPart(b.TopTileStreaks, not look)
+        setPart(b.PortraitContainer, not look or (own() and S("mapPortrait")))
     end
+    applyTitle()
+    applyBackdrop(look)
     if look then
         overlay:Show()
         ns.Border.Draw(overlay, overlay, look)
@@ -179,6 +240,7 @@ Settings.OnChange(function(key)
     if not map then return end
     if key == nil or key:find("^map") or key:find("^border") or key:find("^shadow") then
         WorldMap.ApplyLook()
+        applyScale()
         if map:IsShown() then WorldMap.Place() end
     end
 end)

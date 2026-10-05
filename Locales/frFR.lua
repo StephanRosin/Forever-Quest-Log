@@ -197,3 +197,18 @@ L.OPT_LOG_HINT = "Fond et polices de la liste ; couleurs, lignes et clics resten
 L.LOGSTYLE_HEADER = "En-têtes de zone"
 L.LOGSTYLE_TITLE = "Titres de quête"
 L.LOGSTYLE_OBJECTIVE = "Objectifs"
+
+-- Selected quest tracker
+L.FOCUS_EMPTY = "Aucune quête suivie en priorité. Cliquez sur le bouton de carte d'une quête ou sur « Suivre » dans son menu."
+L.PAGE_FOCUS = "Quête suivie"
+L.OPT_FOCUS = "Suivi de la quête sélectionnée"
+L.OPT_FOCUS_ENABLED = "Afficher la quête suivie en priorité dans son propre cadre"
+L.OPT_FOCUS_HINT = "La quête que vous suivez en priorité (son bouton de carte, ou « Suivre » dans son menu) avec titre et progression. Déverrouillez-le pour le déplacer n'importe où et l'élargir par son coin."
+L.OPT_FOCUS_FALLBACK = "Rien de suivi"
+L.FALLBACK_NONE = "Masquer le cadre"
+L.FALLBACK_FIRST = "Afficher la première quête suivie"
+L.OPT_FOCUS_HIDE_COMBAT = "Masquer en combat"
+L.OPT_FOCUS_ALPHA = "Opacité"
+L.OPT_MAP_PORTRAIT = "Afficher le portrait"
+L.OPT_MAP_BACKGROUND = "Fond du cadre"
+L.OPT_MAP_TITLE = "Titre"

@@ -197,3 +197,18 @@ L.OPT_LOG_HINT = "Fondo y fuentes de la lista; los colores, las filas y los clic
 L.LOGSTYLE_HEADER = "Cabeceras de zona"
 L.LOGSTYLE_TITLE = "Títulos de misión"
 L.LOGSTYLE_OBJECTIVE = "Objetivos"
+
+-- Selected quest tracker
+L.FOCUS_EMPTY = "Ninguna misión enfocada. Haz clic en el botón de mapa de una misión o en «Enfocar» en su menú."
+L.PAGE_FOCUS = "Misión enfocada"
+L.OPT_FOCUS = "Rastreador de la misión seleccionada"
+L.OPT_FOCUS_ENABLED = "Mostrar la misión enfocada en un marco propio"
+L.OPT_FOCUS_HINT = "La misión que enfocas (su botón de mapa o «Enfocar» en su menú) con título y progreso. Desbloquéalo para arrastrarlo a cualquier sitio y ensancharlo por la esquina."
+L.OPT_FOCUS_FALLBACK = "Nada enfocado"
+L.FALLBACK_NONE = "Ocultar el marco"
+L.FALLBACK_FIRST = "Mostrar la primera misión seguida"
+L.OPT_FOCUS_HIDE_COMBAT = "Ocultar en combate"
+L.OPT_FOCUS_ALPHA = "Opacidad"
+L.OPT_MAP_PORTRAIT = "Mostrar el retrato"
+L.OPT_MAP_BACKGROUND = "Fondo del marco"
+L.OPT_MAP_TITLE = "Título"

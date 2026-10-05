@@ -153,28 +153,41 @@ local function appearanceRows()
 end
 
 -- Text: the five styles, each font, size, outline, colour.
+-- Font, size, outline and (unless noColor) colour of the text style
+-- `key` ("title", "focusTitle", "mapTitle", ...), under a header.
+local function textStyleRows(key, header, noColor)
+    local rows = {
+        { type = "header", label = header },
+        media(key .. "Font", "OPT_FONT", "font"),
+        num(key .. "Size", "OPT_FONT_SIZE"),
+        {
+            type = "select", label = "OPT_OUTLINE",
+            choices = function()
+                return {
+                    { label = L.OUTLINE_NONE, value = "" },
+                    { label = L.OUTLINE_SHADOW, value = "SHADOW" },
+                    { label = L.OUTLINE_NORMAL, value = "OUTLINE" },
+                    { label = L.OUTLINE_THICK, value = "THICKOUTLINE" },
+                }
+            end,
+            get = function() return S(key .. "Flag") end,
+            set = function(v) Settings.Set(key .. "Flag", v) end,
+        },
+    }
+    if not noColor then rows[#rows + 1] = colorRow(key .. "Color", "OPT_COLOR", true) end
+    return rows
+end
+
+-- Rows made visible only while cond() holds.
+local function onlyWhile(rows, cond)
+    for _, r in ipairs(rows) do visibleIf(r, cond) end
+    return rows
+end
+
 local function textRows()
     local rows = {}
     for _, name in ipairs(Settings.TEXT_STYLES) do
-        append(rows, {
-            { type = "header", label = "STYLE_" .. name:upper() },
-            media(name .. "Font", "OPT_FONT", "font"),
-            num(name .. "Size", "OPT_FONT_SIZE"),
-            {
-                type = "select", label = "OPT_OUTLINE",
-                choices = function()
-                    return {
-                        { label = L.OUTLINE_NONE, value = "" },
-                        { label = L.OUTLINE_SHADOW, value = "SHADOW" },
-                        { label = L.OUTLINE_NORMAL, value = "OUTLINE" },
-                        { label = L.OUTLINE_THICK, value = "THICKOUTLINE" },
-                    }
-                end,
-                get = function() return S(name .. "Flag") end,
-                set = function(v) Settings.Set(name .. "Flag", v) end,
-            },
-            colorRow(name .. "Color", "OPT_COLOR", true),
-        })
+        append(rows, textStyleRows(name, "STYLE_" .. name:upper()))
         if name == "objective" then rows[#rows + 1] = colorRow("objectiveDoneColor", "OPT_DONE_OBJECTIVE_COLOR", true) end
     end
     return rows
@@ -240,6 +253,7 @@ local function mapRows()
         { type = "buttons", buttons = {
             { label = "OPT_MAP_RESET", width = 200, onClick = function() ns.WorldMap.ResetPosition() end },
         } },
+        num("mapScale", "OPT_SCALE", "%", 5),
         { type = "header", label = "OPT_MAP_LOOK" },
         choice("mapStyle", "OPT_MAP_STYLE", { "BLIZZARD", "TRACKER", "OWN" }, "MAPSTYLE_"),
         own(choice("mapBorderStyle", "OPT_BORDER_STYLE", { "GOLD", "FLAT", "NONE" }, "BORDER_")),
@@ -248,7 +262,72 @@ local function mapRows()
         own(check("mapShadowEnabled", "OPT_SHADOW_SHOW")),
         ownWith(num("mapShadowSize", "OPT_SHADOW_SIZE"), function() return S("mapShadowEnabled") end),
         ownWith(num("mapShadowAlpha", "OPT_SHADOW_ALPHA", "%"), function() return S("mapShadowEnabled") end),
+        own(check("mapPortrait", "OPT_MAP_PORTRAIT")),
+        own({ type = "header", label = "OPT_MAP_BACKGROUND" }),
+        own(choice("mapBgMode", "OPT_BG_MODE", { "SOLID", "GRADIENT", "TEXTURE" }, "BG_")),
+        ownWith(colorRow("mapBgColor", "OPT_BG_COLOR", true), function() return S("mapBgMode") ~= "TEXTURE" end),
+        ownWith(media("mapBgTexture", "OPT_BG_TEXTURE", "background"), function() return S("mapBgMode") == "TEXTURE" end),
+        own(num("mapBgAlpha", "OPT_BG_ALPHA", "%")),
+        unpack(onlyWhile(textStyleRows("mapTitle", "OPT_MAP_TITLE"), function() return S("mapStyle") == "OWN" end)),
     }
+end
+
+-- The selected quest tracker: everything for its own frame.
+local function focusRows()
+    local F = Settings.Prefixed("focus")
+    local k = F.key
+    local function on() return S("focusEnabled") end
+    local rows = {
+        { type = "header", label = "OPT_FOCUS" },
+        check("focusEnabled", "OPT_FOCUS_ENABLED"),
+        { type = "text", label = "OPT_FOCUS_HINT", height = 40 },
+        check(k("locked"), "OPT_LOCK"),
+        choice(k("fallback"), "OPT_FOCUS_FALLBACK", { "NONE", "FIRST" }, "FALLBACK_"),
+        check(k("hideInCombat"), "OPT_FOCUS_HIDE_COMBAT"),
+        { type = "header", label = "OPT_POSITION" },
+        num(k("width"), "OPT_WIDTH"),
+        num(k("scale"), "OPT_SCALE", "%", 5),
+        num(k("alpha"), "OPT_FOCUS_ALPHA", "%"),
+        num(k("padding"), "OPT_PADDING"),
+        { type = "header", label = "OPT_SHOW" },
+        check(k("showLevel"), "OPT_SHOW_LEVEL"),
+        visibleIf(check(k("levelColors"), "OPT_LEVEL_COLORS"), function() return S(k("showLevel")) end),
+        check(k("showTags"), "OPT_SHOW_TAGS"),
+        check(k("showPOI"), "OPT_SHOW_POI"),
+        check(k("showDoneObjectives"), "OPT_SHOW_DONE"),
+        { type = "header", label = "OPT_BACKGROUND" },
+        choice(k("bgMode"), "OPT_BG_MODE", { "SOLID", "GRADIENT", "TEXTURE" }, "BG_"),
+        visibleIf(colorRow(k("bgColor"), "OPT_BG_COLOR", true), function() return S(k("bgMode")) ~= "TEXTURE" end),
+        visibleIf(media(k("bgTexture"), "OPT_BG_TEXTURE", "background"), function() return S(k("bgMode")) == "TEXTURE" end),
+        num(k("bgAlpha"), "OPT_BG_ALPHA", "%"),
+        { type = "header", label = "OPT_BORDER" },
+        choice(k("borderStyle"), "OPT_BORDER_STYLE", { "GOLD", "FLAT", "NONE" }, "BORDER_"),
+        visibleIf(num(k("borderSize"), "OPT_BORDER_SIZE"), function() return S(k("borderStyle")) ~= "NONE" end),
+        visibleIf(colorRow(k("borderColor"), "OPT_BORDER_COLOR"), function() return S(k("borderStyle")) == "FLAT" end),
+        num(k("cornerRadius"), "OPT_CORNER_RADIUS"),
+        check(k("shadowEnabled"), "OPT_SHADOW_SHOW"),
+        visibleIf(num(k("shadowSize"), "OPT_SHADOW_SIZE"), function() return S(k("shadowEnabled")) end),
+        visibleIf(num(k("shadowAlpha"), "OPT_SHADOW_ALPHA", "%"), function() return S(k("shadowEnabled")) end),
+    }
+    append(rows, textStyleRows(k("title"), "STYLE_TITLE"))
+    append(rows, textStyleRows(k("objective"), "STYLE_OBJECTIVE"))
+    rows[#rows + 1] = colorRow(k("objectiveDoneColor"), "OPT_DONE_OBJECTIVE_COLOR", true)
+    append(rows, textStyleRows(k("done"), "STYLE_DONE"))
+    append(rows, {
+        { type = "header", label = "OPT_BARS" },
+        check(k("showBars"), "OPT_SHOW_BARS"),
+        visibleIf(num(k("barHeight"), "OPT_BAR_HEIGHT"), function() return S(k("showBars")) end),
+        visibleIf(media(k("barTexture"), "OPT_BAR_TEXTURE", "statusbar"), function() return S(k("showBars")) end),
+        visibleIf(colorRow(k("barColor"), "OPT_BAR_COLOR", true), function() return S(k("showBars")) end),
+        visibleIf(num(k("barBgAlpha"), "OPT_BAR_BG_ALPHA", "%"), function() return S(k("showBars")) end),
+    })
+    -- Everything but the switch itself only while the frame is on.
+    for i = 3, #rows do
+        local r = rows[i]
+        local cond = r.visible
+        r.visible = function() return on() and (not cond or cond()) end
+    end
+    return rows
 end
 
 local function instanceRows()
@@ -325,6 +404,7 @@ Window.PAGES = {
     { id = "text", label = "PAGE_TEXT", rows = textRows },
     { id = "bars", label = "PAGE_BARS", rows = barRows },
     { id = "instances", label = "PAGE_INSTANCES", rows = instanceRows },
+    { id = "focus", label = "PAGE_FOCUS", rows = focusRows },
     { id = "map", label = "PAGE_MAP", rows = function() return append(mapRows(), questLogRows()) end },
     { id = "profiles", label = "PAGE_PROFILES", rows = profileRows },
 }

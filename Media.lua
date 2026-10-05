@@ -91,3 +91,45 @@ function Media.ApplyText(fs, style)
     local c = style.color
     fs:SetTextColor(c[1], c[2], c[3], c[4] or 1)
 end
+
+-- A background texture: SOLID (colour), GRADIENT (colour fading down) or
+-- TEXTURE (tiled, alpha only). alpha 0..1.
+function Media.ApplyBackground(tex, mode, color, alpha, textureName)
+    if mode == "TEXTURE" then
+        tex:SetTexture(Media.Path("background", textureName), "REPEAT", "REPEAT")
+        tex:SetHorizTile(true)
+        tex:SetVertTile(true)
+        tex:SetVertexColor(1, 1, 1, alpha)
+        return
+    end
+    tex:SetHorizTile(false)
+    tex:SetVertTile(false)
+    tex:SetColorTexture(1, 1, 1, 1)
+    local c = color
+    local top = CreateColor(c[1], c[2], c[3], alpha)
+    local bottom = mode == "GRADIENT" and CreateColor(c[1], c[2], c[3], alpha * 0.35) or top
+    tex:SetGradient("VERTICAL", bottom, top)
+end
+
+-- Blizzard's font on one of its font strings, remembered before we change
+-- it, and put back. SetFontObject alone does not restore: after SetFont the
+-- string still names the same font object, and setting that one again
+-- changes nothing (seen in game). So file, size, flags and shadow go back
+-- explicitly.
+function Media.Snapshot(fs)
+    local file, size, flags = fs:GetFont()
+    local sx, sy = fs:GetShadowOffset()
+    local r, g, b, a = fs:GetShadowColor()
+    local tr, tg, tb, ta = fs:GetTextColor()
+    return { object = fs:GetFontObject(), file = file, size = size, flags = flags or "",
+             shadow = { sx or 0, sy or 0 }, shadowColor = { r or 0, g or 0, b or 0, a or 1 },
+             color = { tr or 1, tg or 1, tb or 1, ta or 1 } }
+end
+
+function Media.Restore(fs, o, withColor)
+    if o.file then fs:SetFont(o.file, o.size, o.flags) end
+    if o.object then fs:SetFontObject(o.object) end
+    fs:SetShadowOffset(o.shadow[1], o.shadow[2])
+    fs:SetShadowColor(o.shadowColor[1], o.shadowColor[2], o.shadowColor[3], o.shadowColor[4])
+    if withColor then fs:SetTextColor(o.color[1], o.color[2], o.color[3], o.color[4]) end
+end

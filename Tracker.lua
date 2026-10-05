@@ -23,6 +23,7 @@ local zoneRows, questRows = {}, {}
 local refreshQueued, layoutPending = false, false
 local resizing          -- { w0, h0, x0, y0 } while the grip is dragged
 local lastShape         -- what the rows look like, to see whether combat may relayout
+local content, view = 0, 0  -- the list's height and the part that shows
 
 local function screenSize()
     return UIParent:GetWidth(), UIParent:GetHeight()
@@ -304,24 +305,7 @@ end
 -- Background and border -------------------------------------------------------
 
 local function applyLook()
-    local mode = S("bgMode")
-    local c, a = S("bgColor"), S("bgAlpha") / 100
-    local bg = frame.bg
-    if mode == "TEXTURE" then
-        bg:SetTexture(Media.Path("background", S("bgTexture")), "REPEAT", "REPEAT")
-        bg:SetHorizTile(true)
-        bg:SetVertTile(true)
-        bg:SetVertexColor(1, 1, 1, a)
-    else
-        bg:SetHorizTile(false)
-        bg:SetVertTile(false)
-        bg:SetColorTexture(1, 1, 1, 1)
-        if mode == "GRADIENT" then
-            bg:SetGradient("VERTICAL", CreateColor(c[1], c[2], c[3], a * 0.35), CreateColor(c[1], c[2], c[3], a))
-        else
-            bg:SetGradient("VERTICAL", CreateColor(c[1], c[2], c[3], a), CreateColor(c[1], c[2], c[3], a))
-        end
-    end
+    Media.ApplyBackground(frame.bg, S("bgMode"), S("bgColor"), S("bgAlpha") / 100, S("bgTexture"))
     local w, h = frame:GetWidth(), frame:GetHeight()
     local radius = ns.Corners.Clamp(S("cornerRadius"), w, h)
     ns.Corners.Fit(frame.clip, frame, radius, { frame.bg, header.shine })
@@ -536,6 +520,7 @@ function Tracker.Layout()
         scroll:Show()
         frame:SetHeight(HEADER_H + pad + math.max(body, 20))
     end
+    content, view = y, math.max(body, 20)
     local range = math.max(0, y - body)
     if (scroll:GetVerticalScroll() or 0) > range then scroll:SetVerticalScroll(range) end
     Tracker.UpdateScrollbar()
@@ -560,12 +545,14 @@ end
 
 -- Scrolling -------------------------------------------------------------------
 
+-- From the layout's own numbers (content and visible height, set in
+-- Layout), not the frames' measured heights: those are snapped to pixels,
+-- and the leftover pixel or two showed a bar almost as tall as the list
+-- with nothing to scroll.
 function Tracker.UpdateScrollbar()
     local thumb = frame.thumb
-    local range, view = scroll:GetVerticalScrollRange() or 0, scroll:GetHeight() or 0
-    local content = child:GetHeight()
-    range = math.max(range, content - view)
-    if range <= 1 or view <= 0 or state().collapsed then thumb:Hide(); return end
+    local range = content - view
+    if range < 2 or view <= 0 or state().collapsed then thumb:Hide(); return end
     local thumbH = math.max(16, view * view / (view + range))
     thumb:SetHeight(thumbH)
     thumb:ClearAllPoints()
@@ -576,8 +563,7 @@ end
 local function onWheel(_, delta)
     -- Item buttons cannot follow in combat.
     if InCombatLockdown() and Items.Count() > 0 then return end
-    local view = scroll:GetHeight() or 0
-    local range = math.max(0, child:GetHeight() - view)
+    local range = math.max(0, content - view)
     local v = (scroll:GetVerticalScroll() or 0) - delta * WHEEL_STEP
     scroll:SetVerticalScroll(math.max(0, math.min(range, v)))
     Tracker.UpdateScrollbar()
