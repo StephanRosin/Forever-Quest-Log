@@ -456,6 +456,8 @@ Settings.Set("bgMode", nil)
 Settings.Set("titleSize", 18)
 relayout()
 check("title size", questRows()[1].title._font[2], 18)
+check("map button centred on the title line", questRows()[1].poi._lastPoint[5], -9)
+check("map button room: rows start inside", questRows()[1]._lastPoint[4], S("padding"))
 Settings.Set("titleFont", "Morpheus")
 relayout()
 check("title font", questRows()[1].title._font[1], "Fonts\\MORPHEUS.TTF")
@@ -499,7 +501,7 @@ ns.Window.Open()
 check("window shown", ns.Window.IsShown(), true)
 local function rowFor(label, field)
     for _, f in ipairs(M.frames) do
-        if f[field] and f.label and f.label._text and f.label._text:find(label, 1, true) and f._shown then
+        if f[field] and f.label and f.label._text and f.label._text:find(label, 1, true) and f:IsVisible() then
             return f
         end
     end
@@ -515,6 +517,14 @@ for _, page in ipairs(ns.Window.PAGES) do
     check("page " .. page.id .. " builds", ok, true)
     if not ok then print(err) end
 end
+ns.Window.ShowPage("appearance")
+check("solid background: no texture choice", rowFor("Texture", "button"), nil)
+check("solid background: colour", rowFor("Colour", "swatch") ~= nil, true)
+Settings.Set("bgMode", "TEXTURE")
+check("texture background: texture choice", rowFor("Texture", "button") ~= nil, true)
+check("texture background: no colour", rowFor("Colour", "swatch"), nil)
+Settings.Set("bgMode", nil)
+check("flat border colour only for flat", rowFor("Colour (flat)", "swatch"), nil)
 ns.Window.Toggle()
 check("closed", ns.Window.IsShown(), false)
 check("interface options page", M.registered[1], "Forever Quest Log")

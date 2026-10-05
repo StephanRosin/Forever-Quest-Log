@@ -8,7 +8,7 @@ local S = Settings.Get
 local Rows = {}
 ns.Rows = Rows
 
-Rows.POI_W = 22         -- room for Blizzard's map button
+Rows.POI_W = 28         -- room for Blizzard's map button
 Rows.ITEM_W = 30        -- room for a quest item button
 Rows.ZONE_H = 22
 local LINE_GAP = 3      -- between title and objectives, and between lines
@@ -332,7 +332,9 @@ function Rows.LayoutQuest(row, q, width, index)
 
     if S("showPOI") then
         row.poi:ClearAllPoints()
-        row.poi:SetPoint("TOPLEFT", row, "TOPLEFT", -2, 3)
+        -- Centred on the title's first line; the button itself is wider than
+        -- the column (the scroll area leaves room to the left).
+        row.poi:SetPoint("CENTER", row, "TOPLEFT", Rows.POI_W / 2 - 3, -S("titleSize") / 2)
         layoutPOI(row.poi, q, index)
         row.poi:Show()
     else

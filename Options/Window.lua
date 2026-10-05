@@ -72,6 +72,12 @@ local function colorRow(key, label, noOpacity)
     }
 end
 
+-- Shows the row only while cond() holds (the page closes up around it).
+local function visibleIf(row, cond)
+    row.visible = cond
+    return row
+end
+
 local function append(rows, more)
     for _, r in ipairs(more) do rows[#rows + 1] = r end
     return rows
@@ -82,11 +88,11 @@ local function generalRows()
     return {
         { type = "header", label = "OPT_LIST" },
         check("groupByZone", "OPT_GROUP_BY_ZONE"),
-        check("currentZoneFirst", "OPT_CURRENT_ZONE_FIRST"),
+        visibleIf(check("currentZoneFirst", "OPT_CURRENT_ZONE_FIRST"), function() return S("groupByZone") end),
         choice("sortBy", "OPT_SORT_BY", { "WATCH", "LEVEL" }, "SORT_"),
         { type = "header", label = "OPT_SHOW" },
         check("showLevel", "OPT_SHOW_LEVEL"),
-        check("levelColors", "OPT_LEVEL_COLORS"),
+        visibleIf(check("levelColors", "OPT_LEVEL_COLORS"), function() return S("showLevel") end),
         check("showTags", "OPT_SHOW_TAGS"),
         check("showPOI", "OPT_SHOW_POI"),
         check("showDoneObjectives", "OPT_SHOW_DONE"),
@@ -130,19 +136,19 @@ local function appearanceRows()
     return {
         { type = "header", label = "OPT_BACKGROUND" },
         choice("bgMode", "OPT_BG_MODE", { "SOLID", "GRADIENT", "TEXTURE" }, "BG_"),
-        colorRow("bgColor", "OPT_BG_COLOR", true),
-        media("bgTexture", "OPT_BG_TEXTURE", "background"),
+        visibleIf(colorRow("bgColor", "OPT_BG_COLOR", true), function() return S("bgMode") ~= "TEXTURE" end),
+        visibleIf(media("bgTexture", "OPT_BG_TEXTURE", "background"), function() return S("bgMode") == "TEXTURE" end),
         num("bgAlpha", "OPT_BG_ALPHA", "%"),
         check("headerLine", "OPT_HEADER_LINE"),
         { type = "header", label = "OPT_BORDER" },
         choice("borderStyle", "OPT_BORDER_STYLE", { "GOLD", "FLAT", "NONE" }, "BORDER_"),
-        num("borderSize", "OPT_BORDER_SIZE"),
-        colorRow("borderColor", "OPT_BORDER_COLOR"),
+        visibleIf(num("borderSize", "OPT_BORDER_SIZE"), function() return S("borderStyle") ~= "NONE" end),
+        visibleIf(colorRow("borderColor", "OPT_BORDER_COLOR"), function() return S("borderStyle") == "FLAT" end),
         num("cornerRadius", "OPT_CORNER_RADIUS"),
         { type = "header", label = "OPT_SHADOW" },
         check("shadowEnabled", "OPT_SHADOW_SHOW"),
-        num("shadowSize", "OPT_SHADOW_SIZE"),
-        num("shadowAlpha", "OPT_SHADOW_ALPHA", "%"),
+        visibleIf(num("shadowSize", "OPT_SHADOW_SIZE"), function() return S("shadowEnabled") end),
+        visibleIf(num("shadowAlpha", "OPT_SHADOW_ALPHA", "%"), function() return S("shadowEnabled") end),
     }
 end
 
@@ -178,10 +184,10 @@ local function barRows()
     return {
         { type = "header", label = "OPT_BARS" },
         check("showBars", "OPT_SHOW_BARS"),
-        num("barHeight", "OPT_BAR_HEIGHT"),
-        media("barTexture", "OPT_BAR_TEXTURE", "statusbar"),
-        colorRow("barColor", "OPT_BAR_COLOR", true),
-        num("barBgAlpha", "OPT_BAR_BG_ALPHA", "%"),
+        visibleIf(num("barHeight", "OPT_BAR_HEIGHT"), function() return S("showBars") end),
+        visibleIf(media("barTexture", "OPT_BAR_TEXTURE", "statusbar"), function() return S("showBars") end),
+        visibleIf(colorRow("barColor", "OPT_BAR_COLOR", true), function() return S("showBars") end),
+        visibleIf(num("barBgAlpha", "OPT_BAR_BG_ALPHA", "%"), function() return S("showBars") end),
     }
 end
 
@@ -386,11 +392,35 @@ end
 
 local function buildRows(page, spec)
     local stack = newStack(page)
+    page.allRows = {}
     for _, opt in ipairs(spec) do
         local row, height = widgetFor(page, opt)
         stack.add(row, height)
+        row.stackHeight, row.visibleIf = height or row:GetHeight(), opt.visible
+        page.allRows[#page.allRows + 1] = row
     end
     page.rows, page.height = stack.rows, stack.y + PAGE_BOTTOM
+end
+
+-- Rows with a `visible` condition (e.g. the texture only for a texture
+-- background) come and go; the rows below close up.
+local function stackVisible(page)
+    if not page.allRows then return end
+    local y, rows = PAGE_TOP, {}
+    for _, row in ipairs(page.allRows) do
+        local shown = not row.visibleIf or row.visibleIf()
+        row:SetShown(shown)
+        if shown then
+            if row.isSection and #rows > 0 then y = y + SECTION_GAP end
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", page, "TOPLEFT", 0, -y)
+            row:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -y)
+            rows[#rows + 1] = row
+            y = y + row.stackHeight
+        end
+    end
+    page.rows, page.height = rows, y + PAGE_BOTTOM
+    page:SetHeight(page.height)
 end
 
 -- --------------------------------------------------------------------------
@@ -655,6 +685,8 @@ function Window.ShowPage(id)
     frame.scrollChild:SetHeight(page.height)
     frame.scroll:SetVerticalScroll(0)
     page:Show()
+    stackVisible(page)
+    frame.scrollChild:SetHeight(page.height)
     for _, row in ipairs(page.rows or {}) do row:Refresh() end
     paintNav()
     updateScrollbar()
@@ -665,7 +697,10 @@ function Window.Refresh()
     if not frame or not current then return end
     local page = pages[current]
     if not page then return end
+    stackVisible(page)
+    frame.scrollChild:SetHeight(page.height)
     for _, row in ipairs(page.rows or {}) do row:Refresh() end
+    updateScrollbar()
     if frame.languageRow then frame.languageRow:Refresh() end
     refreshFooter()
 end

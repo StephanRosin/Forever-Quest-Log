@@ -468,8 +468,11 @@ function Tracker.Layout()
     layoutHeader(#quests, ns.Data.MaxWatches())
 
     local inner = width - 2 * pad
-    child:SetWidth(inner)
-    local y, nz, nq = 0, 0, 0
+    -- The scroll area reaches to the frame's left edge and up to the header,
+    -- so map buttons (wider than their column, with a glow when focused) are
+    -- not cut off; the rows start `pad` in.
+    child:SetWidth(inner + pad)
+    local y, nz, nq = pad, 0, 0
     itemRows = {}
     local index = 0
     for i, e in ipairs(entries) do
@@ -497,7 +500,7 @@ function Tracker.Layout()
             if i > 1 then y = y + S("questSpacing") end
         end
         row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", child, "TOPLEFT", 0, -y)
+        row:SetPoint("TOPLEFT", child, "TOPLEFT", pad, -y)
         y = y + h
     end
     release(zoneRows, nz + 1)
@@ -505,17 +508,17 @@ function Tracker.Layout()
 
     local unlocked = not S("locked")
     empty:SetShown(#entries == 0)
-    if #entries == 0 then y = 20 end
+    if #entries == 0 then y = pad + 20 end
     child:SetHeight(math.max(1, y))
 
-    local bodyMax = S("height") - HEADER_H - 2 * pad
+    local bodyMax = S("height") - HEADER_H - pad
     local body = (S("fitContent") and not resizing) and math.min(y, bodyMax) or bodyMax
     if st.collapsed then
         scroll:Hide()
         frame:SetHeight(HEADER_H)
     else
         scroll:Show()
-        frame:SetHeight(HEADER_H + 2 * pad + math.max(body, 20))
+        frame:SetHeight(HEADER_H + pad + math.max(body, 20))
     end
     local range = math.max(0, y - body)
     if (scroll:GetVerticalScroll() or 0) > range then scroll:SetVerticalScroll(range) end
@@ -679,7 +682,7 @@ function Tracker.Build()
     frame.clip = {}
     createHeader()
     scroll = CreateFrame("ScrollFrame", "ForeverQuestLogScroll", frame)
-    scroll:SetPoint("TOPLEFT", header, "BOTTOMLEFT", S("padding"), -S("padding"))
+    scroll:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, 0)
     scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -S("padding"), S("padding"))
     scroll:EnableMouseWheel(true)
     scroll:SetScript("OnMouseWheel", onWheel)
@@ -690,7 +693,7 @@ function Tracker.Build()
     frame.thumb:SetWidth(2)
     frame.thumb:SetColorTexture(0.55, 0.41, 0.1, 0.9)
     empty = child:CreateFontString(nil, "OVERLAY")
-    empty:SetPoint("TOPLEFT", 0, -2)
+    empty:SetPoint("TOPLEFT", S("padding"), -S("padding"))
     empty:SetFont(Media.FontPath("Arial Narrow"), 13, "")
     empty:SetTextColor(0.6, 0.58, 0.54)
     empty:SetText(L.EMPTY)
@@ -706,7 +709,7 @@ end
 local function applyPadding()
     if not scroll then return end
     scroll:ClearAllPoints()
-    scroll:SetPoint("TOPLEFT", header, "BOTTOMLEFT", S("padding"), -S("padding"))
+    scroll:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, 0)
     scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -S("padding"), S("padding"))
 end
 
