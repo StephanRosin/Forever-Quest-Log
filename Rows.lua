@@ -140,7 +140,11 @@ local function newZoneRow(parent)
     row:RegisterForClicks("LeftButtonUp")
     row:EnableMouse(true)
     row.chevron = row:CreateTexture(nil, "OVERLAY")
-    row.chevron:SetSize(10, 10)
+    -- The icon file has 8 transparent texels around the arrow; cut to the
+    -- middle, so the arrow sits flush with the inner margin like the right
+    -- edge's numbers (it looked indented).
+    row.chevron:SetSize(9, 9)
+    row.chevron:SetTexCoord(0.25, 0.75, 0.25, 0.75)
     row.chevron:SetPoint("LEFT", 0, 0)
     row.name = row:CreateFontString(nil, "OVERLAY")
     row.name:SetPoint("LEFT", row.chevron, "RIGHT", 5, 0)
