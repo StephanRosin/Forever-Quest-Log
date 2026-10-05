@@ -476,6 +476,46 @@ Settings.Set("height", nil)
 relayout()
 check("fits again: bar gone", frame.thumb._shown, false)
 
+section("Exact position: X from the centre, Y from the top")
+ns.Window.Open()
+ns.Window.ShowPage("layout")
+local function sliderRow(label)
+    for _, f in ipairs(M.frames) do
+        if f.slider and f.label and f.label._text == label and f:IsVisible() then return f end
+    end
+end
+frame._rect = { 1600, 600, 300, 400 }     -- centre x 1750, top 1000
+frame._scale = 1
+local xRow, yRow = sliderRow("Horizontal (from the centre)"), sliderRow("Vertical (from the top)")
+check("X slider", xRow ~= nil, true)
+check("Y slider", yRow ~= nil, true)
+xRow:Refresh(); yRow:Refresh()
+check("X reads the centre from the screen's centre", xRow.slider._value, 1750 - 960)
+check("Y reads the top from the screen's top", yRow.slider._value, 1000 - 1080)
+xRow.slider:GetScript("OnValueChanged")(xRow.slider, 0, true)
+check("X set: centred anchor", S("point"), "TOP")
+check("X set: centre offset", S("x"), 0)
+check("X set: Y kept", S("y"), -80)
+yRow.slider:GetScript("OnValueChanged")(yRow.slider, -200, true)
+check("Y set", S("y"), -200)
+Settings.Set("grow", "UP")
+frame._rect = { 800, 300, 300, 400 }
+yRow.slider:GetScript("OnValueChanged")(yRow.slider, -500, true)
+check("growing up: the bottom edge, still from the top", S("point") .. ":" .. S("y"), "BOTTOM:" .. (1080 - 500))
+Settings.Set("grow", nil)
+ns.Window.ShowPage("focus")
+check("focus frame: X / Y", sliderRow("Horizontal (from the centre)") ~= nil, true)
+ns.Window.ShowPage("map")
+local mapX = sliderRow("Horizontal (from the centre)")
+check("world map: X / Y", mapX ~= nil, true)
+M.worldMap._rect = { 100, 200, 1000, 700 }
+mapX.slider:GetScript("OnValueChanged")(mapX.slider, -200, true)
+check("world map: placed by the slider", S("mapPlaced") and S("mapPoint"), "TOP")
+check("world map: x", S("mapX"), -200)
+ns.WorldMap.ResetPosition()
+ns.Window.Toggle()
+Settings.SetMany({ point = "TOPRIGHT", x = -8, y = -330 })
+
 section("Look")
 relayout()
 local ring = ns.Border.Pieces(frame)

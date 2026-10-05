@@ -24,6 +24,7 @@ Profiles.lua
 Settings.lua
 Share.lua
 Media.lua
+Position.lua
 Corners.lua
 Border.lua
 Blizzard.lua

@@ -87,6 +87,10 @@ local function newWidget(name, kind)
     function w:GetNumPoints() local n = 0; for _ in pairs(self._points or {}) do n = n + 1 end; return n end
     function w:GetPoint() local a = self._lastPoint; if a then return a[1], a[2], a[3], a[4], a[5] end end
     -- Screen rectangle: tests set _rect = { left, bottom, width, height }.
+    function w:GetCenter()
+        if not self._rect then return nil end
+        return self._rect[1] + self._rect[3] / 2, self._rect[2] + self._rect[4] / 2
+    end
     function w:GetLeft() return self._rect and self._rect[1] end
     function w:GetBottom() return self._rect and self._rect[2] end
     function w:GetRight() return self._rect and (self._rect[1] + self._rect[3]) end

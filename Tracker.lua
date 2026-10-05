@@ -68,11 +68,14 @@ end
 local function verticalPoint() return S("grow") == "UP" and "BOTTOM" or "TOP" end
 
 -- The saved point, with its vertical half following the grow direction.
+-- The saved point, its vertical half following the grow direction. A
+-- centred one (set by the X / Y sliders) has no side.
 local function anchorPoint()
     local point = S("point")
-    local h = point:find("LEFT") and "LEFT" or "RIGHT"
+    local h = point:find("LEFT") and "LEFT" or (point:find("RIGHT") and "RIGHT" or "")
     return verticalPoint() .. h, h
 end
+Tracker.VerticalPoint = verticalPoint
 
 local function place()
     if frame.moving then return end
@@ -605,6 +608,8 @@ local function createGrip()
     grip.icon:SetTexture(Media.Icon("Resize"))
     grip.icon:SetVertexColor(ACCENT[1], ACCENT[2], ACCENT[3])
     grip:SetScript("OnMouseDown", function()
+        -- From a centred anchor the frame would grow both ways: a corner first.
+        if select(2, anchorPoint()) == "" then savePosition(); place() end
         local x, y = cursor()
         resizing = { w0 = S("width"), h0 = math.max(S("height"), frame:GetHeight()), x0 = x, y0 = y }
         grip:SetScript("OnUpdate", onResizeUpdate)

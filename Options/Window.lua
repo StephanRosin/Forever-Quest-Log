@@ -108,10 +108,13 @@ end
 
 -- Layout: where it sits, how big, how it grows.
 local function layoutRows()
+    local pos = ns.Position.Rows({ point = "point", x = "x", y = "y" },
+        function() return _G.ForeverQuestLogFrame end, function() return ns.Tracker.VerticalPoint() end)
     return {
         { type = "header", label = "OPT_POSITION" },
         check("locked", "OPT_LOCK"),
         { type = "text", label = "OPT_MOVE_HINT", height = 40 },
+        pos[1], pos[2],
         num("width", "OPT_WIDTH"),
         num("height", "OPT_HEIGHT"),
         check("fitContent", "OPT_FIT_CONTENT"),
@@ -242,6 +245,8 @@ local function questLogRows()
 end
 
 local function mapRows()
+    local mapPos = ns.Position.Rows({ point = "mapPoint", x = "mapX", y = "mapY" },
+        function() return _G.WorldMapFrame end, function() return "TOP" end, { mapPlaced = true })
     local function own(row) return visibleIf(row, function() return S("mapStyle") == "OWN" end) end
     local function ownWith(row, cond)
         return visibleIf(row, function() return S("mapStyle") == "OWN" and cond() end)
@@ -249,6 +254,8 @@ local function mapRows()
     return {
         { type = "header", label = "OPT_MAP_POSITION" },
         check("mapMove", "OPT_MAP_MOVE"),
+        visibleIf(mapPos[1], function() return S("mapMove") end),
+        visibleIf(mapPos[2], function() return S("mapMove") end),
         { type = "text", label = "OPT_MAP_MOVE_HINT", height = 40 },
         { type = "buttons", buttons = {
             { label = "OPT_MAP_RESET", width = 200, onClick = function() ns.WorldMap.ResetPosition() end },
@@ -277,11 +284,14 @@ local function focusRows()
     local F = Settings.Prefixed("focus")
     local k = F.key
     local function on() return S("focusEnabled") end
+    local focusPos = ns.Position.Rows({ point = k("point"), x = k("x"), y = k("y") },
+        function() return _G.ForeverQuestLogFocus end, function() return "TOP" end)
     local rows = {
         { type = "header", label = "OPT_FOCUS" },
         check("focusEnabled", "OPT_FOCUS_ENABLED"),
         { type = "text", label = "OPT_FOCUS_HINT", height = 40 },
         check(k("locked"), "OPT_LOCK"),
+        focusPos[1], focusPos[2],
         choice(k("fallback"), "OPT_FOCUS_FALLBACK", { "NONE", "FIRST" }, "FALLBACK_"),
         check(k("hideInCombat"), "OPT_FOCUS_HIDE_COMBAT"),
         { type = "header", label = "OPT_POSITION" },
