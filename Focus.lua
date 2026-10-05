@@ -18,7 +18,7 @@ local G = cfg.get
 local ACCENT = { 0.31, 0.76, 0.97 }
 local GRIP = 16
 
-local frame, row, empty, grip, outline
+local frame, row, grip, outline
 local resizing
 
 -- The quest to show: the focused one, else (if set) the first tracked one.
@@ -91,29 +91,19 @@ function Focus.Layout()
         return
     end
     local q = Focus.Quest()
+    -- Nothing focused: the frame is gone, locked or not.
+    if not q then
+        frame:Hide()
+        return
+    end
     local pad = G("padding")
     local width = G("width")
     frame:SetWidth(width)
-    local h
-    if q then
-        row:Show()
-        empty:Hide()
-        h = Rows.LayoutQuest(row, q, width - 2 * pad, nil, cfg)
-        row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", frame, "TOPLEFT", pad, -pad)
-    else
-        row:Hide()
-        empty:SetShown(unlocked())
-        Media.ApplyText(empty, cfg.text("objective"))
-        empty:ClearAllPoints()
-        empty:SetPoint("TOPLEFT", frame, "TOPLEFT", pad, -pad)
-        empty:SetWidth(width - 2 * pad)
-        empty:SetJustifyH("LEFT")
-        h = math.max(16, empty:GetStringHeight())
-    end
+    local h = Rows.LayoutQuest(row, q, width - 2 * pad, nil, cfg)
+    row:ClearAllPoints()
+    row:SetPoint("TOPLEFT", frame, "TOPLEFT", pad, -pad)
     frame:SetHeight(h + 2 * pad)
-    -- Nothing focused and locked: out of the way.
-    frame:SetShown(q ~= nil or unlocked())
+    frame:Show()
     if G("hideInCombat") and InCombatLockdown() then frame:Hide() end
     place()
     applyLook()
@@ -217,11 +207,6 @@ function Focus.Build()
     frame:SetScript("OnMouseUp", stopMove)
     row:HookScript("OnMouseDown", startMove)
     row:HookScript("OnMouseUp", stopMove)
-    empty = frame:CreateFontString(nil, "OVERLAY")
-    empty:SetPoint("TOPLEFT", 8, -8)
-    -- A font string without a template has no font: set one before any text.
-    Media.ApplyText(empty, cfg.text("objective"))
-    empty:SetText(L.FOCUS_EMPTY)
     createGrip()
     createOutline()
     Focus.frame = frame

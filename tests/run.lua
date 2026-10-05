@@ -64,6 +64,8 @@ M.RunTimers()
 local frame = M.byName["ForeverQuestLogFrame"]
 
 section("Shipped defaults")
+check("quest list in the map: own look", S("logStyle"), "OWN")
+check("focus frame shipped locked", S("focusLocked"), true)
 check("one list", S("groupByZone"), false)
 check("sorted by level", S("sortBy"), "LEVEL")
 check("no border", S("borderStyle"), "NONE")
@@ -624,6 +626,7 @@ check("/fql lock", S("locked"), true)
 
 section("World map")
 local wmf = M.worldMap
+Settings.Set("mapPlaced", false)
 check("built on the map", ns.WorldMap ~= nil and wmf._scripts.OnShow ~= nil, true)
 check("Blizzard's look by default: border untouched", wmf.BorderFrame.NineSlice._alpha, 1)
 M.PanelManagerPlaces()
@@ -675,6 +678,7 @@ check("map options page", okMap, true)
 ns.Window.Toggle()
 
 section("Quest log in the world map")
+Settings.Set("logStyle", "BLIZZARD")
 local row1 = M.QuestLogAddQuest("[21] The Greenwarden")
 check("Blizzard's style: font untouched", row1.Text._font[2], 12)
 check("Blizzard's background shown", QuestScrollFrame.Background._alpha, 1)
@@ -717,7 +721,11 @@ local focus = M.byName["ForeverQuestLogFocus"]
 check("built", focus ~= nil, true)
 M.superTracked = 0
 ns.Focus.Layout()
-check("nothing focused, locked: hidden", focus._shown, false)
+check("nothing focused: gone", focus._shown, false)
+Settings.Set("focusLocked", false)
+ns.Focus.Layout()
+check("nothing focused, unlocked: gone too", focus._shown, false)
+Settings.Set("focusLocked", true)
 Settings.Set("focusFallback", "FIRST")
 ns.Focus.Layout()
 check("fallback: first tracked quest", focus._shown and ns.Focus.Quest().title, "Tiger Mastery")
@@ -761,6 +769,7 @@ check("a real click opens the quest", M.calls[1] and M.calls[1][1], "QuestMapFra
 check("saved: top left", S("focusPoint"), "TOPLEFT")
 check("x", S("focusX"), 100)
 M.state.cursorX = 300
+local fw0 = S("focusWidth")
 local fgrip
 for _, f in ipairs(M.frames) do
     if f._parent == focus and f.icon and f.icon._texture and f.icon._texture:find("IconResize") then fgrip = f end
@@ -769,7 +778,7 @@ fgrip:GetScript("OnMouseDown")(fgrip)
 M.state.cursorX = 340
 fgrip:GetScript("OnUpdate")(fgrip, 0.1)
 fgrip:GetScript("OnMouseUp")(fgrip)
-check("corner widens it", S("focusWidth"), 320)
+check("corner widens it", S("focusWidth"), fw0 + 40)
 -- From the centred default: the drag makes a corner the anchor first.
 Settings.SetMany({ focusPoint = "TOP", focusX = 0, focusY = -140 })
 focus._rect = { 1700, 600, 200, 80 }
@@ -779,7 +788,7 @@ check("right half: anchored right", S("focusPoint"), "TOPRIGHT")
 M.state.cursorX = 60
 fgrip:GetScript("OnUpdate")(fgrip, 0.1)
 fgrip:GetScript("OnMouseUp")(fgrip)
-check("anchored right: dragging left widens", S("focusWidth"), 360)
+check("anchored right: dragging left widens", S("focusWidth"), fw0 + 80)
 check("grip on the left then", fgrip._lastPoint[1], "BOTTOMLEFT")
 Settings.Set("focusLocked", nil)
 Settings.SetMany({ focusPoint = "TOP", focusX = 0, focusY = -140, focusWidth = 280 })

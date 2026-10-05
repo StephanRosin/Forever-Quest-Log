@@ -199,7 +199,6 @@ L.LOGSTYLE_TITLE = "Titres de quête"
 L.LOGSTYLE_OBJECTIVE = "Objectifs"
 
 -- Selected quest tracker
-L.FOCUS_EMPTY = "Aucune quête suivie en priorité. Cliquez sur le bouton de carte d'une quête ou sur « Suivre » dans son menu."
 L.PAGE_FOCUS = "Quête suivie"
 L.OPT_FOCUS = "Suivi de la quête sélectionnée"
 L.OPT_FOCUS_ENABLED = "Afficher la quête suivie en priorité dans son propre cadre"

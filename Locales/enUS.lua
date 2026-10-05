@@ -225,7 +225,6 @@ L.LOGSTYLE_TITLE = "Quest titles"
 L.LOGSTYLE_OBJECTIVE = "Objectives"
 
 -- Selected quest tracker
-L.FOCUS_EMPTY = "No quest focused. Click a quest's map button, or \"Focus\" in its menu."
 L.PAGE_FOCUS = "Focused quest"
 L.OPT_FOCUS = "Selected quest tracker"
 L.OPT_FOCUS_ENABLED = "Show the focused quest in a frame of its own"

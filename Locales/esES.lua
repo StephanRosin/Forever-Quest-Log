@@ -199,7 +199,6 @@ L.LOGSTYLE_TITLE = "Títulos de misión"
 L.LOGSTYLE_OBJECTIVE = "Objetivos"
 
 -- Selected quest tracker
-L.FOCUS_EMPTY = "Ninguna misión enfocada. Haz clic en el botón de mapa de una misión o en «Enfocar» en su menú."
 L.PAGE_FOCUS = "Misión enfocada"
 L.OPT_FOCUS = "Rastreador de la misión seleccionada"
 L.OPT_FOCUS_ENABLED = "Mostrar la misión enfocada en un marco propio"
