@@ -10,6 +10,9 @@ ns.Settings = Settings
 -- The five text styles; each has <prefix>Font, Size, Flag and Color.
 Settings.TEXT_STYLES = { "header", "zone", "title", "objective", "done" }
 
+-- The shipped look is the author's own setup (05.10.2026): no border, the
+-- texture background faded out, sorted by level, one list. The gold frame of
+-- the other Forever addons is the "Forever" preset below.
 Settings.DEFAULTS = {
     -- Off: Blizzard's own tracker stays, ours is not built (after /reload).
     useBlizzard = false,
@@ -18,19 +21,19 @@ Settings.DEFAULTS = {
     -- Dragging picks the point from the side of the screen the frame is on
     -- and from the grow direction (TOP growing down, BOTTOM growing up).
     point = "TOPRIGHT",
-    x = -8,
-    y = -330,
-    width = 300,
-    height = 500,           -- the most it grows to
+    x = -3,
+    y = -287,
+    width = 289,
+    height = 554,           -- the most it grows to
     grow = "DOWN",          -- DOWN (top edge fixed) or UP (bottom edge fixed)
     fitContent = true,      -- shrink to the content, never above height
     locked = true,
     scale = 100,            -- percent
 
     -- What the list shows and how it is ordered.
-    groupByZone = true,
+    groupByZone = false,
     currentZoneFirst = true,
-    sortBy = "WATCH",       -- WATCH (Blizzard's order) or LEVEL
+    sortBy = "LEVEL",       -- WATCH (Blizzard's order) or LEVEL
     showLevel = true,
     levelColors = true,     -- difficulty colours for "[34]"; else the title colour
     showTags = true,        -- Elite, Dungeon, ...
@@ -42,39 +45,39 @@ Settings.DEFAULTS = {
 
     -- Instances and combat
     instanceCollapse = true,
-    instanceOnlyHere = false,
+    instanceOnlyHere = true,
     combatCollapse = false,
     fadeAlpha = 100,        -- percent, while the mouse is not over it
 
     -- Frame look
-    borderStyle = "GOLD",   -- NONE, FLAT or GOLD
-    borderSize = 2,
+    borderStyle = "NONE",   -- NONE, FLAT or GOLD
+    borderSize = 1,
     borderColor = { 0, 0, 0, 1 },
     cornerRadius = 10,
     shadowEnabled = true,
     shadowSize = 9,
     shadowAlpha = 65,       -- percent
-    bgMode = "SOLID",       -- SOLID, GRADIENT or TEXTURE
-    bgColor = { 0.047, 0.047, 0.055 },
-    bgAlpha = 82,           -- percent
-    bgTexture = "Blizzard Dialog Background Dark",
+    bgMode = "TEXTURE",     -- SOLID, GRADIENT or TEXTURE
+    bgColor = { 0.216, 0.62, 0.718 },
+    bgAlpha = 0,            -- percent
+    bgTexture = "Blizzard Dialog Background Gold",
     headerLine = true,      -- the gold line under the header
 
     -- Text styles. Flags: "" none, OUTLINE, THICKOUTLINE, SHADOW.
     headerFont = "Friz Quadrata",
-    headerSize = 15,
+    headerSize = 18,
     headerFlag = "SHADOW",
     headerColor = { 1, 0.82, 0.29 },
     zoneFont = "Friz Quadrata",
-    zoneSize = 11,
+    zoneSize = 14,
     zoneFlag = "",
     zoneColor = { 0.73, 0.64, 0.48 },
-    titleFont = "Arial Narrow",
-    titleSize = 14,
+    titleFont = "Friz Quadrata",
+    titleSize = 12,
     titleFlag = "SHADOW",
     titleColor = { 1, 0.82, 0 },
-    objectiveFont = "Arial Narrow",
-    objectiveSize = 13,
+    objectiveFont = "Friz Quadrata",
+    objectiveSize = 11,
     objectiveFlag = "",
     objectiveColor = { 0.84, 0.82, 0.78 },
     objectiveDoneColor = { 0.5, 0.54, 0.5 },
@@ -84,14 +87,14 @@ Settings.DEFAULTS = {
     doneColor = { 0.37, 0.83, 0.42 },
 
     -- Objective bars
-    barHeight = 3,
-    barTexture = "Solid",
-    barColor = { 1, 0.79, 0.19 },
-    barBgAlpha = 8,         -- percent
+    barHeight = 5,
+    barTexture = "Blizzard",
+    barColor = { 0.455, 1, 0.471 },
+    barBgAlpha = 9,         -- percent
 
     -- Spacing
-    padding = 8,            -- inside the frame
-    questSpacing = 6,       -- between quests
+    padding = 10,           -- inside the frame
+    questSpacing = 11,      -- between quests
 
     -- Minimap button
     minimapShow = true,
@@ -196,8 +199,19 @@ end
 -- Presets: ready-made looks, offered as read-only profiles (Profiles.lua):
 -- the values here, everything else at its default.
 Settings.PRESETS = {
-    -- The look of the other Forever addons: the defaults.
-    { id = "FOREVER", values = {} },
+    -- The look of the other Forever addons: gold frame, dark background,
+    -- zones, Blizzard's order (the first defaults, as in the mockup).
+    { id = "FOREVER", values = {
+        groupByZone = true, sortBy = "WATCH", instanceOnlyHere = false,
+        borderStyle = "GOLD", borderSize = 2, bgMode = "SOLID", bgColor = { 0.047, 0.047, 0.055 }, bgAlpha = 82,
+        bgTexture = "Blizzard Dialog Background Dark",
+        headerSize = 15, zoneSize = 11, titleFont = "Arial Narrow", titleSize = 14,
+        objectiveFont = "Arial Narrow", objectiveSize = 13,
+        barHeight = 3, barTexture = "Solid", barColor = { 1, 0.79, 0.19 }, barBgAlpha = 8,
+        padding = 8, questSpacing = 6,
+    } },
+    -- The shipped defaults.
+    { id = "DEFAULT", values = {} },
     -- Close to Blizzard's: no border, a faint background, no zones.
     { id = "MINIMAL", values = {
         borderStyle = "NONE", shadowEnabled = false, bgAlpha = 35, cornerRadius = 0,

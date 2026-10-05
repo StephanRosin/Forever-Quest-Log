@@ -1,6 +1,6 @@
 **Summary**
 
-A quest tracker in the gold style of the Forever addons: drag and resize it, group quests by zone or sort them by level, and keep everything Blizzard's tracker does.
+A quest tracker in the style of the Forever addons: drag and resize it, group quests by zone or sort them by level, and keep everything Blizzard's tracker does.
 
 ---
 
@@ -30,19 +30,19 @@ A new quest tracker for the right side of your screen, made for **WoW: Forever**
 - Scale, inner margin, spacing between quests, and how far it fades while the mouse is elsewhere.
 
 ## Make it yours
-- **Gold border** with rounded corners and a soft shadow (the Forever look), a flat border in any colour, or none.
+- **Gold border** with rounded corners and a soft shadow (the Forever look, one click away as a preset), a flat border in any colour, or none.
 - Background as a colour, a gradient or a **texture** (Blizzard's and every texture from LibSharedMedia), with its own opacity.
 - **Five text styles**: header, zones, quest titles, objectives and turn-in, each with font (Blizzard's and LibSharedMedia's), size, outline or shadow and colour.
 - Progress bars: height, texture, colour and how strong the empty part shows.
 
 ## Dungeons and raids
 - Collapses to its header when you enter a dungeon or raid (can be switched off); **one click on the arrow** opens it again. Leaving restores it.
-- A switch in the header shows **only the quests for the dungeon you are in**, or all of them. It can also be the default.
+- A switch in the header shows **only the quests for the dungeon you are in** (the default), or all of them.
 - Optionally collapses in combat.
 
 ## Options
 - Its own options window in the style of Forever Unit Frames, opened from the gear in the header, the **minimap button**, Blizzard's **addon compartment** or `/fql`: General, Layout, Appearance, Text, Bars, Instances and Profiles. Only the settings that apply are shown.
-- **Profiles** shared between characters, two presets ("Forever" and "Minimal"), and **export / import** of a whole profile as a text string (only read as settings, never run as code).
+- **Profiles** shared between characters, three presets ("Forever" with the gold frame of the other Forever addons, "Minimal" and the shipped look), and **export / import** of a whole profile as a text string (only read as settings, never run as code).
 
 ## Commands
 `/fql` (options), `/fql lock`, `/fql unlock`, `/fql reset` (position and size), `/fql status`

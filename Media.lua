@@ -19,6 +19,7 @@ Media.BLIZZARD = {
     background = {
         { name = "Blizzard Dialog Background Dark", path = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark" },
         { name = "Blizzard Dialog Background", path = "Interface\\DialogFrame\\UI-DialogBox-Background" },
+        { name = "Blizzard Dialog Background Gold", path = "Interface\\DialogFrame\\UI-DialogBox-Gold-Background" },
         { name = "Blizzard Tooltip", path = "Interface\\Tooltips\\UI-Tooltip-Background" },
         { name = "Blizzard Parchment", path = "Interface\\AchievementFrame\\UI-Achievement-Parchment-Horizontal" },
         { name = "Blizzard Rock", path = "Interface\\FrameGeneral\\UI-Background-Rock" },

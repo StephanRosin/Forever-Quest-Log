@@ -63,6 +63,24 @@ M.RunTimers()
 
 local frame = M.byName["ForeverQuestLogFrame"]
 
+section("Shipped defaults")
+check("one list", S("groupByZone"), false)
+check("sorted by level", S("sortBy"), "LEVEL")
+check("no border", S("borderStyle"), "NONE")
+check("gold dialog texture, built in", ns.Media.Path("background", S("bgTexture")),
+    "Interface\\DialogFrame\\UI-DialogBox-Gold-Background")
+check("only this dungeon's quests", S("instanceOnlyHere"), true)
+
+-- The rest runs on the Forever preset's look, so it does not change with
+-- the defaults.
+for _, preset in ipairs(Settings.PRESETS) do
+    if preset.id == "FOREVER" then
+        for k, v in pairs(preset.values) do ns.DB()[k] = v end
+    end
+end
+Settings.Changed(nil)
+M.RunTimers()
+
 -- Rows on screen: zone rows have .chevron, quest rows .title.
 local function shownRows(field)
     local list = {}
@@ -429,12 +447,13 @@ local grip
 for _, f in ipairs(M.frames) do if f.icon and f.icon._texture and f.icon._texture:find("IconResize") then grip = f end end
 check("grip shown unlocked", grip and grip._shown, true)
 M.state.cursorX, M.state.cursorY = 500, 500
+local w0, h0 = S("width"), math.max(S("height"), frame._h)
 grip:GetScript("OnMouseDown")(grip)
 M.state.cursorX, M.state.cursorY = 560, 400       -- right 60, down 100
 grip:GetScript("OnUpdate")(grip, 0.1)
 grip:GetScript("OnMouseUp")(grip)
-check("anchored left: the grip widens to the right", S("width"), 360)
-check("anchored at the top: dragging down grows", S("height"), 600)
+check("anchored left: the grip widens to the right", S("width"), w0 + 60)
+check("anchored at the top: dragging down grows", S("height"), h0 + 100)
 Settings.SetMany({ point = "TOPRIGHT", x = -8, y = -330, width = 300, height = 500 })
 Settings.Set("locked", true)
 M.RunTimers()
@@ -452,11 +471,11 @@ check("gold shading", ring[1] and ring[1]._gradient ~= nil, true)
 Settings.Set("borderStyle", "NONE")
 relayout()
 check("no border", ring[1]._shown, false)
-Settings.Set("borderStyle", nil)
+Settings.Set("borderStyle", "GOLD")
 Settings.Set("bgMode", "TEXTURE")
 relayout()
 check("texture background", frame.bg._texture, "Interface\\DialogFrame\\UI-DialogBox-Background-Dark")
-Settings.Set("bgMode", nil)
+Settings.Set("bgMode", "SOLID")
 Settings.Set("titleSize", 18)
 relayout()
 check("title size", questRows()[1].title._font[2], 18)
@@ -492,7 +511,7 @@ Settings.Set("barColor", { 0.1, 0.2, 0.3 })
 local text = ns.Share.Export()
 check("prefix", text:sub(1, 5), "FQL1:")
 Settings.ResetProfile()
-check("reset", S("titleSize"), 14)
+check("reset", S("titleSize"), Settings.DEFAULTS.titleSize)
 check("import", ns.Share.Import(text), true)
 check("number back", S("titleSize"), 17)
 check("colour back", S("barColor")[3], 0.3)
@@ -521,6 +540,7 @@ for _, page in ipairs(ns.Window.PAGES) do
     check("page " .. page.id .. " builds", ok, true)
     if not ok then print(err) end
 end
+Settings.Set("bgMode", "SOLID")
 ns.Window.ShowPage("appearance")
 check("solid background: no texture choice", rowFor("Texture", "button"), nil)
 check("solid background: colour", rowFor("Colour", "swatch") ~= nil, true)
