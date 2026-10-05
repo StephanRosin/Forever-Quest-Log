@@ -29,6 +29,8 @@ L.TIP_ZONES_ON = "Agrupadas por zona. Clic: una sola lista"
 L.TIP_ZONES_OFF = "Una sola lista. Clic: agrupar por zona"
 L.TIP_ONLY_HERE = "Mostrar solo las misiones de esta mazmorra o todas las seguidas"
 L.TIP_RESIZE = "Arrastra para cambiar el tamaño"
+L.TIP_COUNT = "%d de %d misiones en el registro"
+L.TIP_TRACKED = "%d de ellas seguidas"
 
 L.MSG_LOCKED = "Rastreador bloqueado."
 L.MSG_UNLOCKED = "Rastreador desbloqueado: arrastra la cabecera para moverlo y la esquina para cambiar su tamaño."

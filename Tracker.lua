@@ -218,6 +218,17 @@ local function createHeader()
     header.title = header:CreateFontString(nil, "OVERLAY")
     header.count = header:CreateFontString(nil, "OVERLAY")
     header.count:SetPoint("BOTTOMLEFT", header.title, "BOTTOMRIGHT", 6, 1)
+    -- Hovering the count tells how many of the quests are tracked.
+    header.countHover = CreateFrame("Frame", nil, header)
+    header.countHover:SetAllPoints(header.count)
+    header.countHover:EnableMouse(true)
+    header.countHover:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:SetText(L.TIP_COUNT:format(self.inLog or 0, self.max or 0), 1, 1, 1)
+        GameTooltip:AddLine(L.TIP_TRACKED:format(self.tracked or 0), nil, nil, nil, true)
+        GameTooltip:Show()
+    end)
+    header.countHover:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
     -- Right to left.
     local collapse = headerButton("ChevronUp", function()
@@ -259,7 +270,10 @@ local function createHeader()
     end)
 end
 
-local function layoutHeader(quests, max)
+-- The count reads like the quest log's: quests in the log / its maximum,
+-- red when over it; the tracked number is in the tooltip.
+local function layoutHeader(tracked)
+    local inLog, max = ns.Data.LogCount()
     local unlocked = not S("locked")
     Media.ApplyText(header.title, Settings.TextStyle("header"))
     header.title:SetText(L.HEADER_QUESTS)
@@ -271,7 +285,9 @@ local function layoutHeader(quests, max)
     countStyle.flag = ""
     countStyle.color = { 0.56, 0.54, 0.5 }
     Media.ApplyText(header.count, countStyle)
-    header.count:SetText(quests .. " / " .. max)
+    local full = max > 0 and inLog >= max
+    header.count:SetText((full and "|cffff4040" or "") .. inLog .. " / " .. max .. (full and "|r" or ""))
+    header.countHover.inLog, header.countHover.max, header.countHover.tracked = inLog, max, tracked
     header.line:SetShown(S("headerLine") and not state().collapsed)
     header.collapse.icon:SetTexture(Media.Icon(state().collapsed and "ChevronDown" or "ChevronUp"))
     header.lock.icon:SetTexture(Media.Icon(S("locked") and "Lock" or "Unlock"))
@@ -465,7 +481,7 @@ function Tracker.Layout()
     local width = S("width")
     local pad = S("padding")
     frame:SetWidth(width)
-    layoutHeader(#quests, ns.Data.MaxWatches())
+    layoutHeader(#quests)
 
     local inner = width - 2 * pad
     -- The scroll area reaches to the frame's left edge and up to the header,

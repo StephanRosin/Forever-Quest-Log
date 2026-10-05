@@ -52,6 +52,8 @@ L.TIP_ZONES_ON = "Grouped by zone. Click: one list"
 L.TIP_ZONES_OFF = "One list. Click: group by zone"
 L.TIP_ONLY_HERE = "Show only this dungeon's quests, or all tracked quests"
 L.TIP_RESIZE = "Drag to resize"
+L.TIP_COUNT = "%d of %d quests in the quest log"
+L.TIP_TRACKED = "%d of them tracked"
 
 -- Chat
 L.MSG_LOCKED = "Tracker locked."

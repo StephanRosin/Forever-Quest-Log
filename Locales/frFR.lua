@@ -29,6 +29,8 @@ L.TIP_ZONES_ON = "Groupées par zone. Clic : une seule liste"
 L.TIP_ZONES_OFF = "Une seule liste. Clic : grouper par zone"
 L.TIP_ONLY_HERE = "Afficher seulement les quêtes de ce donjon, ou toutes les quêtes suivies"
 L.TIP_RESIZE = "Glisser pour redimensionner"
+L.TIP_COUNT = "%d quêtes sur %d dans le journal"
+L.TIP_TRACKED = "dont %d suivies"
 
 L.MSG_LOCKED = "Suivi verrouillé."
 L.MSG_UNLOCKED = "Suivi déverrouillé : glissez l'en-tête pour le déplacer, le coin pour le redimensionner."

@@ -156,6 +156,15 @@ function Data.Quests()
     return list
 end
 
+-- Quests in the log and how many it holds, as Forever's quest log counts
+-- them (Camelot/QuestMapFrameUtils.lua).
+function Data.LogCount()
+    local _, numQuests = C_QuestLog.GetNumQuestLogEntries()
+    local max = Constants and Constants.QuestLogConsts and Constants.QuestLogConsts.MAXIMUM_NUM_QUESTS_LOG_CAN_ACCEPT
+    if not max and C_QuestLog.GetMaxNumQuestsCanAccept then max = C_QuestLog.GetMaxNumQuestsCanAccept() end
+    return numQuests or 0, max or 0
+end
+
 function Data.MaxWatches()
     return (Constants and Constants.QuestWatchConsts and Constants.QuestWatchConsts.MAX_QUEST_WATCHES) or 25
 end

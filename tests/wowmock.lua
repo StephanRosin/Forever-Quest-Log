@@ -196,7 +196,7 @@ InterfaceOptions_AddCategory = function(panel) M.registered[#M.registered + 1] =
 PixelUtil = { GetNearestPixelSize = function(v) return v end, GetPixelToUIUnitFactor = function() return 1 end }
 Enum = { UITextureSliceMode = { Stretched = 1 }, SpellBookSpellBank = { Player = 0 } }
 POIButtonUtil = { Style = { QuestInProgress = 1, QuestComplete = 2 } }
-Constants = { QuestWatchConsts = { MAX_QUEST_WATCHES = 25 } }
+Constants = { QuestWatchConsts = { MAX_QUEST_WATCHES = 25 }, QuestLogConsts = { MAXIMUM_NUM_QUESTS_LOG_CAN_ACCEPT = 40 } }
 
 M.locale = "enUS"
 function GetLocale() return M.locale end
@@ -244,7 +244,11 @@ local function logIndex(id)
 end
 
 C_QuestLog = {
-    GetNumQuestLogEntries = function() return #M.log end,
+    GetNumQuestLogEntries = function()
+        local n = 0
+        for _, e in ipairs(M.log) do if not e.header then n = n + 1 end end
+        return #M.log, n
+    end,
     GetInfo = function(i)
         local e = M.log[i]
         if not e then return nil end

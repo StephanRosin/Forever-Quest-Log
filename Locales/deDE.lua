@@ -29,6 +29,8 @@ L.TIP_ZONES_ON = "Nach Zonen gruppiert. Klick: eine Liste"
 L.TIP_ZONES_OFF = "Eine Liste. Klick: nach Zonen gruppieren"
 L.TIP_ONLY_HERE = "Nur die Quests dieses Dungeons zeigen oder alle verfolgten"
 L.TIP_RESIZE = "Ziehen, um die Größe zu ändern"
+L.TIP_COUNT = "%d von %d Quests im Questlog"
+L.TIP_TRACKED = "%d davon verfolgt"
 
 L.MSG_LOCKED = "Tracker festgehalten."
 L.MSG_UNLOCKED = "Tracker gelöst: Kopfzeile ziehen zum Verschieben, Ecke ziehen für die Größe."

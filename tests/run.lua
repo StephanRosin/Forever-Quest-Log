@@ -175,7 +175,11 @@ check("finished objective: no bar", watch.lines[1].barBg._shown, false)
 local skull = questRows()[5]
 check("tag shown", skull.tag._shown, true)
 check("one-of objective: no bar", skull.lines[1].barBg._shown, false)
-check("header count", frame and true, true)
+local headerFrame
+for _, f in ipairs(M.frames) do if f.countHover then headerFrame = f end end
+check("count like the quest log: in the log / maximum", headerFrame.count._text, "6 / 40")
+headerFrame.countHover:GetScript("OnEnter")(headerFrame.countHover)
+check("tooltip: tracked", GameTooltip._lines[1], "5 of them tracked")
 
 Settings.Set("showDoneObjectives", false)
 relayout()
