@@ -24,6 +24,11 @@ local refreshQueued, layoutPending = false, false
 local resizing          -- { w0, h0, x0, y0 } while the grip is dragged
 local lastShape         -- what the rows look like, to see whether combat may relayout
 local content, view = 0, 0  -- the list's height and the part that shows
+local chipRow = 0       -- the chip's own line under the header; 0 while it fits in it
+local CHIP_ROW = 22
+
+-- The header and, when the chip did not fit into it, the chip's line.
+local function topHeight() return HEADER_H + chipRow end
 
 local function screenSize()
     return UIParent:GetWidth(), UIParent:GetHeight()
@@ -170,12 +175,15 @@ local function newChip()
     return chip
 end
 
+-- Right after the count; when the header is too narrow for that, on a line
+-- of its own under it, so it never covers the count or the buttons.
 local function layoutChip()
     local chip = header.chip
     local st = state()
+    chipRow = 0
     if not st.instance then
         chip:Hide()
-        return 0
+        return
     end
     local on = st.onlyHere and true or false
     chip.text:SetFont(Media.FontPath(S("objectiveFont")), 11, "")
@@ -184,9 +192,21 @@ local function layoutChip()
     chip.text:SetTextColor(c[1], c[2], c[3])
     for _, e in ipairs(chip.edges) do e:SetColorTexture(c[1], c[2], c[3], on and 0.6 or 0.35) end
     chip.fill:SetColorTexture(c[1], c[2], c[3], on and 0.12 or 0)
-    chip:SetWidth(chip.text:GetStringWidth() + 14)
+    local width = chip.text:GetStringWidth() + 14
+    chip:SetWidth(width)
+
+    local titleLeft = S("locked") and 10 or 26
+    local countRight = titleLeft + header.title:GetStringWidth() + 6 + header.count:GetStringWidth()
+    -- Five buttons from the right edge, 5 px in, 1 px apart.
+    local buttonsLeft = S("width") - 5 - 5 * BUTTON - 4
+    chip:ClearAllPoints()
+    if countRight + 8 + width + 4 <= buttonsLeft then
+        chip:SetPoint("LEFT", header, "LEFT", countRight + 8, 0)
+    else
+        chip:SetPoint("TOPLEFT", header, "BOTTOMLEFT", titleLeft, -3)
+        chipRow = CHIP_ROW
+    end
     chip:Show()
-    return chip:GetWidth() + 4
 end
 
 local function toggleCollapse()
@@ -256,7 +276,6 @@ local function createHeader()
     sort:SetPoint("RIGHT", lock, "LEFT", -1, 0)
     zones:SetPoint("RIGHT", sort, "LEFT", -1, 0)
     header.chip = newChip()
-    header.chip:SetPoint("RIGHT", zones, "LEFT", -4, 0)
 
     -- Dragging the header moves the frame (unlocked, or with Ctrl).
     header:SetScript("OnMouseDown", function(_, mouse)
@@ -514,14 +533,15 @@ function Tracker.Layout()
     if #entries == 0 then y = pad + 20 end
     child:SetHeight(math.max(1, y))
 
-    local bodyMax = S("height") - HEADER_H - pad
+    scroll:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -chipRow)
+    local bodyMax = S("height") - topHeight() - pad
     local body = (S("fitContent") and not resizing) and math.min(y, bodyMax) or bodyMax
     if st.collapsed then
         scroll:Hide()
-        frame:SetHeight(HEADER_H)
+        frame:SetHeight(topHeight())
     else
         scroll:Show()
-        frame:SetHeight(HEADER_H + pad + math.max(body, 20))
+        frame:SetHeight(topHeight() + pad + math.max(body, 20))
     end
     content, view = y, math.max(body, 20)
     local range = math.max(0, y - body)
@@ -621,7 +641,7 @@ local function createGrip()
         local values = { width = w, height = h }
         -- Dragged taller than the content: the size the player chose stays,
         -- instead of snapping back to the content.
-        if S("fitContent") and h > content + HEADER_H + S("padding") + 2 and math.abs(h - resizing.h0) > 2 then
+        if S("fitContent") and h > content + topHeight() + S("padding") + 2 and math.abs(h - resizing.h0) > 2 then
             values.fitContent = false
         end
         resizing = nil
@@ -722,7 +742,7 @@ end
 local function applyPadding()
     if not scroll then return end
     scroll:ClearAllPoints()
-    scroll:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, 0)
+    scroll:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -chipRow)
     scroll:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -S("padding"), S("padding"))
 end
 
