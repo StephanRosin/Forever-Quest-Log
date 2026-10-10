@@ -5,7 +5,7 @@
 ## Notes-esES: Un rastreador de misiones al estilo de los addons Forever: zonas, niveles, barras de progreso, fácil de mover y redimensionar.
 ## Notes-esMX: Un rastreador de misiones al estilo de los addons Forever: zonas, niveles, barras de progreso, fácil de mover y redimensionar.
 ## Notes-frFR: Un suivi de quêtes dans le style des addons Forever : zones, niveaux, barres de progression, facile à déplacer et redimensionner.
-## Version: 0.2.4
+## Version: 0.2.5
 ## X-Curse-Project-ID: 1729048
 ## IconTexture: Interface\AddOns\ForeverQuestLog\Media\MinimapIcon.tga
 ## AddonCompartmentFunc: ForeverQuestLog_OnAddonCompartmentClick
