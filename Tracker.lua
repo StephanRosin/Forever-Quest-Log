@@ -1,9 +1,10 @@
 local ADDON, ns = ...
 local L, Settings, Media, Rows, Items = ns.L, ns.Settings, ns.Media, ns.Rows, ns.Items
+local Position = ns.Position
 local S = Settings.Get
 
 -- The tracker frame: a header bar with the buttons, a scrolling list of
--- rows, a resize grip. Ordinary (insecure) frames only; the quest item
+-- rows, resize arrows in the four corners while unlocked. Ordinary (insecure) frames only; the quest item
 -- buttons are separate (Items.lua).
 local Tracker = {}
 ns.Tracker = Tracker
@@ -17,11 +18,13 @@ local ON = { 1, 0.82, 0.29 }
 local OFF = { 0.45, 0.42, 0.36 }
 local WHEEL_STEP = 40
 local GRIP = 16
+local GRIP_BRIGHT = { 0.72, 0.92, 1 }     -- the arrows under the cursor
+local CORNERS = { "TOPLEFT", "TOPRIGHT", "BOTTOMLEFT", "BOTTOMRIGHT" }
 
-local frame, header, scroll, child, grip, outline, readout, empty
+local frame, header, scroll, child, grips, outline, readout, empty
 local zoneRows, questRows = {}, {}
 local refreshQueued, layoutPending = false, false
-local resizing          -- { w0, h0, x0, y0 } while the grip is dragged
+local resizing          -- the dragged corner and where everything started, while a grip is dragged
 local lastShape         -- what the rows look like, to see whether combat may relayout
 local content, view = 0, 0  -- the list's height and the part that shows
 local chipRow = 0       -- the chip's own line under the header; 0 while it fits in it
@@ -337,21 +340,14 @@ local function applyLook()
     })
 end
 
--- Unlocked: a blue outline, the grip and the size below the frame.
+-- Unlocked: a blue outline, an arrow in each corner and the size below the frame.
 local function layoutUnlocked()
     local unlocked = not S("locked")
     for _, e in ipairs(outline) do e:SetShown(unlocked) end
-    grip:SetShown(unlocked)
+    for _, g in ipairs(grips) do g:SetShown(unlocked) end
     readout:SetShown(unlocked or resizing ~= nil)
     if not unlocked then return end
-    -- The grip sits in the corner opposite the anchor: that corner moves.
-    local point, side = anchorPoint()
-    local v = point:find("TOP") and "BOTTOM" or "TOP"
-    local h = side == "LEFT" and "RIGHT" or "LEFT"
-    grip:ClearAllPoints()
-    grip:SetPoint(v .. h, frame, v .. h, 0, 0)
-    local flipX, flipY = h == "LEFT", v == "TOP"
-    grip.icon:SetTexCoord(flipX and 1 or 0, flipX and 0 or 1, flipY and 1 or 0, flipY and 0 or 1)
+    local v = anchorPoint():find("TOP") and "BOTTOM" or "TOP"
     readout:ClearAllPoints()
     if v == "BOTTOM" then
         readout:SetPoint("TOP", frame, "BOTTOM", 0, -8)
@@ -601,58 +597,111 @@ local function cursor()
     return x / s, y / s
 end
 
+-- Where the frame sits for a size, the corner opposite the dragged one fixed:
+-- the saved point is that fixed side (left or right) and the grow direction's
+-- edge; x / y are the edge's distance in UIParent units, as savePosition has them.
+local function resizedPlacement(r, w, h)
+    local s = r.scale
+    local sw, sh = screenSize()
+    local fixedLeft = r.corner:find("RIGHT") ~= nil
+    local fixedTop = r.corner:find("BOTTOM") ~= nil
+    local top = fixedTop and r.top or (r.bottom + h * s)
+    local bottom = fixedTop and (r.top - h * s) or r.bottom
+    local v = verticalPoint()
+    return {
+        point = v .. (fixedLeft and "LEFT" or "RIGHT"),
+        x = fixedLeft and r.left or (r.right - sw),
+        y = (v == "TOP") and (top - sh) or bottom,
+        vertical = v,
+        edge = (v == "TOP") and top or bottom,
+    }
+end
+
+local function stopResizing()
+    for _, g in ipairs(grips) do g:SetScript("OnUpdate", nil) end
+end
+
 local function onResizeUpdate()
     if not resizing then return end
+    -- A button released outside the grip may not reach OnMouseUp.
+    if IsMouseButtonDown and not IsMouseButtonDown("LeftButton") then Tracker.FinishResize(); return end
     local x, y = cursor()
-    local s = frame:GetScale()
+    local s = resizing.scale
     local dx, dy = (x - resizing.x0) / s, (y - resizing.y0) / s
-    local point, side = anchorPoint()
-    local w = resizing.w0 + (side == "LEFT" and dx or -dx)
-    local h = resizing.h0 + (point:find("TOP") and -dy or dy)
+    local w = resizing.w0 + (resizing.corner:find("RIGHT") and dx or -dx)
+    local h = resizing.h0 + (resizing.corner:find("TOP") and dy or -dy)
     local r1, r2 = Settings.RANGES.width, Settings.RANGES.height
     w = math.max(r1[1], math.min(r1[2], math.floor(w + 0.5)))
     h = math.max(r2[1], math.min(r2[2], math.floor(h + 0.5)))
     if w ~= resizing.w or h ~= resizing.h then
         resizing.w, resizing.h = w, h
-        ns.DB().width, ns.DB().height = w, h
+        local p, db = resizedPlacement(resizing, w, h), ns.DB()
+        db.width, db.height, db.point, db.x, db.y = w, h, p.point, p.x, p.y
         Tracker.Layout()
     end
 end
 
-local function createGrip()
-    grip = CreateFrame("Button", nil, frame)
-    grip:SetSize(GRIP, GRIP)
-    grip:SetFrameLevel(frame:GetFrameLevel() + 20)
-    grip.icon = grip:CreateTexture(nil, "OVERLAY")
-    grip.icon:SetAllPoints()
-    grip.icon:SetTexture(Media.Icon("Resize"))
-    grip.icon:SetVertexColor(ACCENT[1], ACCENT[2], ACCENT[3])
-    grip:SetScript("OnMouseDown", function()
-        -- From a centred anchor the frame would grow both ways: a corner first.
-        if select(2, anchorPoint()) == "" then savePosition(); place() end
-        local x, y = cursor()
-        resizing = { w0 = S("width"), h0 = math.max(S("height"), frame:GetHeight()), x0 = x, y0 = y }
-        grip:SetScript("OnUpdate", onResizeUpdate)
-    end)
-    grip:SetScript("OnMouseUp", function()
-        grip:SetScript("OnUpdate", nil)
-        if not resizing then return end
-        local w, h = ns.DB().width or S("width"), ns.DB().height or S("height")
-        local values = { width = w, height = h }
-        -- Dragged taller than the content: the size the player chose stays,
-        -- instead of snapping back to the content.
-        if S("fitContent") and h > content + topHeight() + S("padding") + 2 and math.abs(h - resizing.h0) > 2 then
-            values.fitContent = false
-        end
-        resizing = nil
-        Settings.SetMany(values)
-    end)
-    grip:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText(L.TIP_RESIZE, 1, 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    grip:SetScript("OnLeave", function() GameTooltip:Hide() end)
+-- The drop: written once through Position.Write, so the fixed corner stays
+-- where it was. Dragged vertically with fitContent on, the height the player
+-- chose wins (fitContent off); a width-only drag leaves fitContent alone.
+function Tracker.FinishResize()
+    stopResizing()
+    local r = resizing
+    if not r then return end
+    resizing = nil
+    local w, h = r.w or r.w0, r.h or r.h0
+    local extra = { width = w, height = h }
+    if S("fitContent") and math.abs(h - r.h0) > 2 then extra.fitContent = false end
+    local p = resizedPlacement(r, w, h)
+    extra.point = p.point
+    Position.Write({ point = "point", x = "x", y = "y" }, p.vertical, p.x, p.edge - select(2, screenSize()), extra)
+end
+
+local function startResizing(grip)
+    -- Moved out of the way of the frame's own anchor: the rectangle on screen.
+    local s = frame:GetScale()
+    local left, right = frame:GetLeft(), frame:GetRight()
+    local top, bottom = frame:GetTop(), frame:GetBottom()
+    if not (left and top) then return end
+    local x, y = cursor()
+    resizing = {
+        corner = grip.corner, scale = s, x0 = x, y0 = y,
+        left = left * s, right = right * s, top = top * s, bottom = bottom * s,
+        w0 = S("width"), h0 = frame:GetHeight(),
+    }
+    grip:SetScript("OnUpdate", onResizeUpdate)
+end
+
+local function createGrips()
+    grips = {}
+    for _, corner in ipairs(CORNERS) do
+        local grip = CreateFrame("Button", nil, frame)
+        grip.corner = corner
+        grip:SetSize(GRIP, GRIP)
+        grip:SetFrameLevel(frame:GetFrameLevel() + 20)
+        grip.icon = grip:CreateTexture(nil, "OVERLAY")
+        grip.icon:SetAllPoints()
+        grip.icon:SetTexture(Media.Icon("ArrowCorner"))
+        grip.icon:SetVertexColor(ACCENT[1], ACCENT[2], ACCENT[3])
+        -- The icon points to the top right; mirrored for the other corners.
+        local flipX, flipY = corner:find("LEFT") ~= nil, corner:find("BOTTOM") ~= nil
+        grip.icon:SetTexCoord(flipX and 1 or 0, flipX and 0 or 1, flipY and 1 or 0, flipY and 0 or 1)
+        local dx, dy = flipX and -2 or 2, flipY and -2 or 2    -- a little outside the frame
+        grip:SetPoint(corner, frame, corner, dx, dy)
+        grip:SetScript("OnMouseDown", function(self) startResizing(self) end)
+        grip:SetScript("OnMouseUp", function() Tracker.FinishResize() end)
+        grip:SetScript("OnEnter", function(self)
+            self.icon:SetVertexColor(GRIP_BRIGHT[1], GRIP_BRIGHT[2], GRIP_BRIGHT[3])
+            GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+            GameTooltip:SetText(L.TIP_RESIZE, 1, 1, 1, 1, true)
+            GameTooltip:Show()
+        end)
+        grip:SetScript("OnLeave", function(self)
+            self.icon:SetVertexColor(ACCENT[1], ACCENT[2], ACCENT[3])
+            GameTooltip:Hide()
+        end)
+        grips[#grips + 1] = grip
+    end
 end
 
 -- Fading --------------------------------------------------------------------
@@ -730,7 +779,7 @@ function Tracker.Build()
     empty:SetFont(Media.FontPath("Arial Narrow"), 13, "")
     empty:SetTextColor(0.6, 0.58, 0.54)
     empty:SetText(L.EMPTY)
-    createGrip()
+    createGrips()
     createOutline()
     frame:SetScript("OnUpdate", onUpdate)
     Tracker.frame = frame

@@ -460,25 +460,103 @@ header:GetScript("OnMouseUp")(header, "LeftButton")
 M.state.ctrl = false
 Settings.Set("locked", false)
 M.RunTimers()
-local grip
+local grips = {}
 for _, f in ipairs(M.frames) do
-    if f.icon and f.icon._texture and f.icon._texture:find("IconResize") and f._parent == frame then grip = f end
+    if f.icon and f.icon._texture and f.icon._texture:find("IconArrowCorner") and f._parent == frame then
+        grips[f._lastPoint[1]] = f
+    end
 end
-check("grip shown unlocked", grip and grip._shown, true)
-M.state.cursorX, M.state.cursorY = 500, 500
-local w0, h0 = S("width"), math.max(S("height"), frame._h)
-grip:GetScript("OnMouseDown")(grip)
-M.state.cursorX, M.state.cursorY = 560, 400       -- right 60, down 100
-grip:GetScript("OnUpdate")(grip, 0.1)
-grip:GetScript("OnMouseUp")(grip)
-check("anchored left: the grip widens to the right", S("width"), w0 + 60)
-check("anchored at the top: dragging down grows", S("height"), h0 + 100)
-check("dragged taller than the content: the size stays", S("fitContent"), false)
+local function gripCount() local n = 0 for _ in pairs(grips) do n = n + 1 end return n end
+check("four corner grips", gripCount(), 4)
+check("grips shown unlocked", grips.TOPLEFT._shown and grips.TOPRIGHT._shown and grips.BOTTOMLEFT._shown and grips.BOTTOMRIGHT._shown, true)
+check("old single grip is gone", (function()
+    for _, f in ipairs(M.frames) do
+        if f.icon and f.icon._texture and f.icon._texture:find("IconResize") and f._parent == frame then return true end
+    end
+    return false
+end)(), false)
+check("top right arrow is not mirrored", grips.TOPRIGHT.icon._texCoord[1] < grips.TOPRIGHT.icon._texCoord[2]
+    and grips.TOPRIGHT.icon._texCoord[3] < grips.TOPRIGHT.icon._texCoord[4], true)
+check("bottom left arrow is mirrored both ways", grips.BOTTOMLEFT.icon._texCoord[1] > grips.BOTTOMLEFT.icon._texCoord[2]
+    and grips.BOTTOMLEFT.icon._texCoord[3] > grips.BOTTOMLEFT.icon._texCoord[4], true)
+grips.TOPLEFT:GetScript("OnEnter")(grips.TOPLEFT)
+local hov = grips.TOPLEFT.icon._vertex
+grips.TOPLEFT:GetScript("OnLeave")(grips.TOPLEFT)
+check("brighter on hover", hov[1] > grips.TOPLEFT.icon._vertex[1], true)
+
+-- Drags a corner by (dx, dy) screen pixels on a frame at rect (UIParent scale 1).
+local function dragCorner(corner, dx, dy, rect)
+    Settings.SetMany({ point = "TOPLEFT", x = rect[1], y = rect[2] + rect[4] - 1080, width = rect[3], height = rect[4], fitContent = false })
+    frame._rect = { rect[1], rect[2], rect[3], rect[4] }
+    frame._scale, frame._h = 1, rect[4]
+    M.state.cursorX, M.state.cursorY = 1000, 600
+    local g = grips[corner]
+    g:GetScript("OnMouseDown")(g)
+    M.state.cursorX, M.state.cursorY = 1000 + dx, 600 + dy
+    g:GetScript("OnUpdate")(g, 0.1)
+    g:GetScript("OnMouseUp")(g)
+end
+-- The frame's rectangle from the saved placement: { left, bottom, right, top }.
+local function placed()
+    local w, h = S("width"), S("height")
+    local sw, sh = 1920, 1080
+    local left = S("point"):find("LEFT") and S("x") or (sw + S("x") - w)
+    local top, bottom
+    if S("point"):find("TOP") then top = sh + S("y"); bottom = top - h
+    else bottom = S("y") + sh; top = bottom + h end
+    return left, bottom, left + w, top
+end
+local rect = { 600, 300, 300, 400 }   -- left 600, bottom 300, right 900, top 700
+dragCorner("BOTTOMRIGHT", 50, -30, rect)
+local l, b, r, t = placed()
+check("bottom right: size", S("width") .. "x" .. S("height"), "350x430")
+check("bottom right: top left stays", l .. "," .. t, "600,700")
+dragCorner("TOPLEFT", -40, 25, rect)
+l, b, r, t = placed()
+check("top left: size", S("width") .. "x" .. S("height"), "340x425")
+check("top left: bottom right stays", r .. "," .. b, "900,300")
+check("top left: anchor follows the fixed side", S("point"), "TOPRIGHT")
+dragCorner("TOPRIGHT", 20, 10, rect)
+l, b, r, t = placed()
+check("top right: size", S("width") .. "x" .. S("height"), "320x410")
+check("top right: bottom left stays", l .. "," .. b, "600,300")
+dragCorner("BOTTOMLEFT", -15, -45, rect)
+l, b, r, t = placed()
+check("bottom left: size", S("width") .. "x" .. S("height"), "315x445")
+check("bottom left: top right stays", r .. "," .. t, "900,700")
+dragCorner("BOTTOMRIGHT", -5000, 5000, rect)
+check("clamped to the minimum", S("width") .. "x" .. S("height"), Settings.RANGES.width[1] .. "x" .. Settings.RANGES.height[1])
+l, b, r, t = placed()
+check("clamped: fixed corner still stays", l .. "," .. t, "600,700")
+dragCorner("TOPLEFT", -5000, 5000, rect)
+check("clamped to the maximum", S("width") .. "x" .. S("height"), Settings.RANGES.width[2] .. "x" .. Settings.RANGES.height[2])
+l, b, r, t = placed()
+check("clamped: fixed corner stays (max)", r .. "," .. b, "900,300")
+-- fitContent: a vertical drag switches it off, a width-only drag does not.
+Settings.SetMany({ fitContent = true })
+frame._rect, frame._h = { 600, 300, 300, 400 }, 400
+M.state.cursorX, M.state.cursorY = 1000, 600
+grips.BOTTOMRIGHT:GetScript("OnMouseDown")(grips.BOTTOMRIGHT)
+M.state.cursorX = 1040
+grips.BOTTOMRIGHT:GetScript("OnUpdate")(grips.BOTTOMRIGHT, 0.1)
+grips.BOTTOMRIGHT:GetScript("OnMouseUp")(grips.BOTTOMRIGHT)
+check("width-only drag keeps fitContent", S("fitContent"), true)
+M.state.cursorY = 600
+grips.BOTTOMRIGHT:GetScript("OnMouseDown")(grips.BOTTOMRIGHT)
+M.state.cursorY = 500
+grips.BOTTOMRIGHT:GetScript("OnUpdate")(grips.BOTTOMRIGHT, 0.1)
+grips.BOTTOMRIGHT:GetScript("OnMouseUp")(grips.BOTTOMRIGHT)
+check("vertical drag switches fitContent off", S("fitContent"), false)
+local readoutText
+for _, f in ipairs(M.frames) do
+    if f._parent == frame and f.text and f.text._text and f.text._text:find(" x ", 1, true) then readoutText = f.text._text end
+end
+check("readout shows the size", readoutText and readoutText:find(S("width") .. " x " .. math.floor(frame._h + 0.5), 1, true) ~= nil, true)
 Settings.Set("fitContent", nil)
 Settings.SetMany({ point = "TOPRIGHT", x = -8, y = -330, width = 300, height = 500 })
 Settings.Set("locked", true)
 M.RunTimers()
-check("grip hidden locked", grip._shown, false)
+check("grips hidden locked", grips.TOPLEFT._shown or grips.TOPRIGHT._shown or grips.BOTTOMLEFT._shown or grips.BOTTOMRIGHT._shown, false)
 ns.Tracker.SnapBelowMinimap()
 check("below the minimap", S("y"), 767 - 1080 - 16)
 check("right edges in line", S("x"), 1912 - 1920)

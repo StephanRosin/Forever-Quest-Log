@@ -25,7 +25,7 @@ A new quest tracker for the right side of your screen, made for **WoW: Forever**
 - Blizzard's tracker is not modified or hooked, only made invisible, so it cannot break your quest items or other frames. One checkbox gives it back.
 
 ## Move it, size it
-- **Unlock** it (lock button in the header, right-click on the minimap button or `/fql unlock`): drag the header to move it, drag the corner to resize it, with the size shown while you drag. **Ctrl + drag** moves it even while locked.
+- **Unlock** it (lock button in the header, right-click on the minimap button or `/fql unlock`): drag the header to move it, drag any of the **four corner arrows** to resize it towards that corner (the opposite corner stays where it is), with the size shown while you drag. Dragging vertically switches "fit to content" off. **Ctrl + drag** moves it even while locked.
 - Or set the position exactly: **X from the centre of the screen, Y from its top**, with sliders and number fields.
 - Grows down or up, shrinks to its content if you like, and has a button to sit right under your minimap.
 - Scale, inner margin, spacing between quests, and how far it fades while the mouse is elsewhere. The scrollbar only shows when there is something to scroll.
