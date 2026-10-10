@@ -4,8 +4,8 @@ local Position = ns.Position
 local S = Settings.Get
 
 -- The tracker frame: a header bar with the buttons, a scrolling list of
--- rows, resize arrows in the four corners while unlocked. Ordinary (insecure) frames only; the quest item
--- buttons are separate (Items.lua).
+-- rows, resize arrows in the four corners while unlocked. Ordinary
+-- (insecure) frames only; the quest item buttons are separate (Items.lua).
 local Tracker = {}
 ns.Tracker = Tracker
 
@@ -17,7 +17,8 @@ local HOVER = { 1, 0.88, 0.54 }
 local ON = { 1, 0.82, 0.29 }
 local OFF = { 0.45, 0.42, 0.36 }
 local WHEEL_STEP = 40
-local GRIP = 16
+local GRIP = 12
+local GRIP_IN = 5                          -- how far an arrow reaches into the frame: the header's empty margin
 local GRIP_BRIGHT = { 0.72, 0.92, 1 }     -- the arrows under the cursor
 local CORNERS = { "TOPLEFT", "TOPRIGHT", "BOTTOMLEFT", "BOTTOMRIGHT" }
 
@@ -350,9 +351,9 @@ local function layoutUnlocked()
     local v = anchorPoint():find("TOP") and "BOTTOM" or "TOP"
     readout:ClearAllPoints()
     if v == "BOTTOM" then
-        readout:SetPoint("TOP", frame, "BOTTOM", 0, -8)
+        readout:SetPoint("TOP", frame, "BOTTOM", 0, -(GRIP + 4))
     else
-        readout:SetPoint("BOTTOM", frame, "TOP", 0, 8)
+        readout:SetPoint("BOTTOM", frame, "TOP", 0, GRIP + 4)
     end
     readout.text:SetText(("%d x %d  ·  %s"):format(S("width"), math.floor(frame:GetHeight() + 0.5), L.UNLOCKED_HINT))
     readout:SetWidth(readout.text:GetStringWidth() + 16)
@@ -649,7 +650,8 @@ function Tracker.FinishResize()
     local r = resizing
     if not r then return end
     resizing = nil
-    local w, h = r.w or r.w0, r.h or r.h0
+    if r.w == nil then return end     -- a click without a drag changes nothing
+    local w, h = r.w, r.h
     local extra = { width = w, height = h }
     if S("fitContent") and math.abs(h - r.h0) > 2 then extra.fitContent = false end
     local p = resizedPlacement(r, w, h)
@@ -667,7 +669,8 @@ local function startResizing(grip)
     resizing = {
         corner = grip.corner, scale = s, x0 = x, y0 = y,
         left = left * s, right = right * s, top = top * s, bottom = bottom * s,
-        w0 = S("width"), h0 = frame:GetHeight(),
+        w0 = S("width"),
+        h0 = math.max(Settings.RANGES.height[1], math.min(Settings.RANGES.height[2], math.floor(frame:GetHeight() + 0.5))),
     }
     grip:SetScript("OnUpdate", onResizeUpdate)
 end
@@ -686,10 +689,16 @@ local function createGrips()
         -- The icon points to the top right; mirrored for the other corners.
         local flipX, flipY = corner:find("LEFT") ~= nil, corner:find("BOTTOM") ~= nil
         grip.icon:SetTexCoord(flipX and 1 or 0, flipX and 0 or 1, flipY and 1 or 0, flipY and 0 or 1)
-        local dx, dy = flipX and -2 or 2, flipY and -2 or 2    -- a little outside the frame
-        grip:SetPoint(corner, frame, corner, dx, dy)
-        grip:SetScript("OnMouseDown", function(self) startResizing(self) end)
-        grip:SetScript("OnMouseUp", function() Tracker.FinishResize() end)
+        -- Mostly outside the corner; the part inside stays in the 5px margin
+        -- around the header buttons, so it covers neither them nor their clicks.
+        local inner = (flipY and "TOP" or "BOTTOM") .. (flipX and "RIGHT" or "LEFT")
+        grip:SetPoint(inner, frame, corner, flipX and GRIP_IN or -GRIP_IN, flipY and GRIP_IN or -GRIP_IN)
+        grip:SetScript("OnMouseDown", function(self, button)
+            if button == nil or button == "LeftButton" then startResizing(self) end
+        end)
+        grip:SetScript("OnMouseUp", function(_, button)
+            if button == nil or button == "LeftButton" then Tracker.FinishResize() end
+        end)
         grip:SetScript("OnEnter", function(self)
             self.icon:SetVertexColor(GRIP_BRIGHT[1], GRIP_BRIGHT[2], GRIP_BRIGHT[3])
             GameTooltip:SetOwner(self, "ANCHOR_LEFT")

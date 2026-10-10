@@ -463,7 +463,7 @@ M.RunTimers()
 local grips = {}
 for _, f in ipairs(M.frames) do
     if f.icon and f.icon._texture and f.icon._texture:find("IconArrowCorner") and f._parent == frame then
-        grips[f._lastPoint[1]] = f
+        grips[f.corner] = f
     end
 end
 local function gripCount() local n = 0 for _ in pairs(grips) do n = n + 1 end return n end
@@ -532,6 +532,105 @@ dragCorner("TOPLEFT", -5000, 5000, rect)
 check("clamped to the maximum", S("width") .. "x" .. S("height"), Settings.RANGES.width[2] .. "x" .. Settings.RANGES.height[2])
 l, b, r, t = placed()
 check("clamped: fixed corner stays (max)", r .. "," .. b, "900,300")
+-- Grips keep clear of the header buttons (rects relative to the frame's top right corner, y up).
+local gp = grips.TOPRIGHT._lastPoint
+local gw, gh = grips.TOPRIGHT._w, grips.TOPRIGHT._h
+check("top right grip hangs off the corner by its bottom left", gp[1] .. gp[3], "BOTTOMLEFTTOPRIGHT")
+local g1, g2, g3, g4 = gp[4], gp[5], gp[4] + gw, gp[5] + gh          -- left, bottom, right, top
+local cb = header.collapse
+local bw, bh = cb._w, cb._h
+local b3 = cb._lastPoint[4]                                           -- RIGHT, -5
+local b1 = b3 - bw
+local b4 = -((header._h - bh) / 2)
+local b2 = b4 - bh
+check("top right grip does not touch the collapse button",
+    g1 < b3 and g3 > b1 and g2 < b4 and g4 > b2, false)
+local tl = grips.TOPLEFT._lastPoint
+check("top left grip hangs off the corner too", tl[1] .. tl[3], "BOTTOMRIGHTTOPLEFT")
+check("the readout sits clear of the bottom grips", (function()
+    for _, f in ipairs(M.frames) do
+        if f._parent == frame and f.text and f.text._text and f.text._text:find(" x ", 1, true) then
+            return math.abs(f._lastPoint[5]) >= grips.BOTTOMLEFT._h
+        end
+    end
+end)(), true)
+
+-- Other anchors: grow UP, scale, a centred anchor, the place() round trip.
+local function rectOf(w, h, sc)
+    local sw, sh = 1920, 1080
+    local pt, x, y = S("point"), S("x"), S("y")
+    local left = pt:find("LEFT") and x or (pt:find("RIGHT") and (sw + x - w) or (sw / 2 + x - w / 2))
+    if pt:find("TOP") then return left, sh + y - h, left + w, sh + y end
+    return left, y, left + w, y + h
+end
+local function drag(corner, dx, dy, setup, rc, sc)
+    Settings.SetMany(setup)
+    frame._rect = { rc[1], rc[2], rc[3] / sc, rc[4] / sc }   -- frame units * scale = screen units
+    frame._rect = { rc[1] / sc, rc[2] / sc, rc[3] / sc, rc[4] / sc }
+    frame._scale, frame._h = sc, rc[4] / sc
+    M.state.cursorX, M.state.cursorY = 1000, 600
+    grips[corner]:GetScript("OnMouseDown")(grips[corner], "LeftButton")
+    M.state.cursorX, M.state.cursorY = 1000 + dx, 600 + dy
+    grips[corner]:GetScript("OnUpdate")(grips[corner], 0.1)
+    grips[corner]:GetScript("OnMouseUp")(grips[corner], "LeftButton")
+end
+Settings.SetMany({ grow = "UP" })
+drag("TOPRIGHT", 30, 40, { point = "BOTTOMLEFT", x = 600, y = 300, width = 300, height = 400, fitContent = false }, { 600, 300, 300, 400 }, 1)
+l, b, r, t = rectOf(S("width"), S("height"))
+check("grow up, top right: size", S("width") .. "x" .. S("height"), "330x440")
+check("grow up: anchored at the bottom", S("point"), "BOTTOMLEFT")
+check("grow up: bottom left stays", l .. "," .. b, "600,300")
+drag("TOPLEFT", -30, 40, { point = "BOTTOMLEFT", x = 600, y = 300, width = 300, height = 400, fitContent = false }, { 600, 300, 300, 400 }, 1)
+l, b, r, t = rectOf(S("width"), S("height"))
+check("grow up, top left: bottom right stays", r .. "," .. b, "900,300")
+Settings.SetMany({ grow = "DOWN" })
+-- scale 2: the frame is 150 x 200 units; 40 px right is 20 units
+drag("BOTTOMRIGHT", 40, -60, { scale = 200, point = "TOPLEFT", x = 600, y = 700 - 1080, width = 200, height = 200, fitContent = false }, { 600, 300, 400, 400 }, 2)
+check("scale 2: size in frame units", S("width") .. "x" .. S("height"), "220x230")
+l, b, r, t = rectOf(S("width") * 2, S("height") * 2)
+check("scale 2: top left stays on screen", l .. "," .. t, "600,700")
+check("place() anchors to the saved values", (function()
+    local p = frame._lastPoint
+    return p[1] == S("point") and p[4] == S("x") / 2 and p[5] == S("y") / 2
+end)(), true)
+Settings.SetMany({ scale = 100 })
+-- starting from a centred anchor (the X / Y sliders write TOP)
+drag("BOTTOMRIGHT", 40, -20, { point = "TOP", x = 0, y = 700 - 1080, width = 300, height = 400, fitContent = false }, { 810, 300, 300, 400 }, 1)
+l, b, r, t = rectOf(S("width"), S("height"))
+check("centred start: becomes a corner anchor", S("point"), "TOPLEFT")
+check("centred start: top left stays", l .. "," .. t, "810,700")
+-- round trip: the saved values put the frame where the drag left it
+Tracker = ns.Tracker
+local rl, rb, rr, rt = rectOf(S("width"), S("height"))
+ns.Tracker.Layout()
+M.RunTimers()
+local lp = frame._lastPoint
+check("round trip: place() uses the saved point", lp[1], S("point"))
+check("round trip: place() uses the saved offsets", lp[4] .. "," .. lp[5], S("x") .. "," .. S("y"))
+check("round trip: fixed corner unchanged", rl .. "," .. rt, "810,700")
+-- a plain click and the right button change nothing
+Settings.SetMany({ point = "TOPLEFT", x = 600, y = -380, width = 300, height = 400, fitContent = true })
+frame._rect, frame._h, frame._scale = { 600, 300, 300, 400 }, 400, 1
+local g = grips.BOTTOMRIGHT
+g:GetScript("OnMouseDown")(g, "LeftButton")
+g:GetScript("OnMouseUp")(g, "LeftButton")
+check("click without a drag: nothing changes", S("width") .. S("height") .. S("point") .. tostring(S("fitContent")), "300400TOPLEFTtrue")
+M.state.cursorX, M.state.cursorY = 1000, 600
+g:GetScript("OnMouseDown")(g, "RightButton")
+M.state.cursorX = 1100
+if g:GetScript("OnUpdate") then g:GetScript("OnUpdate")(g, 0.1) end
+g:GetScript("OnMouseUp")(g, "RightButton")
+check("right button: no resize", S("width"), 300)
+-- a width-only drag from a content height below the minimum: no jump, fitContent stays
+frame._h = 60
+M.state.cursorX = 1000
+g:GetScript("OnMouseDown")(g, "LeftButton")
+M.state.cursorX = 1030
+g:GetScript("OnUpdate")(g, 0.1)
+g:GetScript("OnMouseUp")(g, "LeftButton")
+check("short content: width-only drag keeps fitContent", S("fitContent"), true)
+check("short content: width grows", S("width"), 330)
+
 -- fitContent: a vertical drag switches it off, a width-only drag does not.
 Settings.SetMany({ fitContent = true })
 frame._rect, frame._h = { 600, 300, 300, 400 }, 400
