@@ -572,7 +572,7 @@ end
 function Tracker.UpdateScrollbar()
     local thumb = frame.thumb
     local range = content - view
-    if range < 2 or view <= 0 or state().collapsed then thumb:Hide(); return end
+    if range < 2 or view <= 0 or state().collapsed or not S("showScrollbar") then thumb:Hide(); return end
     local thumbH = math.max(16, view * view / (view + range))
     thumb:SetHeight(thumbH)
     thumb:ClearAllPoints()

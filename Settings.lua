@@ -62,6 +62,7 @@ Settings.DEFAULTS = {
     bgAlpha = 0,            -- percent
     bgTexture = "Blizzard Dialog Background Gold",
     headerLine = true,      -- the gold line under the header
+    showScrollbar = true,   -- off: the wheel still scrolls
 
     -- Text styles. Flags: "" none, OUTLINE, THICKOUTLINE, SHADOW.
     headerFont = "Friz Quadrata",
