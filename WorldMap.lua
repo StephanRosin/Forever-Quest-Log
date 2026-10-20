@@ -15,7 +15,14 @@ local S = Settings.Get
 -- (SetPoint, StartMoving, SetAlpha on parts of its border); none of its
 -- regions is protected, so this works in combat too. The maximized map is
 -- left alone.
-local WorldMap = {}
+--
+-- Another addon may place the map too, putting its own place back the moment
+-- anyone else calls SetPoint / SetScale (OpenMap hooks those methods). Then
+-- both would move the map twenty times a second: the pins under the cursor
+-- lose and regain the mouse each time and their tooltips flicker. So when the
+-- map does not stay where we just put it, we step back: no moving, no
+-- scaling, no drag handle, for the rest of the session.
+local WorldMap = { yielded = false }   -- yielded: another addon places the map
 ns.WorldMap = WorldMap
 
 local TITLE_H = 24
@@ -24,6 +31,12 @@ local SIDE = 64          -- leave the portrait (left) and the buttons (right) fr
 local map, overlay, handle, backdrop
 local titleOriginal         -- Blizzard's title font, to give back
 local scaledByUs = false
+
+local function yieldToOtherAddon()
+    WorldMap.yielded = true
+    if handle then handle:EnableMouse(false) end
+    ns.Print(L.MSG_MAP_YIELDED)
+end
 
 local function maximized()
     return map.IsMaximized and map:IsMaximized() or false
@@ -41,10 +54,13 @@ end
 -- panel manager may scale panels to fit the screen; back at 100 % we only
 -- undo what we set ourselves.
 local function applyScale()
-    if maximized() then return end
+    if maximized() or WorldMap.yielded then return end
     local want = S("mapScale") / 100
     if want ~= 1 then
-        if math.abs(map:GetScale() - want) > 0.001 then map:SetScale(want) end
+        if math.abs(map:GetScale() - want) > 0.001 then
+            map:SetScale(want)
+            if math.abs(map:GetScale() - want) > 0.001 then return yieldToOtherAddon() end
+        end
         scaledByUs = true
     elseif scaledByUs then
         map:SetScale(1)
@@ -52,20 +68,23 @@ local function applyScale()
     end
 end
 
+local function isAt(point, x, y)
+    local cur, rel, relPoint, cx, cy = map:GetPoint(1)
+    return cur == point and rel == UIParent and relPoint == point and cx ~= nil and math.abs(cx - x) < 0.5
+        and math.abs(cy - y) < 0.5 and map:GetNumPoints() == 1
+end
+
 function WorldMap.Place()
-    if not map then return end
+    if not map or WorldMap.yielded then return end
     applyScale()
     local point, x, y = wanted()
-    if not point then return end
+    if not point or WorldMap.yielded then return end
     local s = map:GetScale()
-    local cur, rel, relPoint, cx, cy = map:GetPoint(1)
     local tx, ty = x / s, y / s
-    if cur == point and rel == UIParent and relPoint == point and cx and math.abs(cx - tx) < 0.5
-        and math.abs(cy - ty) < 0.5 and map:GetNumPoints() == 1 then
-        return
-    end
+    if isAt(point, tx, ty) then return end
     map:ClearAllPoints()
     map:SetPoint(point, UIParent, point, tx, ty)
+    if not isAt(point, tx, ty) then yieldToOtherAddon() end
 end
 
 -- After dragging: anchored at the corner nearest to it, offsets in UIParent
@@ -98,7 +117,7 @@ local function createHandle()
     handle:SetHeight(TITLE_H)
     handle:EnableMouse(true)
     handle:SetScript("OnMouseDown", function(_, button)
-        if button ~= "LeftButton" or not S("mapMove") or maximized() then return end
+        if button ~= "LeftButton" or not S("mapMove") or maximized() or WorldMap.yielded then return end
         map:SetMovable(true)
         map:SetClampedToScreen(true)
         map:StartMoving()

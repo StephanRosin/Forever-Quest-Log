@@ -895,6 +895,27 @@ wmf._moving = false
 handle._scripts.OnMouseDown(handle, "LeftButton")
 check("moving off: no drag", wmf._moving, false)
 Settings.Set("mapMove", nil)
+-- Another addon (OpenMap) puts its own place back whenever SetPoint runs:
+-- we step back instead of moving the map twenty times a second.
+local setPoint = wmf.SetPoint
+local othersPlace = 0
+wmf.SetPoint = function(self, ...)
+    setPoint(self, ...)
+    othersPlace = othersPlace + 1
+    setPoint(self, "TOPLEFT", UIParent, "TOPLEFT", 50, -50)
+end
+M.chat = {}
+Settings.SetMany({ mapPlaced = true, mapPoint = "TOPLEFT", mapX = 400, mapY = -100 })
+handle._scripts.OnUpdate(handle, 0.1)
+handle._scripts.OnUpdate(handle, 0.1)
+check("another addon places the map: we tried once", othersPlace, 1)
+check("then left it there", wmf._lastPoint[4], 50)
+check("said so once", #M.chat, 1)
+check("drag handle off", handle._mouse, false)
+wmf.SetPoint = setPoint
+ns.WorldMap.yielded = false
+handle:EnableMouse(true)
+Settings.SetMany({ mapPlaced = nil, mapPoint = nil, mapX = nil, mapY = nil })
 wmf._shown = false
 ns.Window.Open()
 local okMap = pcall(ns.Window.ShowPage, "map")
