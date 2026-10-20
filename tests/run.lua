@@ -269,8 +269,10 @@ tiger:GetScript("OnClick")(tiger, "RightButton")
 menu = M.menus[#M.menus]
 check("in a group: share", menu.entries[6].text, "Share")
 check("focused: stop focus", menu.entries[2].text, "Stop focus")
+M.quest(185).party = 1
 tiger:GetScript("OnEnter")(tiger)
 check("hover in a group: party progress", lastCall(), "SetQuestPartyProgress:185")
+M.quest(185).party = nil
 tiger:GetScript("OnLeave")(tiger)
 M.state.group = false
 M.superTracked = 0
@@ -1073,6 +1075,58 @@ ns.Blizzard.Hide()
 check("then Blizzard's stays as it is", M.objectiveTracker._scale, 1)
 Settings.Set("useBlizzard", nil)
 
+section("Ideas from MonkeyQuest")
+check("default: finished objectives dimmed, not hidden", Settings.DEFAULTS.showDoneObjectives, true)
+check("default: completed quests shown", Settings.DEFAULTS.hideCompleteQuests, false)
+check("default: objective colours unchanged", Settings.DEFAULTS.objectiveProgressColors, false)
+local all = Data.Quests()
+check("hide completed quests: one less", #Sort.Build(all, { hideComplete = true }), #all - 1)
+for _, entry in ipairs(Sort.Build(all, { hideComplete = true })) do
+    check("hide completed quests: " .. entry.quest.title, entry.quest.isComplete, false)
+end
+local talkTo = { objectives = {}, overview = "Speak to Kin'weelay." }
+check("no objectives: the quest text", ns.Rows.QuestLines(talkTo)[1].text, "Speak to Kin'weelay.")
+Settings.Set("showOverview", false)
+check("no objectives, option off: nothing", #ns.Rows.QuestLines(talkTo), 0)
+Settings.Set("showOverview", true)
+local function rgb(c) return table.concat(c, ",") end
+check("progress colour 0: red", rgb(ns.Rows.ProgressColor(0)), "1,0,0")
+check("progress colour 1/2: yellow", rgb(ns.Rows.ProgressColor(0.5)), "1,1,0")
+check("progress colour 1: green", rgb(ns.Rows.ProgressColor(1)), "0,1,0")
+
+M.quest(185).overview = "Kill 10 Young Stranglethorn Tigers."
+relayout()
+M.calls = {}
+local hovered
+for _, row in ipairs(questRows()) do if row.quest and row.quest.id == 185 then hovered = row end end
+hovered:GetScript("OnEnter")(hovered)
+check("tooltip: title", GameTooltip._text, "Tiger Mastery")
+check("tooltip: quest text", GameTooltip._lines[1], "Kill 10 Young Stranglethorn Tigers.")
+check("tooltip alone: no party progress", #M.calls, 0)
+M.state.group = true
+M.quest(185).party = 2
+hovered:GetScript("OnEnter")(hovered)
+check("tooltip in a group: party progress after the text", lastCall(), "SetQuestPartyProgress:185")
+Settings.Set("questTooltip", false)
+M.state.group = false
+M.calls = {}
+GameTooltip._text = nil
+hovered:GetScript("OnEnter")(hovered)
+check("tooltip off, alone: nothing", GameTooltip._text, nil)
+Settings.Set("questTooltip", true)
+M.quest(185).party, M.quest(185).overview = nil, nil
+
+ForeverQuestLog_Binding("HIDECOMPLETE")
+check("key: hide completed quests", S("hideCompleteQuests"), true)
+ForeverQuestLog_Binding("HIDECOMPLETE")
+check("key: show them again", S("hideCompleteQuests"), false)
+local bindings = io.open(ROOT .. "/Bindings.xml"):read("*a")
+for name, action in bindings:gmatch('name="([%w_]+)".-ForeverQuestLog_Binding%("(%u+)"%)') do
+    check(name .. " has a label", type(_G["BINDING_NAME_" .. name]), "string")
+    check(name .. " runs", pcall(ForeverQuestLog_Binding, action), true)
+end
+check("bindings header", BINDING_HEADER_FOREVERQUESTLOG, "Forever Quest Log")
+
 section("Languages")
 local base = ns.Locales.enUS
 for code, strings in pairs(ns.Locales) do
@@ -1099,7 +1153,9 @@ end
 section("No accidental globals")
 local allowed = { SLASH_FOREVERQUESTLOG1 = true, SLASH_FOREVERQUESTLOG2 = true, ForeverQuestLogProfiles = true,
     ForeverQuestLogChar = true, ForeverQuestLog_OnAddonCompartmentClick = true,
-    ForeverQuestLog_OnAddonCompartmentEnter = true, ForeverQuestLog_OnAddonCompartmentLeave = true }
+    ForeverQuestLog_OnAddonCompartmentEnter = true, ForeverQuestLog_OnAddonCompartmentLeave = true,
+    ForeverQuestLog_Binding = true, BINDING_HEADER_FOREVERQUESTLOG = true }
+for name in io.open(ROOT .. "/Bindings.xml"):read("*a"):gmatch('name="([%w_]+)"') do allowed["BINDING_NAME_" .. name] = true end
 for _, f in ipairs(tocFiles()) do
     local listing = io.popen("luac5.1 -l -p '" .. ROOT .. "/" .. f .. "' 2>/dev/null"):read("*a")
     for name in listing:gmatch("SETGLOBAL%s+%d+%s+[%-%d]*%s*; ([%w_]+)") do

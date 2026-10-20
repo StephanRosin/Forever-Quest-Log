@@ -90,6 +90,14 @@ local function tagName(questID)
     return nil
 end
 
+-- The quest log's short text ("Bring 10 Shards to ..."), nil when empty.
+local function overview(logIndex)
+    if not GetQuestLogQuestText then return nil end
+    local _, text = GetQuestLogQuestText(logIndex)
+    if text and text ~= "" then return text end
+    return nil
+end
+
 local function specialItem(logIndex, isComplete)
     if not GetQuestLogSpecialItemInfo then return nil end
     local link, texture, charges, showWhenComplete = GetQuestLogSpecialItemInfo(logIndex)
@@ -123,6 +131,7 @@ function Data.Quest(questID, watchIndex, headers, superTracked)
         isAutoComplete = info.isAutoComplete and true or false,
         superTracked = superTracked == questID,
         objectives = objectives(questID, logIndex),
+        overview = overview(logIndex),
         item = specialItem(logIndex, isComplete),
     }
     if isComplete and not q.isAutoComplete and GetQuestLogCompletionText then

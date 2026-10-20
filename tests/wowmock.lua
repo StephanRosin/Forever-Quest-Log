@@ -198,6 +198,7 @@ function Minimap:GetCenter() return 1782, 897 end
 GameTooltip = newWidget("GameTooltip")
 function GameTooltip:AddLine(t) self._lines = self._lines or {}; self._lines[#self._lines + 1] = t end
 function GameTooltip:SetOwner() self._lines = {} end
+function GameTooltip:SetText(t) self._text = t; self._lines = {} end
 function GameTooltip:IsOwned() return true end
 function GameTooltip:SetQuestPartyProgress(id) record("SetQuestPartyProgress", id) end
 function GameTooltip:SetQuestLogSpecialItem(i) record("SetQuestLogSpecialItem", i) end
@@ -300,6 +301,8 @@ function GetQuestLogLeaderBoard(n, i)
 end
 function GetQuestProgressBarPercent(id) return M.quest(id).percent or 0 end
 function GetQuestLogCompletionText(i) return M.log[i].completionText end
+function GetQuestLogQuestText(i) return "", M.log[i].overview or "" end
+function QuestUtils_GetNumPartyMembersOnQuest(id) return M.state.group and (M.quest(id).party or 0) or 0 end
 function GetQuestLogSpecialItemInfo(i)
     local it = M.log[i].item
     if not it then return nil end

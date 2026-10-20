@@ -96,6 +96,9 @@ local function generalRows()
         check("showTags", "OPT_SHOW_TAGS"),
         check("showPOI", "OPT_SHOW_POI"),
         check("showDoneObjectives", "OPT_SHOW_DONE"),
+        check("hideCompleteQuests", "OPT_HIDE_COMPLETE"),
+        check("showOverview", "OPT_SHOW_OVERVIEW"),
+        check("questTooltip", "OPT_QUEST_TOOLTIP"),
         check("showItems", "OPT_SHOW_ITEMS"),
         check("showRecipes", "OPT_SHOW_RECIPES"),
         { type = "header", label = "OPT_MINIMAP" },
@@ -192,7 +195,10 @@ local function textRows()
     local rows = {}
     for _, name in ipairs(Settings.TEXT_STYLES) do
         append(rows, textStyleRows(name, "STYLE_" .. name:upper()))
-        if name == "objective" then rows[#rows + 1] = colorRow("objectiveDoneColor", "OPT_DONE_OBJECTIVE_COLOR", true) end
+        if name == "objective" then
+            rows[#rows + 1] = colorRow("objectiveDoneColor", "OPT_DONE_OBJECTIVE_COLOR", true)
+            rows[#rows + 1] = check("objectiveProgressColors", "OPT_PROGRESS_COLORS")
+        end
     end
     return rows
 end
@@ -306,6 +312,7 @@ local function focusRows()
         check(k("showTags"), "OPT_SHOW_TAGS"),
         check(k("showPOI"), "OPT_SHOW_POI"),
         check(k("showDoneObjectives"), "OPT_SHOW_DONE"),
+        check(k("showOverview"), "OPT_SHOW_OVERVIEW"),
         { type = "header", label = "OPT_BACKGROUND" },
         choice(k("bgMode"), "OPT_BG_MODE", { "SOLID", "GRADIENT", "TEXTURE" }, "BG_"),
         visibleIf(colorRow(k("bgColor"), "OPT_BG_COLOR", true), function() return S(k("bgMode")) ~= "TEXTURE" end),
@@ -323,6 +330,7 @@ local function focusRows()
     append(rows, textStyleRows(k("title"), "STYLE_TITLE"))
     append(rows, textStyleRows(k("objective"), "STYLE_OBJECTIVE"))
     rows[#rows + 1] = colorRow(k("objectiveDoneColor"), "OPT_DONE_OBJECTIVE_COLOR", true)
+    rows[#rows + 1] = check(k("objectiveProgressColors"), "OPT_PROGRESS_COLORS")
     append(rows, textStyleRows(k("done"), "STYLE_DONE"))
     append(rows, {
         { type = "header", label = "OPT_BARS" },

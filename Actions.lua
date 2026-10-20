@@ -61,13 +61,36 @@ function Actions.QuestClick(owner, quest, mouseButton)
     end
 end
 
--- Party progress on hover, as Blizzard's tracker shows it in a group.
-function Actions.QuestEnter(owner, quest)
-    if not IsInGroup() then return end
+local function anchorTooltip(owner)
     GameTooltip:ClearAllPoints()
     GameTooltip:SetPoint("TOPRIGHT", owner, "TOPLEFT", 0, 0)
     GameTooltip:SetOwner(owner, "ANCHOR_PRESERVE")
-    GameTooltip:SetQuestPartyProgress(quest.id)
+end
+
+local function partyMembersOnQuest(questID)
+    return QuestUtils_GetNumPartyMembersOnQuest and QuestUtils_GetNumPartyMembersOnQuest(questID) or 0
+end
+
+-- On hover: the title and the quest's short text, then the party's progress
+-- the way Blizzard's quest log tooltip adds it (QuestMapLogTitleButton_OnEnter).
+-- Without the tooltip option only the party progress, as Blizzard's tracker.
+function Actions.QuestEnter(owner, quest)
+    if not ns.Settings.Get("questTooltip") then
+        if not IsInGroup() then return end
+        anchorTooltip(owner)
+        GameTooltip:SetQuestPartyProgress(quest.id)
+        return
+    end
+    anchorTooltip(owner)
+    GameTooltip:SetText(quest.title, 1, 0.82, 0, 1, true)
+    if quest.overview then GameTooltip:AddLine(quest.overview, 1, 1, 1, true) end
+    if partyMembersOnQuest(quest.id) > 0 then
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(PARTY_QUEST_STATUS_ON or L.PARTY_ON_QUEST)
+        local omitTitle, ignoreActivePlayer = true, true
+        GameTooltip:SetQuestPartyProgress(quest.id, omitTitle, ignoreActivePlayer)
+    end
+    GameTooltip:Show()
 end
 
 function Actions.Leave()

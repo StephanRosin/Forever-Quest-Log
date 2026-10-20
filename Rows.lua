@@ -47,12 +47,37 @@ local function hideLine(line)
     line.text:Hide(); line.count:Hide(); line.icon:Hide(); line.barBg:Hide(); line.bar:Hide()
 end
 
+-- How far a counted objective is, 0..1; nil for a plain line.
+local function progressShare(o)
+    local share
+    if o.percent then
+        share = o.percent / 100
+    elseif o.max and o.max > 0 then
+        share = (o.cur or 0) / o.max
+    else
+        return nil
+    end
+    return math.max(0, math.min(1, share))
+end
+
+-- Red at 0 through yellow at half to green at 1, as MonkeyQuest colours
+-- objectives.
+function Rows.ProgressColor(share)
+    if share < 0.5 then return { 1, share * 2, 0 } end
+    return { 2 - share * 2, 1, 0 }
+end
+
 -- One line at (x, -y) of row, width w. o: { text, cur, max, done, percent }
 -- or a plain text line with a style ("done", "failed"). Returns its height.
 local function layoutLine(row, line, o, x, y, w, style, cfg)
     local isDone = o.done
     local textStyle = cfg.text(style or "objective")
-    if style == nil and isDone then textStyle.color = cfg.get("objectiveDoneColor") end
+    local share = progressShare(o)
+    if style == nil and isDone then
+        textStyle.color = cfg.get("objectiveDoneColor")
+    elseif style == nil and share and cfg.get("objectiveProgressColors") then
+        textStyle.color = Rows.ProgressColor(share)
+    end
     if o.color then textStyle.color = o.color end
     local countText
     if o.percent then
@@ -99,8 +124,6 @@ local function layoutLine(row, line, o, x, y, w, style, cfg)
         line.barBg:SetSize(w - (left - x), barH)
         line.barBg:SetColorTexture(1, 1, 1, cfg.get("barBgAlpha") / 100)
         line.barBg:Show()
-        local share = o.percent and (o.percent / 100) or ((o.cur or 0) / o.max)
-        share = math.max(0, math.min(1, share))
         if share > 0 then
             local c = cfg.get("barColor")
             line.bar:ClearAllPoints()
@@ -319,6 +342,9 @@ function Rows.QuestLines(q, cfg)
     end
     for _, o in ipairs(q.objectives) do
         if not o.done or cfg.get("showDoneObjectives") then list[#list + 1] = o end
+    end
+    if #q.objectives == 0 and q.overview and cfg.get("showOverview") then
+        list[#list + 1] = { text = q.overview }
     end
     if q.money then
         local text = GetMoneyString and (GetMoneyString(q.money.have) .. " / " .. GetMoneyString(q.money.need))

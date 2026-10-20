@@ -12,8 +12,10 @@ A new quest tracker for the right side of your screen, made for **WoW: Forever**
 - **Grouped by zone**, with your current zone on top, or as one list. One click on the header switches.
 - **Sorted like Blizzard's tracker** (nearest first) **or by level**, also with one click, and both combine: by level inside each zone.
 - The **quest level** in front of every title, in its difficulty colour (grey, green, yellow, orange, red), and tags such as Elite, Dungeon or Raid.
-- Every counted objective with its number on the right and a **thin progress bar** under it. Finished objectives are dimmed (or hidden, if you prefer).
-- Completed quests show how to turn them in, with a check mark; failed quests say so; missing gold for a quest is shown as well.
+- Every counted objective with its number on the right and a **thin progress bar** under it. Finished objectives are dimmed (or hidden, if you prefer). Open objectives can be coloured by progress, red through yellow to green.
+- Completed quests show how to turn them in, with a check mark; failed quests say so; missing gold for a quest is shown as well. One checkbox (or a key) **hides completed quests**.
+- A quest without objectives ("Speak to ...") shows its short quest text instead.
+- **Hover a quest** for its quest text; in a group the tooltip adds your party's progress.
 - Zones collapse on a click; the header counts your quests like the quest log does (15 / 40), the tooltip tells how many of them you track.
 - **Tracked recipes** in their own section, with every reagent and how many you have.
 
@@ -21,7 +23,7 @@ A new quest tracker for the right side of your screen, made for **WoW: Forever**
 - **Left-click** a quest: details on the map. **Shift-click**: stop tracking. **Right-click**: Blizzard's own menu (focus, quest details, show on map, stop tracking, share in a group, abandon).
 - Blizzard's own **map buttons** in front of the quests: click to focus a quest, exactly as on the map.
 - **Quest items** as buttons next to their quest, usable **in combat**, with cooldown, charges and range colouring. Shift-click links the item.
-- Auto-complete quests complete with a click; in a group, hovering shows your party's progress; Shift-click a recipe to untrack it.
+- Auto-complete quests complete with a click; Shift-click a recipe to untrack it.
 - Blizzard's tracker is not modified or hooked, only made invisible, so it cannot break your quest items or other frames. One checkbox gives it back.
 
 ## Move it, size it
@@ -57,8 +59,10 @@ A new quest tracker for the right side of your screen, made for **WoW: Forever**
 - Its own options window in the style of Forever Unit Frames, opened from the gear in the header, the **minimap button**, Blizzard's **addon compartment** or `/fql`: General, Layout, Appearance, Text, Bars, Instances, Focused quest, World map and Profiles. Only the settings that apply are shown.
 - **Profiles** shared between characters, three presets ("Forever" with the gold frame of the other Forever addons, "Minimal" and the shipped look), and **export / import** of a whole profile as a text string (only read as settings, never run as code).
 
-## Commands
+## Commands and keys
 `/fql` (options), `/fql lock`, `/fql unlock`, `/fql reset` (position and size), `/fql status`
+
+Key bindings (Key Bindings → AddOns → Forever Quest Log): collapse / expand the tracker, hide / show completed quests, lock / unlock, options.
 
 ## Notes
 - Made for WoW: Forever.

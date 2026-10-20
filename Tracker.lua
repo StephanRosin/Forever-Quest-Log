@@ -219,6 +219,7 @@ local function toggleCollapse()
     st.combatCollapsed = nil
     Tracker.Refresh()
 end
+Tracker.ToggleCollapse = toggleCollapse
 
 local function createHeader()
     header = CreateFrame("Button", nil, frame)
@@ -398,6 +399,7 @@ function Tracker.Entries(quests, recipes)
         currentZone = GetRealZoneText and GetRealZoneText() or nil,
         collapsedZones = st.zones,
         onlyZone = st.instance and st.onlyHere and st.instance or nil,
+        hideComplete = S("hideCompleteQuests"),
     })
     if #recipes > 0 then
         local collapsed = st.sections.recipes and true or false

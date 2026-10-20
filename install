@@ -15,6 +15,8 @@ grep -v '^\s*#' "$HERE/ForeverQuestLog.toc" | grep -v '^\s*$' | tr -d '\r' | whi
     mkdir -p "$TARGET/$(dirname "$f")"
     cp "$HERE/$f" "$TARGET/$f"
 done
+# The client loads Bindings.xml by itself, without a TOC entry.
+cp "$HERE/Bindings.xml" "$TARGET/"
 # Textures the Lua code loads by path.
 mkdir -p "$TARGET/Media"
 cp "$HERE"/Media/*.tga "$TARGET/Media/"

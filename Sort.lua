@@ -10,7 +10,8 @@ local L = ns.L
 --
 -- opts: sortBy ("WATCH" | "LEVEL"), groupByZone, currentZoneFirst,
 -- currentZone (the player's zone name), collapsedZones (name -> true),
--- onlyZone (an instance name: only quests under that header).
+-- onlyZone (an instance name: only quests under that header),
+-- hideComplete (leave out quests ready to turn in).
 local Sort = {}
 ns.Sort = Sort
 
@@ -45,7 +46,9 @@ end
 function Sort.Build(quests, opts)
     opts = opts or {}
     local list = {}
-    for _, q in ipairs(Sort.Filter(quests, opts.onlyZone)) do list[#list + 1] = q end
+    for _, q in ipairs(Sort.Filter(quests, opts.onlyZone)) do
+        if not (opts.hideComplete and q.isComplete) then list[#list + 1] = q end
+    end
     table.sort(list, compare(opts.sortBy))
 
     local entries = {}
