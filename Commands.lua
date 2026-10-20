@@ -6,25 +6,6 @@ function ns.ToggleLock()
     ns.Print(Settings.Get("locked") and L.MSG_LOCKED or L.MSG_UNLOCKED)
 end
 
--- Key bindings (Bindings.xml): the names shown under Key Bindings -> AddOns,
--- and what each key does.
-BINDING_HEADER_FOREVERQUESTLOG = L.ADDON_NAME
-BINDING_NAME_FOREVERQUESTLOG_COLLAPSE = L.BIND_COLLAPSE
-BINDING_NAME_FOREVERQUESTLOG_HIDECOMPLETE = L.BIND_HIDE_COMPLETE
-BINDING_NAME_FOREVERQUESTLOG_LOCK = L.BIND_LOCK
-BINDING_NAME_FOREVERQUESTLOG_OPTIONS = L.BIND_OPTIONS
-
-local BINDINGS = {
-    COLLAPSE = function() ns.Tracker.ToggleCollapse() end,
-    HIDECOMPLETE = function() Settings.Set("hideCompleteQuests", not Settings.Get("hideCompleteQuests")) end,
-    LOCK = function() ns.ToggleLock() end,
-    OPTIONS = function() ns.Window.Toggle() end,
-}
-
-function ForeverQuestLog_Binding(action)
-    BINDINGS[action]()
-end
-
 -- /fql status: what an error report needs.
 local function status()
     local getMetadata = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata

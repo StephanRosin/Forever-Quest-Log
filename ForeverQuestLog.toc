@@ -37,6 +37,7 @@ Tracker.lua
 WorldMap.lua
 QuestLogStyle.lua
 Focus.lua
+Keys.lua
 Options\Style.lua
 Options\Widgets.lua
 Options\Window.lua

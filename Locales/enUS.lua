@@ -246,8 +246,15 @@ L.OPT_POS_X = "Horizontal (from the centre)"
 L.OPT_POS_Y = "Vertical (from the top)"
 
 -- Key bindings
-L.BIND_COLLAPSE = "Collapse / expand the tracker"
-L.BIND_HIDE_COMPLETE = "Hide / show completed quests"
+L.BIND_COLLAPSE = "Collapse / expand"
+L.BIND_HIDE_COMPLETE = "Completed quests on / off"
 L.BIND_LOCK = "Lock / unlock"
 L.BIND_OPTIONS = "Options"
 L.PARTY_ON_QUEST = "Party members on this quest:"
+L.PAGE_KEYS = "Keys"
+L.OPT_KEYS = "Key bindings"
+L.OPT_KEYS_HINT = "Click a button and press a key, with Shift, Ctrl or Alt if you like. Escape cancels, right-click removes the key. The same keys are under Key Bindings in the game menu."
+L.KEY_PRESS = "Press a key ..."
+L.KEY_NONE = "Not bound"
+L.MSG_KEYS_COMBAT = "Keys cannot be changed in combat."
+L.MSG_KEY_REPLACED = '%s no longer does "%s".'

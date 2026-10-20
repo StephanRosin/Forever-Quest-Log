@@ -365,6 +365,22 @@ end
 local shareField = {}
 Window.shareField = shareField
 
+-- Keys: WoW's own key bindings for the addon's actions (Keys.lua).
+local function keyRows()
+    local rows = {
+        { type = "header", label = "OPT_KEYS" },
+        { type = "text", label = "OPT_KEYS_HINT", height = 40 },
+    }
+    for _, action in ipairs(ns.Keys.ACTIONS) do
+        rows[#rows + 1] = {
+            type = "key", label = action.label,
+            get = function() return ns.Keys.Get(action.id) end,
+            set = function(key) ns.Keys.Set(action.id, key) end,
+        }
+    end
+    return rows
+end
+
 local function profileRows()
     return {
         { type = "header", label = "OPT_PROFILES" },
@@ -425,6 +441,7 @@ Window.PAGES = {
     { id = "instances", label = "PAGE_INSTANCES", rows = instanceRows },
     { id = "focus", label = "PAGE_FOCUS", rows = focusRows },
     { id = "map", label = "PAGE_MAP", rows = function() return append(mapRows(), questLogRows()) end },
+    { id = "keys", label = "PAGE_KEYS", rows = keyRows },
     { id = "profiles", label = "PAGE_PROFILES", rows = profileRows },
 }
 
@@ -535,6 +552,9 @@ local function widgetFor(page, opt)
     elseif kind == "color" then
         o.noOpacity = opt.noOpacity
         row = Widgets.Color(page, o)
+    elseif kind == "key" then
+        o.combination = ns.Keys.Combination
+        row = Widgets.Keybind(page, o)
     else
         o.min, o.max, o.step = opt.min, opt.max, opt.step or 1
         row = Widgets.Slider(page, o)

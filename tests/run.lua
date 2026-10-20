@@ -1127,6 +1127,39 @@ for name, action in bindings:gmatch('name="([%w_]+)".-ForeverQuestLog_Binding%("
 end
 check("bindings header", BINDING_HEADER_FOREVERQUESTLOG, "Forever Quest Log")
 
+section("Keys page")
+ns.Window.Open("keys")
+local keyRow = rowFor("Lock / unlock", "button")
+check("keys page: a row per action", keyRow ~= nil, true)
+check("not bound yet", keyRow.button.text._text, "Not bound")
+keyRow.button:GetScript("OnClick")(keyRow.button, "LeftButton")
+check("listening", keyRow.button.text._text, "Press a key ...")
+keyRow.button:GetScript("OnKeyDown")(keyRow.button, "LSHIFT")
+check("a modifier alone: still listening", keyRow.button.listening, true)
+M.state.shift = true
+keyRow.button:GetScript("OnKeyDown")(keyRow.button, "L")
+M.state.shift = false
+check("bound with its modifier", M.bindings["SHIFT-L"], "FOREVERQUESTLOG_LOCK")
+check("shown", keyRow.button.text._text, "SHIFT-L")
+check("saved", lastCall(), "SaveBindings:1")
+M.bindings["F7"] = "TOGGLEWORLDMAP"
+M.chat = {}
+keyRow.button:GetScript("OnClick")(keyRow.button, "LeftButton")
+keyRow.button:GetScript("OnKeyDown")(keyRow.button, "F7")
+check("a new key replaces the old one", M.bindings["SHIFT-L"], nil)
+check("taken from another action: said so", #M.chat > 0, true)
+keyRow.button:GetScript("OnClick")(keyRow.button, "LeftButton")
+keyRow.button:GetScript("OnKeyDown")(keyRow.button, "ESCAPE")
+check("escape: key kept", M.bindings["F7"], "FOREVERQUESTLOG_LOCK")
+keyRow.button:GetScript("OnClick")(keyRow.button, "RightButton")
+check("right click: no key", M.bindings["F7"], nil)
+check("right click: shown", keyRow.button.text._text, "Not bound")
+M.state.combat = true
+ns.Keys.Set("LOCK", "F8")
+check("combat: nothing bound", M.bindings["F8"], nil)
+M.state.combat = false
+ns.Window.Toggle()
+
 section("Languages")
 local base = ns.Locales.enUS
 for code, strings in pairs(ns.Locales) do

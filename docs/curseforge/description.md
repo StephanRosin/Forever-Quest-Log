@@ -56,13 +56,13 @@ A new quest tracker for the right side of your screen, made for **WoW: Forever**
 - Optionally collapses in combat.
 
 ## Options
-- Its own options window in the style of Forever Unit Frames, opened from the gear in the header, the **minimap button**, Blizzard's **addon compartment** or `/fql`: General, Layout, Appearance, Text, Bars, Instances, Focused quest, World map and Profiles. Only the settings that apply are shown.
+- Its own options window in the style of Forever Unit Frames, opened from the gear in the header, the **minimap button**, Blizzard's **addon compartment** or `/fql`: General, Layout, Appearance, Text, Bars, Instances, Focused quest, World map, Keys and Profiles. Only the settings that apply are shown.
 - **Profiles** shared between characters, three presets ("Forever" with the gold frame of the other Forever addons, "Minimal" and the shipped look), and **export / import** of a whole profile as a text string (only read as settings, never run as code).
 
 ## Commands and keys
 `/fql` (options), `/fql lock`, `/fql unlock`, `/fql reset` (position and size), `/fql status`
 
-Key bindings (Key Bindings → AddOns → Forever Quest Log): collapse / expand the tracker, hide / show completed quests, lock / unlock, options.
+Key bindings for collapse / expand, completed quests on / off, lock / unlock and options: set them on the **Keys** page of the options, or under Key Bindings → Forever Quest Log in the game menu.
 
 ## Notes
 - Made for WoW: Forever.

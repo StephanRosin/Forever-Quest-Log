@@ -221,6 +221,25 @@ M.build = { "1.60.1", "70205", "Oct 2 2026", 16001 }
 function GetBuildInfo() return M.build[1], M.build[2], M.build[3], M.build[4] end
 M.state = { combat = false, money = 500, instance = nil, zone = "Stranglethorn Vale", ctrl = false, modified = {} }
 function InCombatLockdown() return M.state.combat end
+-- Key bindings: key -> command, saved with SaveBindings.
+M.bindings = {}
+function GetBindingKey(command)
+    local keys = {}
+    for key, c in pairs(M.bindings) do if c == command then keys[#keys + 1] = key end end
+    table.sort(keys)
+    return unpack(keys)
+end
+function GetBindingAction(key) return M.bindings[key] or "" end
+function GetBindingText(key) return key end
+function SetBinding(key, command) M.bindings[key] = command end
+function GetCurrentBindingSet() return 1 end
+function SaveBindings(set) record("SaveBindings", set) end
+function IsAltKeyDown() return false end
+function IsShiftKeyDown() return M.state.shift or false end
+function IsKeyPressIgnoredForBinding(key) return key == "LSHIFT" or key == "RSHIFT" or key == "LCTRL" or key == "LALT" end
+function CreateKeyChordStringUsingMetaKeyState(key)
+    return (IsControlKeyDown() and "CTRL-" or "") .. (IsShiftKeyDown() and "SHIFT-" or "") .. key
+end
 function IsControlKeyDown() return M.state.ctrl end
 function IsModifiedClick(what) return M.state.modified[what] or false end
 function IsInGroup() return M.state.group or false end

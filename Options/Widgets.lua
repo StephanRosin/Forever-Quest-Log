@@ -553,7 +553,8 @@ local function drawArrow(button)
     end
 end
 
-local function newDropdownButton(row)
+-- A framed button in the control column, without the dropdown arrow.
+local function newControlButton(row)
     local b = CreateFrame("Button", nil, row)
     b:SetSize(Widgets.CONTROL_W, 22)
     b:SetPoint("LEFT", row, "LEFT", Widgets.CONTROL_X, 0)
@@ -562,10 +563,15 @@ local function newDropdownButton(row)
     b.text:SetPoint("LEFT", b, "LEFT", 8, 0)
     b.text:SetPoint("RIGHT", b, "RIGHT", -24, 0)
     b.text:SetJustifyH("LEFT")
-    drawArrow(b)
     b:SetScript("OnEnter", function(self) Style.SetBorderColor(self, "accent") end)
     b:SetScript("OnLeave", function(self) Style.SetBorderColor(self, "border") end)
     trackHover(row, b)
+    return b
+end
+
+local function newDropdownButton(row)
+    local b = newControlButton(row)
+    drawArrow(b)
     return b
 end
 
@@ -591,6 +597,55 @@ function Widgets.Dropdown(parent, opts)
     function row:SetEnabled(on)
         if not on and list.owner == row then Widgets.CloseList() end
         row.button:SetEnabled(on)
+        dimRow(row, on)
+    end
+    return row
+end
+
+-- Key binding ---------------------------------------------------------------
+
+-- A button showing the bound key. Click: the next key pressed (with its
+-- modifiers) is bound, Escape cancels; right-click removes the key.
+-- shortcut: keyboard keys only, no mouse buttons; add them if someone asks.
+function Widgets.Keybind(parent, opts)
+    local row = newRow(parent, opts)
+    local b = newControlButton(row)
+    b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    row.button = b
+
+    local function stopListening()
+        b.listening = false
+        b:EnableKeyboard(false)
+        b:SetScript("OnKeyDown", nil)
+        row:Refresh()
+    end
+    b:SetScript("OnClick", function(_, mouseButton)
+        if mouseButton == "RightButton" then
+            opts.set(nil)
+            stopListening()
+            return
+        end
+        b.listening = true
+        b.text:SetText(L.KEY_PRESS)
+        b:EnableKeyboard(true)
+        b:SetScript("OnKeyDown", function(_, key)
+            if key == "ESCAPE" then return stopListening() end
+            local chord = opts.combination(key)
+            if not chord then return end
+            opts.set(chord)
+            stopListening()
+        end)
+    end)
+    b:SetScript("OnHide", function() if b.listening then stopListening() end end)
+
+    function row:Refresh()
+        if b.listening then return end
+        local key = opts.get()
+        b.text:SetText(key and GetBindingText(key) or L.KEY_NONE)
+        row:RefreshInherit()
+    end
+    function row:SetEnabled(on)
+        b:SetEnabled(on)
         dimRow(row, on)
     end
     return row

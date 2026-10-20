@@ -1,14 +1,14 @@
 <Bindings>
-    <Binding name="FOREVERQUESTLOG_COLLAPSE" header="FOREVERQUESTLOG" category="ADDONS">
+    <Binding name="FOREVERQUESTLOG_COLLAPSE" category="BINDING_HEADER_FOREVERQUESTLOG">
         ForeverQuestLog_Binding("COLLAPSE")
     </Binding>
-    <Binding name="FOREVERQUESTLOG_HIDECOMPLETE" category="ADDONS">
+    <Binding name="FOREVERQUESTLOG_HIDECOMPLETE" category="BINDING_HEADER_FOREVERQUESTLOG">
         ForeverQuestLog_Binding("HIDECOMPLETE")
     </Binding>
-    <Binding name="FOREVERQUESTLOG_LOCK" category="ADDONS">
+    <Binding name="FOREVERQUESTLOG_LOCK" category="BINDING_HEADER_FOREVERQUESTLOG">
         ForeverQuestLog_Binding("LOCK")
     </Binding>
-    <Binding name="FOREVERQUESTLOG_OPTIONS" category="ADDONS">
+    <Binding name="FOREVERQUESTLOG_OPTIONS" category="BINDING_HEADER_FOREVERQUESTLOG">
         ForeverQuestLog_Binding("OPTIONS")
     </Binding>
 </Bindings>
