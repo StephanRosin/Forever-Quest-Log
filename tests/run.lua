@@ -247,6 +247,13 @@ M.calls = {}
 tiger = questRows()[1]
 tiger:GetScript("OnClick")(tiger, "LeftButton")
 check("left click: quest details on the map", lastCall(), "QuestMapFrame_OpenToQuestDetails:185")
+M.calls = {}
+M.state.combat = true
+tiger:GetScript("OnClick")(tiger, "LeftButton")
+check("in combat: the map waits (ShowUIPanel would be blocked)", #M.calls, 0)
+M.state.combat = false
+M.Fire("PLAYER_REGEN_ENABLED")
+check("after combat: the map opens", lastCall(), "QuestMapFrame_OpenToQuestDetails:185")
 M.state.modified.QUESTWATCHTOGGLE = true
 tiger:GetScript("OnClick")(tiger, "LeftButton")
 check("shift click: stop tracking", lastCall(), "RemoveQuestWatch:185")

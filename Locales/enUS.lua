@@ -259,3 +259,4 @@ L.KEY_NONE = "Not bound"
 L.MSG_KEYS_COMBAT = "Keys cannot be changed in combat."
 L.MSG_KEY_REPLACED = '%s no longer does "%s".'
 L.MSG_MAP_YIELDED = "Another addon places the world map (e.g. OpenMap): Forever Quest Log leaves its position and scale to it."
+L.MSG_OPEN_AFTER_COMBAT = "Quest opens after combat (the game does not let addons open the map in combat)."

@@ -13,8 +13,17 @@ local function canUntrack()
     return not (QuestUtil and QuestUtil.CanRemoveQuestWatch) or QuestUtil.CanRemoveQuestWatch()
 end
 
+-- Map and quest log are UI panels: ShowUIPanel refuses insecure callers in
+-- combat ("Interface action failed"), Blizzard's own tracker runs secure.
+-- So in combat the last request waits for the end of combat.
+local function showPanel(fn)
+    if InCombatLockdown() then ns.Print(L.MSG_OPEN_AFTER_COMBAT) end
+    ns.AfterCombat("panel", fn)
+end
+
 local function openDetails(questID)
-    if QuestMapFrame_OpenToQuestDetails then QuestMapFrame_OpenToQuestDetails(questID) end
+    if not QuestMapFrame_OpenToQuestDetails then return end
+    showPanel(function() QuestMapFrame_OpenToQuestDetails(questID) end)
 end
 
 -- The right-click menu, Blizzard's entries in Blizzard's order.
@@ -29,7 +38,7 @@ local function questMenu(owner, questID)
         end
         local showing = QuestUtil and QuestUtil.IsShowingQuestDetails and QuestUtil.IsShowingQuestDetails(questID)
         root:CreateButton(showing and OBJECTIVES_HIDE_VIEW_IN_QUESTLOG or OBJECTIVES_VIEW_IN_QUESTLOG, function()
-            QuestUtil.OpenQuestDetails(questID)
+            showPanel(function() QuestUtil.OpenQuestDetails(questID) end)
         end)
         root:CreateButton(OBJECTIVES_SHOW_QUEST_MAP, function() openDetails(questID) end)
         if canUntrack() then
