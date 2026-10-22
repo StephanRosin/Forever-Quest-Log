@@ -17,7 +17,7 @@ Design notes: [docs/specs/](docs/specs/).
 ## Development
 
     tests/run                    # Lua 5.1, as in the game
-    ./install "<WoW>/_classic_beta_/Interface/AddOns"
+    ./install "<WoW>/_forever_/Interface/AddOns"
     tools/package                # dist/ForeverQuestLog-<version>.zip
     tools/release release "<changelog>"   # bump ## Version first
     python3 tools/make_icons.py  # header and minimap icons (Pillow)
