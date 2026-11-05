@@ -23,6 +23,27 @@ function Position.Read(frame, vertical)
     return round(cx * s - sw / 2), round(edge * s - sh)
 end
 
+-- After dragging: the corner nearest to the frame and the offsets from it, in
+-- UIParent units.
+function Position.NearestCorner(frame)
+    local s = frame:GetScale()
+    local left, right = frame:GetLeft() * s, frame:GetRight() * s
+    local top, bottom = frame:GetTop() * s, frame:GetBottom() * s
+    local sw, sh = UIParent:GetWidth(), UIParent:GetHeight()
+    local h = ((left + right) / 2 < sw / 2) and "LEFT" or "RIGHT"
+    local v = ((top + bottom) / 2 < sh / 2) and "BOTTOM" or "TOP"
+    local x = (h == "LEFT") and left or (right - sw)
+    local y = (v == "TOP") and (top - sh) or bottom
+    return v .. h, round(x), round(y)
+end
+
+-- Whether the frame hangs at this point of UIParent, and nowhere else.
+function Position.IsAt(frame, point, x, y)
+    local cur, rel, relPoint, cx, cy = frame:GetPoint(1)
+    return cur == point and rel == UIParent and relPoint == point and cx ~= nil and math.abs(cx - x) < 0.5
+        and math.abs(cy - y) < 0.5 and frame:GetNumPoints() == 1
+end
+
 -- keys: { point =, x =, y = } setting names; extra: more values to store.
 function Position.Write(keys, vertical, x, y, extra)
     local sh = UIParent:GetHeight()

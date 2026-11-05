@@ -924,6 +924,60 @@ ns.WorldMap.yielded = false
 handle:EnableMouse(true)
 Settings.SetMany({ mapPlaced = nil, mapPoint = nil, mapX = nil, mapY = nil })
 wmf._shown = false
+
+section("Quest window")
+local qf = M.questFrame
+local qfHandle
+for _, f in ipairs(M.frames) do if f._parent == QuestFrame and f._scripts.OnMouseDown then qfHandle = f end end
+check("drag handle on the title bar", qfHandle ~= nil, true)
+M.PanelManagerPlacesQuestFrame()
+qf._scripts.OnShow(qf)
+check("not dragged yet: Blizzard's place", qf._lastPoint[4], 16)
+qfHandle._scripts.OnMouseDown(qfHandle, "LeftButton")
+check("dragging moves it", qf._moving, true)
+qf._rect = { 1200, 400, 338, 496 }
+qfHandle._scripts.OnMouseUp(qfHandle, "LeftButton")
+check("dropped: right half, top half", S("questDialogPoint"), "TOPRIGHT")
+check("x from the right edge", S("questDialogX"), 1538 - 1920)
+check("y from the top", S("questDialogY"), 896 - 1080)
+M.PanelManagerPlacesQuestFrame()
+qf._scripts.OnShow(qf)
+check("opens where it was left", qf._lastPoint[1] .. "," .. qf._lastPoint[4], "TOPRIGHT,-382")
+M.PanelManagerPlacesQuestFrame()
+qfHandle._scripts.OnUpdate(qfHandle, 0.1)
+check("Blizzard places it again: put back", qf._lastPoint[4], -382)
+-- Walking away from the NPC closes the window in the middle of a drag.
+qfHandle._scripts.OnMouseDown(qfHandle, "LeftButton")
+qf._rect = { 100, 400, 338, 496 }
+qfHandle._scripts.OnHide(qfHandle)
+check("closed mid-drag: drag ended", qf._moving, false)
+check("closed mid-drag: position kept", S("questDialogPoint") .. "," .. S("questDialogX"), "TOPLEFT,100")
+ns.QuestDialog.ResetPosition()
+M.PanelManagerPlacesQuestFrame()
+qfHandle._scripts.OnUpdate(qfHandle, 0.1)
+check("reset: Blizzard's place stays", qf._lastPoint[4], 16)
+Settings.Set("questDialogMove", false)
+qfHandle._scripts.OnMouseDown(qfHandle, "LeftButton")
+check("moving off: no drag", qf._moving, false)
+Settings.Set("questDialogMove", nil)
+-- Another addon that puts its own place back: we step back once.
+local qfSetPoint = qf.SetPoint
+qf.SetPoint = function(self, ...)
+    qfSetPoint(self, ...)
+    qfSetPoint(self, "TOPLEFT", UIParent, "TOPLEFT", 50, -50)
+end
+M.chat = {}
+Settings.SetMany({ questDialogPlaced = true, questDialogPoint = "TOPLEFT", questDialogX = 400, questDialogY = -100 })
+qfHandle._scripts.OnUpdate(qfHandle, 0.1)
+qfHandle._scripts.OnUpdate(qfHandle, 0.1)
+check("another addon places it: left there", qf._lastPoint[4], 50)
+check("said so once", #M.chat, 1)
+check("drag handle off", qfHandle._mouse, false)
+qf.SetPoint = qfSetPoint
+ns.QuestDialog.yielded = false
+qfHandle:EnableMouse(true)
+Settings.SetMany({ questDialogPlaced = nil, questDialogPoint = nil, questDialogX = nil, questDialogY = nil })
+
 ns.Window.Open()
 local okMap = pcall(ns.Window.ShowPage, "map")
 check("map options page", okMap, true)

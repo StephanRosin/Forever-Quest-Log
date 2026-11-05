@@ -68,12 +68,6 @@ local function applyScale()
     end
 end
 
-local function isAt(point, x, y)
-    local cur, rel, relPoint, cx, cy = map:GetPoint(1)
-    return cur == point and rel == UIParent and relPoint == point and cx ~= nil and math.abs(cx - x) < 0.5
-        and math.abs(cy - y) < 0.5 and map:GetNumPoints() == 1
-end
-
 function WorldMap.Place()
     if not map or WorldMap.yielded then return end
     applyScale()
@@ -81,24 +75,15 @@ function WorldMap.Place()
     if not point or WorldMap.yielded then return end
     local s = map:GetScale()
     local tx, ty = x / s, y / s
-    if isAt(point, tx, ty) then return end
+    if ns.Position.IsAt(map, point, tx, ty) then return end
     map:ClearAllPoints()
     map:SetPoint(point, UIParent, point, tx, ty)
-    if not isAt(point, tx, ty) then yieldToOtherAddon() end
+    if not ns.Position.IsAt(map, point, tx, ty) then yieldToOtherAddon() end
 end
 
--- After dragging: anchored at the corner nearest to it, offsets in UIParent
--- units.
 local function savePosition()
-    local s = map:GetScale()
-    local left, right = map:GetLeft() * s, map:GetRight() * s
-    local top, bottom = map:GetTop() * s, map:GetBottom() * s
-    local sw, sh = UIParent:GetWidth(), UIParent:GetHeight()
-    local h = ((left + right) / 2 < sw / 2) and "LEFT" or "RIGHT"
-    local v = ((top + bottom) / 2 < sh / 2) and "BOTTOM" or "TOP"
-    local x = (h == "LEFT") and left or (right - sw)
-    local y = (v == "TOP") and (top - sh) or bottom
-    Settings.SetMany({ mapPlaced = true, mapPoint = v .. h, mapX = math.floor(x + 0.5), mapY = math.floor(y + 0.5) })
+    local point, x, y = ns.Position.NearestCorner(map)
+    Settings.SetMany({ mapPlaced = true, mapPoint = point, mapX = x, mapY = y })
 end
 
 function WorldMap.ResetPosition()

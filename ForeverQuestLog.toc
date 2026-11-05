@@ -35,6 +35,7 @@ Items.lua
 Rows.lua
 Tracker.lua
 WorldMap.lua
+QuestDialog.lua
 QuestLogStyle.lua
 Focus.lua
 Keys.lua

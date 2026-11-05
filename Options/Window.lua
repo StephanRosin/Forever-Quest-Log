@@ -268,6 +268,12 @@ local function mapRows()
             { label = "OPT_MAP_RESET", width = 200, onClick = function() ns.WorldMap.ResetPosition() end },
         } },
         num("mapScale", "OPT_SCALE", "%", 5),
+        { type = "header", label = "OPT_QUESTDIALOG" },
+        check("questDialogMove", "OPT_QUESTDIALOG_MOVE"),
+        { type = "text", label = "OPT_QUESTDIALOG_HINT", height = 40 },
+        { type = "buttons", buttons = {
+            { label = "OPT_MAP_RESET", width = 200, onClick = function() ns.QuestDialog.ResetPosition() end },
+        } },
         { type = "header", label = "OPT_MAP_LOOK" },
         choice("mapStyle", "OPT_MAP_STYLE", { "BLIZZARD", "TRACKER", "OWN" }, "MAPSTYLE_"),
         own(choice("mapBorderStyle", "OPT_BORDER_STYLE", { "GOLD", "FLAT", "NONE" }, "BORDER_")),

@@ -101,6 +101,13 @@ Settings.DEFAULTS = {
     padding = 10,           -- inside the frame
     questSpacing = 11,      -- between quests
 
+    -- The NPC's quest window: moved by its title bar (placed once dragged).
+    questDialogMove = true,
+    questDialogPlaced = false,
+    questDialogPoint = "TOPLEFT",
+    questDialogX = 0,
+    questDialogY = 0,
+
     -- World map: moved by its title bar (mapPlaced once dragged), and its
     -- frame: BLIZZARD (unchanged), TRACKER (the tracker's border and
     -- shadow) or OWN (the map* values below).
@@ -249,6 +256,8 @@ Settings.RANGES = {
     mapScale = { 50, 150 },
     mapX = { -4000, 4000 },
     mapY = { -3000, 3000 },
+    questDialogX = { -4000, 4000 },
+    questDialogY = { -3000, 3000 },
     mapBorderSize = { 1, 8 },
     mapShadowSize = { 1, 24 },
     mapShadowAlpha = { 0, 100 },
