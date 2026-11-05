@@ -46,7 +46,7 @@ A new quest tracker for the right side of your screen, made for **WoW: Forever**
 
 ## World map
 - **Move the world map** by its title bar, or set X / Y exactly; it opens where you left it. **Scale** it from 50 to 150 %. The maximized map stays as it is.
-- **Move the quest window** (where an NPC offers or takes a quest) by its title bar; it opens where you left it too.
+- **Move the quest windows** (an NPC's greeting and the quest itself) by their title bar; they share one place and open where you left them too.
 - **Frame style**: Blizzard's, like the tracker, or your own: gold, flat or no border, shadow, the title's font and colour, the portrait on or off, and a background of your choice.
 - **The quest list beside the map**: Blizzard's, like the tracker, or your own background and fonts for zone headers, quest titles and objectives. Rows keep their height, colours and clicks stay Blizzard's.
 - Nothing of Blizzard's map is replaced: zoom, pins, filters, quest details and the quest log work as always.

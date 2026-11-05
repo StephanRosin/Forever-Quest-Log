@@ -946,6 +946,22 @@ check("opens where it was left", qf._lastPoint[1] .. "," .. qf._lastPoint[4], "T
 M.PanelManagerPlacesQuestFrame()
 qfHandle._scripts.OnUpdate(qfHandle, 0.1)
 check("Blizzard places it again: put back", qf._lastPoint[4], -382)
+-- The greeting shares that place, whichever of the two was dragged.
+local gf = M.gossipFrame
+local gfHandle
+for _, f in ipairs(M.frames) do if f._parent == GossipFrame and f._scripts.OnMouseDown then gfHandle = f end end
+check("greeting: drag handle", gfHandle ~= nil, true)
+M.PanelManagerPlacesQuestFrame(gf)
+gf._scripts.OnShow(gf)
+check("greeting opens at the quest window's place", gf._lastPoint[1] .. "," .. gf._lastPoint[4], "TOPRIGHT,-382")
+gfHandle._scripts.OnMouseDown(gfHandle, "LeftButton")
+check("greeting: dragging moves it", gf._moving, true)
+gf._rect = { 1000, 400, 338, 496 }
+gfHandle._scripts.OnMouseUp(gfHandle, "LeftButton")
+check("greeting: dropped", S("questDialogX"), 1338 - 1920)
+M.PanelManagerPlacesQuestFrame()
+qf._scripts.OnShow(qf)
+check("quest window follows the greeting", qf._lastPoint[4], -582)
 -- Walking away from the NPC closes the window in the middle of a drag.
 qfHandle._scripts.OnMouseDown(qfHandle, "LeftButton")
 qf._rect = { 100, 400, 338, 496 }
@@ -973,8 +989,9 @@ qfHandle._scripts.OnUpdate(qfHandle, 0.1)
 check("another addon places it: left there", qf._lastPoint[4], 50)
 check("said so once", #M.chat, 1)
 check("drag handle off", qfHandle._mouse, false)
+check("the greeting still moves", gfHandle._mouse, true)
 qf.SetPoint = qfSetPoint
-ns.QuestDialog.yielded = false
+ns.QuestDialog.yielded[QuestFrame] = nil
 qfHandle:EnableMouse(true)
 Settings.SetMany({ questDialogPlaced = nil, questDialogPoint = nil, questDialogX = nil, questDialogY = nil })
 

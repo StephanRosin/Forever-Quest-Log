@@ -471,9 +471,16 @@ qf._w, qf._h, qf._scale = 338, 496, 1
 qf._shown = false
 QuestFrame = guard(qf, "QuestFrame")
 M.questFrame = qf
-function M.PanelManagerPlacesQuestFrame()
-    qf:ClearAllPoints()
-    qf:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -116)
+-- ... and the NPC's greeting, its twin.
+local gf = newWidget("GossipFrame", "Frame")
+gf._w, gf._h, gf._scale = 338, 496, 1
+gf._shown = false
+GossipFrame = guard(gf, "GossipFrame")
+M.gossipFrame = gf
+function M.PanelManagerPlacesQuestFrame(frame)
+    frame = frame or qf
+    frame:ClearAllPoints()
+    frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 16, -116)
 end
 
 -- Post-hooks as in the game: the original runs, then the hook with the
