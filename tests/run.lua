@@ -1009,6 +1009,32 @@ local function blizzardUpdate(text)
     QuestLogQuests_Update()
     return row
 end
+do
+    local row = blizzardUpdate("[30] Apothecary Zarah")
+    row.questID = 185
+    QuestLogQuests_Update()
+    check("list: no limit, title stays", row.Text:GetText(), "[30] Apothecary Zarah")
+    M.timed = { [185] = { 2700, 900 } }
+    QuestLogQuests_Update()
+    check("list: time behind the title", row.Text:GetText(), "[30] Apothecary Zarah (30:00)")
+    QuestLogQuests_Update()
+    check("list: not appended twice", row.Text:GetText(), "[30] Apothecary Zarah (30:00)")
+    local ticker = ns.QuestLogStyle.ticker
+    M.timed[185] = { 2700, 901 }
+    ticker:GetScript("OnUpdate")(ticker, 0.5)
+    check("list: waits for the second", row.Text:GetText(), "[30] Apothecary Zarah (30:00)")
+    ticker:GetScript("OnUpdate")(ticker, 0.6)
+    check("list: counts down", row.Text:GetText(), "[30] Apothecary Zarah (29:59)")
+    QuestScrollFrame:Hide()
+    M.timed[185] = { 2700, 902 }
+    ticker:GetScript("OnUpdate")(ticker, 1.1)
+    check("list hidden: no tick", row.Text:GetText(), "[30] Apothecary Zarah (29:59)")
+    QuestScrollFrame:Show()
+    M.timed[185] = { 2700, 2700 }
+    ticker:GetScript("OnUpdate")(ticker, 1.1)
+    check("list: time up, title clean", row.Text:GetText(), "[30] Apothecary Zarah")
+    M.timed = nil
+end
 Settings.Set("logStyle", "BLIZZARD")
 local row1 = blizzardUpdate("[21] The Greenwarden")
 check("Blizzard's style: font untouched", row1.Text._font[2], 12)
@@ -1184,6 +1210,48 @@ for _, entry in ipairs(Sort.Build(all, { hideComplete = true })) do
     check("hide completed quests: " .. entry.quest.title, entry.quest.isComplete, false)
 end
 local talkTo = { objectives = {}, overview = "Speak to Kin'weelay." }
+do
+    check("time text: minutes", ns.Rows.TimeText(2700), "45:00")
+    check("time text: hours", ns.Rows.TimeText(3753), "1:02:33")
+    check("time text: rounds up", ns.Rows.TimeText(59.2), "1:00")
+    local function timed(extra)
+        local q = { objectives = {}, timeLeft = 1500, isComplete = false }
+        for k, v in pairs(extra or {}) do q[k] = v end
+        return ns.Rows.QuestLines(q)
+    end
+    check("timer: first line", timed()[1].text, ns.L.TIME_LEFT:format("25:00"))
+    check("timer: no warning yet", timed()[1].color, nil)
+    check("timer: red in the last minute", timed({ timeLeft = 60 })[1].color[1], 1)
+    check("timer: also on a complete quest", timed({ isComplete = true })[1].text, ns.L.TIME_LEFT:format("25:00"))
+    check("timer: complete keeps its line", timed({ isComplete = true })[2].style, "done")
+
+    M.timed = { [185] = { 2700, 900 }, [605] = { 2700, 2700 } }
+    local list = ns.Data.Quests()
+    local byID = {}
+    for _, q in ipairs(list) do byID[q.id] = q end
+    check("timed quest: seconds left", byID[185].timeLeft, 1800)
+    check("time is up: no line", byID[605].timeLeft, nil)
+    check("no time limit: no line", byID[189].timeLeft, nil)
+
+    -- On screen: the line counts down once a second, and stops ticking without a timer.
+    local tracker = ns.Tracker.frame
+    local function timerLine()
+        for _, r in ipairs(questRows()) do
+            for _, line in ipairs(r.lines or {}) do
+                local t = line.text and line.text._shown ~= false and line.text:GetText()
+                if t and t:find(ns.L.TIME_LEFT:format(""), 1, true) then return t end
+            end
+        end
+    end
+    ns.Tracker.Refresh(); M.RunTimers()
+    check("on screen: time left", timerLine(), ns.L.TIME_LEFT:format("30:00"))
+    M.timed[185] = { 2700, 901 }
+    tracker:GetScript("OnUpdate")(tracker, 1.1); M.RunTimers()
+    check("on screen: counts down", timerLine(), ns.L.TIME_LEFT:format("29:59"))
+    M.timed = nil
+    tracker:GetScript("OnUpdate")(tracker, 1.1); M.RunTimers()
+    check("timer gone: nothing ticks", ns.Tracker.hasTimedQuest, false)
+end
 check("no objectives: the quest text", ns.Rows.QuestLines(talkTo)[1].text, "Speak to Kin'weelay.")
 Settings.Set("showOverview", false)
 check("no objectives, option off: nothing", #ns.Rows.QuestLines(talkTo), 0)

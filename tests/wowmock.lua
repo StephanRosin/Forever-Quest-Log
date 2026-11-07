@@ -293,6 +293,10 @@ C_QuestLog = {
                  isBounty = false, isAutoComplete = e.autoComplete or false, questLogIndex = i }
     end,
     GetLogIndexForQuestID = function(id) return logIndex(id) end,
+    GetTimeAllowed = function(id)
+        local t = M.timed and M.timed[id]
+        if t then return t[1], t[2] end
+    end,
     GetNumQuestWatches = function() return #M.watches end,
     GetQuestIDForQuestWatchIndex = function(i) return M.watches[i] end,
     GetQuestDifficultyLevel = function(id) return M.quest(id).level end,

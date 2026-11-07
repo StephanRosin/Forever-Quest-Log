@@ -107,6 +107,15 @@ end
 
 -- One quest as the tracker draws it, or nil when it is no longer in the
 -- log. watchIndex: its place in Blizzard's watch order.
+-- Seconds left on a timed quest, else nil. Also for complete ones: a delivery
+-- counts as complete from the start, and its time still runs.
+function Data.TimeLeft(questID)
+    if C_QuestLog.IsFailed and C_QuestLog.IsFailed(questID) then return nil end
+    local total, elapsed = C_QuestLog.GetTimeAllowed(questID)
+    if total and elapsed and elapsed < total then return total - elapsed end
+    return nil
+end
+
 function Data.Quest(questID, watchIndex, headers, superTracked)
     local logIndex = C_QuestLog.GetLogIndexForQuestID(questID)
     if not logIndex then return nil end
@@ -134,6 +143,7 @@ function Data.Quest(questID, watchIndex, headers, superTracked)
         overview = overview(logIndex),
         item = specialItem(logIndex, isComplete),
     }
+    q.timeLeft = Data.TimeLeft(questID)
     if isComplete and not q.isAutoComplete and GetQuestLogCompletionText then
         local text = GetQuestLogCompletionText(logIndex)
         if text and text ~= "" then q.completionText = text end

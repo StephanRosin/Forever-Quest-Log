@@ -463,6 +463,10 @@ function Tracker.Layout()
     Tracker.queued = false
     ns.Blizzard.Check()
     local quests = ns.Data.Quests()
+    Tracker.hasTimedQuest = false
+    for _, q in ipairs(quests) do
+        if q.timeLeft then Tracker.hasTimedQuest = true end
+    end
     local recipes = S("showRecipes") and ns.Data.Recipes() or {}
     local entries = Tracker.Entries(quests, recipes)
     local st = state()
@@ -727,8 +731,17 @@ function Tracker.UpdateAlpha()
     Items.SetAlpha(state().collapsed and 0 or alpha)
 end
 
-local elapsedSince = 0
+local elapsedSince, timerSince = 0, 0
 local function onUpdate(_, elapsed)
+    -- Timed quests count down: redraw once a second, only while one is listed.
+    timerSince = timerSince + elapsed
+    if timerSince >= 1 then
+        timerSince = 0
+        if Tracker.hasTimedQuest then
+            Tracker.Refresh()
+            ns.Focus.Refresh()
+        end
+    end
     elapsedSince = elapsedSince + elapsed
     if elapsedSince < 0.1 then return end
     elapsedSince = 0

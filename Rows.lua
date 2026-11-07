@@ -312,6 +312,14 @@ local function newQuestRow(parent)
     return row
 end
 
+-- "45:00", "1:02:33".
+function Rows.TimeText(seconds)
+    seconds = math.max(0, math.ceil(seconds))
+    local h, m, sec = math.floor(seconds / 3600), math.floor(seconds % 3600 / 60), seconds % 60
+    if h > 0 then return ("%d:%02d:%02d"):format(h, m, sec) end
+    return ("%d:%02d"):format(m, sec)
+end
+
 -- The objective lines of a quest, as Blizzard's tracker picks them
 -- (UpdateSingle): complete quests show only how to turn them in, failed
 -- ones "Failed", others the way point (super-tracked), the objectives and
@@ -319,6 +327,10 @@ end
 function Rows.QuestLines(q, cfg)
     cfg = cfg or Rows.TRACKER
     local list = {}
+    if q.timeLeft then
+        list[#list + 1] = { text = L.TIME_LEFT:format(Rows.TimeText(q.timeLeft)),
+            color = q.timeLeft <= 60 and { 1, 0.25, 0.25 } or nil }
+    end
     if q.isComplete then
         if q.isAutoComplete then
             list[#list + 1] = { text = QUEST_WATCH_QUEST_COMPLETE or L.QUEST_COMPLETE, style = "done", check = true }

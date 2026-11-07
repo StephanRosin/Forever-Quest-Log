@@ -78,8 +78,22 @@ local function headerText(button)
     return button.ButtonText or (button.GetFontString and button:GetFontString())
 end
 
+-- Time left behind the title of a timed quest: "Title (44:59)". Blizzard writes
+-- the title anew with each update, so the suffix is replaced, never remembered.
+local function showTimeLeft(f)
+    local text = f.questID and f.Text and f.Text:GetText()
+    if not text then return end
+    local title = text:gsub(" %(%d+:%d%d:?%d*%)$", "")
+    local left = ns.Data.TimeLeft(f.questID)
+    local wanted = left and (title .. " (" .. ns.Rows.TimeText(left) .. ")") or title
+    if wanted ~= text then f.Text:SetText(wanted) end
+end
+
 local PARTS = {
-    titleFramePool = function(f) applyFont(f.Text, QuestLogStyle.TextStyle("title")) end,
+    titleFramePool = function(f)
+        applyFont(f.Text, QuestLogStyle.TextStyle("title"))
+        showTimeLeft(f)
+    end,
     objectiveFramePool = function(f)
         local style = QuestLogStyle.TextStyle("objective")
         applyFont(f.Text, style)
@@ -107,6 +121,16 @@ local function hookUpdate()
     if hooked or type(_G.QuestLogQuests_Update) ~= "function" then return end
     hooksecurefunc("QuestLogQuests_Update", styleAll)
     hooked = true
+    -- The countdown, only while the list is on screen.
+    local since = 0
+    QuestLogStyle.ticker = CreateFrame("Frame")
+    QuestLogStyle.ticker:SetScript("OnUpdate", function(_, elapsed)
+        since = since + elapsed
+        if since < 1 then return end
+        since = 0
+        local scroll = _G.QuestScrollFrame
+        if scroll:IsVisible() then styleFrames(scroll.titleFramePool, showTimeLeft) end
+    end)
 end
 
 -- Background -------------------------------------------------------------
