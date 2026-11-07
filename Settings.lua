@@ -27,6 +27,7 @@ Settings.DEFAULTS = {
     height = 564,           -- the most it grows to
     grow = "DOWN",          -- DOWN (top edge fixed) or UP (bottom edge fixed)
     fitContent = false,      -- shrink to the content, never above height
+    collapseHides = false,   -- collapsed hides the header too
     locked = true,
     scale = 100,            -- percent
 

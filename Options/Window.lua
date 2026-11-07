@@ -121,6 +121,8 @@ local function layoutRows()
         num("width", "OPT_WIDTH"),
         num("height", "OPT_HEIGHT"),
         check("fitContent", "OPT_FIT_CONTENT"),
+        check("collapseHides", "OPT_COLLAPSE_HIDES"),
+        visibleIf({ type = "text", label = "OPT_COLLAPSE_HIDES_HINT", height = 40 }, function() return S("collapseHides") end),
         choice("grow", "OPT_GROW", { "DOWN", "UP" }, "GROW_"),
         num("scale", "OPT_SCALE", "%", 5),
         { type = "buttons", buttons = {

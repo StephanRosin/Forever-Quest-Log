@@ -552,7 +552,9 @@ function Tracker.Layout()
     Tracker.UpdateScrollbar()
 
     -- Nothing tracked and locked: out of the way, as Blizzard's tracker.
-    local visible = #entries > 0 or unlocked or (st.instance and st.onlyHere and #quests > 0)
+    -- Unlocked always shows, so a hidden frame can be found again.
+    local hasContent = #entries > 0 or (st.instance and st.onlyHere and #quests > 0)
+    local visible = unlocked or (hasContent and not (st.collapsed and S("collapseHides")))
     frame:SetShown(visible and true or false)
     place()
     applyLook()
