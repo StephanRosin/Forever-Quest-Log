@@ -153,6 +153,7 @@ local function appearanceRows()
         visibleIf(media("bgTexture", "OPT_BG_TEXTURE", "background"), function() return S("bgMode") == "TEXTURE" end),
         num("bgAlpha", "OPT_BG_ALPHA", "%"),
         check("headerLine", "OPT_HEADER_LINE"),
+        check("headerShine", "OPT_HEADER_SHINE"),
         check("showScrollbar", "OPT_SCROLLBAR"),
         { type = "header", label = "OPT_BORDER" },
         choice("borderStyle", "OPT_BORDER_STYLE", { "GOLD", "FLAT", "NONE" }, "BORDER_"),

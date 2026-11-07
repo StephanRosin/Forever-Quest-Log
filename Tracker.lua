@@ -320,6 +320,7 @@ local function layoutHeader(tracked)
     header.count:SetText((full and "|cffff4040" or "") .. inLog .. " / " .. max .. (full and "|r" or ""))
     header.countHover.inLog, header.countHover.max, header.countHover.tracked = inLog, max, tracked
     header.line:SetShown(S("headerLine") and not state().collapsed)
+    header.shine:SetShown(S("headerShine"))
     header.collapse.icon:SetTexture(Media.Icon(state().collapsed and "ChevronDown" or "ChevronUp"))
     header.lock.icon:SetTexture(Media.Icon(S("locked") and "Lock" or "Unlock"))
     header.lock.activeColor = ACCENT
