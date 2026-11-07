@@ -1216,6 +1216,28 @@ section("Ideas from MonkeyQuest")
 check("default: finished objectives dimmed, not hidden", Settings.DEFAULTS.showDoneObjectives, true)
 check("default: completed quests shown", Settings.DEFAULTS.hideCompleteQuests, false)
 check("default: objective colours unchanged", Settings.DEFAULTS.objectiveProgressColors, false)
+do
+    local row = ns.Rows.NewQuestRow(UIParent)
+    local function layout(line)
+        ns.Rows.LayoutQuest(row, { title = "T", objectives = { line } }, 200, 1)
+        local l = row.lines[1]
+        return l.text._points.TOPLEFT[3], l.icon:IsShown() and l.icon._points.TOPLEFT[3] or nil
+    end
+    local open, done = { text = "open" }, { text = "done", check = true }
+    local base = layout(open)
+    check("objective indent: off by default", Settings.DEFAULTS.objectiveIndent, 0)
+    local text, icon = layout(done)
+    check("objective indent 0: check mark at the edge", icon, base)
+    check("objective indent 0: its text behind it", text, base + 15)
+    Settings.Set("objectiveIndent", 25)
+    text, icon = layout(open)
+    check("objective indent 25: open text moves", text, base + 25)
+    check("objective indent 25: no check mark appears", icon, nil)
+    text, icon = layout(done)
+    check("objective indent 25: checked text lines up", text, base + 25)
+    check("objective indent 25: check mark right before it", icon, base + 10)
+    Settings.Set("objectiveIndent", nil)
+end
 local all = Data.Quests()
 check("hide completed quests: one less", #Sort.Build(all, { hideComplete = true }), #all - 1)
 for _, entry in ipairs(Sort.Build(all, { hideComplete = true })) do

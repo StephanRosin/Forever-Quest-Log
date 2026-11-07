@@ -151,6 +151,7 @@ L.OUTLINE_THICK = "Dicke Kontur"
 L.OPT_COLOR = "Farbe"
 L.OPT_DONE_OBJECTIVE_COLOR = "Erledigte Ziele"
 L.OPT_PROGRESS_COLORS = "Offene Ziele nach Fortschritt färben"
+L.OPT_OBJECTIVE_INDENT = "Einzug der Ziele"
 
 L.OPT_BARS = "Fortschrittsbalken"
 L.OPT_SHOW_BARS = "Balken unter gezählten Zielen"

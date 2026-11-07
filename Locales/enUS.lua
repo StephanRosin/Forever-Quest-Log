@@ -177,6 +177,7 @@ L.OUTLINE_THICK = "Thick outline"
 L.OPT_COLOR = "Colour"
 L.OPT_DONE_OBJECTIVE_COLOR = "Finished objectives"
 L.OPT_PROGRESS_COLORS = "Colour open objectives by progress"
+L.OPT_OBJECTIVE_INDENT = "Objective indent"
 
 L.OPT_BARS = "Objective bars"
 L.OPT_SHOW_BARS = "A bar under counted objectives"

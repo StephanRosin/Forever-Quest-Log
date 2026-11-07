@@ -151,6 +151,7 @@ L.OUTLINE_THICK = "Contour épais"
 L.OPT_COLOR = "Couleur"
 L.OPT_DONE_OBJECTIVE_COLOR = "Objectifs accomplis"
 L.OPT_PROGRESS_COLORS = "Colorer les objectifs ouverts selon la progression"
+L.OPT_OBJECTIVE_INDENT = "Retrait des objectifs"
 
 L.OPT_BARS = "Barres d'objectifs"
 L.OPT_SHOW_BARS = "Une barre sous les objectifs comptés"

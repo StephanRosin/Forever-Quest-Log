@@ -19,6 +19,7 @@ Rows.ZONE_H = 22
 local LINE_GAP = 3      -- between title and objectives, and between lines
 local BAR_GAP = 2       -- between an objective and its bar
 local COUNT_GAP = 6
+local CHECK_W = 15      -- a check mark and its gap
 local TAG_PAD = 4
 
 local function hex(c)
@@ -85,14 +86,14 @@ local function layoutLine(row, line, o, x, y, w, style, cfg)
     elseif o.cur and o.max then
         countText = o.cur .. "/" .. o.max
     end
-    local left = x
+    local left = x + cfg.get("objectiveIndent")
     if o.check then
+        left = math.max(left, x + CHECK_W)
         line.icon:ClearAllPoints()
-        line.icon:SetPoint("TOPLEFT", row, "TOPLEFT", x, -y - 1)
+        line.icon:SetPoint("TOPLEFT", row, "TOPLEFT", left - CHECK_W, -y - 1)
         local c = textStyle.color
         line.icon:SetVertexColor(c[1], c[2], c[3])
         line.icon:Show()
-        left = x + 15
     else
         line.icon:Hide()
     end

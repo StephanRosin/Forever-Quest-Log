@@ -200,6 +200,7 @@ local function textRows()
         if name == "objective" then
             rows[#rows + 1] = colorRow("objectiveDoneColor", "OPT_DONE_OBJECTIVE_COLOR", true)
             rows[#rows + 1] = check("objectiveProgressColors", "OPT_PROGRESS_COLORS")
+            rows[#rows + 1] = num("objectiveIndent", "OPT_OBJECTIVE_INDENT")
         end
     end
     return rows
@@ -339,6 +340,7 @@ local function focusRows()
     append(rows, textStyleRows(k("objective"), "STYLE_OBJECTIVE"))
     rows[#rows + 1] = colorRow(k("objectiveDoneColor"), "OPT_DONE_OBJECTIVE_COLOR", true)
     rows[#rows + 1] = check(k("objectiveProgressColors"), "OPT_PROGRESS_COLORS")
+    rows[#rows + 1] = num(k("objectiveIndent"), "OPT_OBJECTIVE_INDENT")
     append(rows, textStyleRows(k("done"), "STYLE_DONE"))
     append(rows, {
         { type = "header", label = "OPT_BARS" },
