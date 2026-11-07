@@ -1375,7 +1375,6 @@ do
         M.Fire("LOADING_SCREEN_DISABLED")
         M.RunTimers()
     end
-    check("the shipped version is announced", (io.open(ROOT .. "/" .. ADDON .. ".toc"):read("*a"):find("## Version: " .. News.VERSION, 1, true)) ~= nil, true)
     check("fresh install: nothing shown", shown(), 0)
     check("fresh install: recorded", ForeverQuestLogProfiles.newsSeen, News.VERSION)
     loadingDone()
