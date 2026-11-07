@@ -38,6 +38,7 @@ Settings.DEFAULTS = {
     showLevel = true,
     levelColors = true,     -- difficulty colours for "[34]"; else the title colour
     showTags = true,        -- Elite, Dungeon, ...
+    taskCountBank = false,  -- task lists: the bank counts as having an item
     showPOI = true,         -- Blizzard's map buttons in front of the titles
     showBars = true,        -- a thin bar under each counted objective
     showDoneObjectives = true,

@@ -33,6 +33,7 @@ local function Init()
     if ready then return end
     ready = true
 
+    ns.freshInstall = ForeverQuestLogProfiles == nil
     ForeverQuestLogProfiles = ForeverQuestLogProfiles or {}
     ForeverQuestLogProfiles.profiles = ForeverQuestLogProfiles.profiles or {}
     ForeverQuestLogChar = ForeverQuestLogChar or {}

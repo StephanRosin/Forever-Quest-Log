@@ -198,6 +198,7 @@ function Minimap:GetCenter() return 1782, 897 end
 GameTooltip = newWidget("GameTooltip")
 function GameTooltip:AddLine(t) self._lines = self._lines or {}; self._lines[#self._lines + 1] = t end
 function GameTooltip:SetOwner() self._lines = {} end
+function GameTooltip:SetItemByID(id) self._item = id end
 function GameTooltip:SetText(t) self._text = t; self._lines = {} end
 function GameTooltip:IsOwned() return true end
 function GameTooltip:SetQuestPartyProgress(id) record("SetQuestPartyProgress", id) end
@@ -206,7 +207,11 @@ DEFAULT_CHAT_FRAME = { AddMessage = function(_, m) M.chat[#M.chat + 1] = m end }
 SlashCmdList = {}
 UISpecialFrames = {}
 StaticPopupDialogs = {}
-function StaticPopup_Show(which, a) M.popups[#M.popups + 1] = { which = which, text = StaticPopupDialogs[which].text, arg = a } end
+function StaticPopup_Show(which, a)
+    if M.popupBlocked then return nil end
+    M.popups[#M.popups + 1] = { which = which, text = StaticPopupDialogs[which].text, arg = a }
+    return M.popups[#M.popups]
+end
 C_Timer = { After = function(_, fn) M.timers[#M.timers + 1] = fn end }
 function CreateColor(r, g, b, a) return { r = r, g = g, b = b, a = a } end
 InterfaceOptions_AddCategory = function(panel) M.registered[#M.registered + 1] = panel.name end
@@ -356,7 +361,10 @@ MenuUtil = { CreateContextMenu = function(owner, build)
     local menu = { entries = {} }
     local root = {
         CreateTitle = function(_, t) menu.entries[#menu.entries + 1] = { text = t } end,
-        CreateButton = function(_, t, fn) menu.entries[#menu.entries + 1] = { text = t, fn = fn } end,
+        CreateButton = function(self, t, fn)
+            menu.entries[#menu.entries + 1] = { text = t, fn = fn }
+            return self  -- a submenu's entries land in the same flat list
+        end,
     }
     build(owner, root)
     M.menus[#M.menus + 1] = menu
@@ -406,7 +414,12 @@ ProfessionsUtil = {
     end,
 }
 C_Item = { GetItemNameByID = function(id) return M.itemNames and M.itemNames[id] end,
-           RequestLoadItemDataByID = function(id) record("RequestLoadItemDataByID", id) end }
+           RequestLoadItemDataByID = function(id) record("RequestLoadItemDataByID", id) end,
+           GetItemCount = function(id, includeBank)
+               return (M.bags and M.bags[id] or 0) + (includeBank and M.bank and M.bank[id] or 0)
+           end,
+           GetItemIconByID = function(id) return "ICON" .. id end,
+           GetItemQualityColor = function() return 1, 1, 1, "ffffffff" end }
 
 -- Blizzard's tracker, the frame the addon must leave alone except for
 -- scale and alpha. Writing a field on it, calling a method other than

@@ -23,7 +23,7 @@ local GRIP_BRIGHT = { 0.72, 0.92, 1 }     -- the arrows under the cursor
 local CORNERS = { "TOPLEFT", "TOPRIGHT", "BOTTOMLEFT", "BOTTOMRIGHT" }
 
 local frame, header, scroll, child, grips, outline, readout, empty
-local zoneRows, questRows = {}, {}
+local zoneRows, questRows, taskRows = {}, {}, {}
 local refreshQueued, layoutPending = false, false
 local resizing          -- the dragged corner and where everything started, while a grip is dragged
 local lastShape         -- what the rows look like, to see whether combat may relayout
@@ -201,8 +201,8 @@ local function layoutChip()
 
     local titleLeft = S("locked") and 10 or 26
     local countRight = titleLeft + header.title:GetStringWidth() + 6 + header.count:GetStringWidth()
-    -- Five buttons from the right edge, 5 px in, 1 px apart.
-    local buttonsLeft = S("width") - 5 - 5 * BUTTON - 4
+    -- Six buttons from the right edge, 5 px in, 1 px apart.
+    local buttonsLeft = S("width") - 5 - 6 * BUTTON - 5
     chip:ClearAllPoints()
     if countRight + 8 + width + 4 <= buttonsLeft then
         chip:SetPoint("LEFT", header, "LEFT", countRight + 8, 0)
@@ -270,16 +270,19 @@ local function createHeader()
     local sort = headerButton("SortWatch", function()
         return S("sortBy") == "LEVEL" and L.TIP_SORT_LEVEL or L.TIP_SORT_WATCH
     end, function() Settings.Set("sortBy", S("sortBy") == "LEVEL" and "WATCH" or "LEVEL") end)
+    local add = headerButton("Plus", L.OPT_TASK_NEW, function() ns.TaskUI.OpenNewList() end)
     local zones = headerButton("Zones", function()
         return S("groupByZone") and L.TIP_ZONES_ON or L.TIP_ZONES_OFF
     end, function() Settings.Set("groupByZone", not S("groupByZone")) end,
         function() return S("groupByZone") end)
     header.collapse, header.options, header.lock, header.sort, header.zones = collapse, options, lock, sort, zones
+    header.add = add
     collapse:SetPoint("RIGHT", -5, 0)
     options:SetPoint("RIGHT", collapse, "LEFT", -1, 0)
     lock:SetPoint("RIGHT", options, "LEFT", -1, 0)
     sort:SetPoint("RIGHT", lock, "LEFT", -1, 0)
     zones:SetPoint("RIGHT", sort, "LEFT", -1, 0)
+    add:SetPoint("RIGHT", zones, "LEFT", -1, 0)
     header.chip = newChip()
 
     -- Dragging the header moves the frame (unlocked, or with Ctrl).
@@ -322,7 +325,7 @@ local function layoutHeader(tracked)
     header.lock.activeColor = ACCENT
     header.lock.isActive = function() return not S("locked") end
     header.sort.icon:SetTexture(Media.Icon(S("sortBy") == "LEVEL" and "SortLevel" or "SortWatch"))
-    for _, b in ipairs({ header.collapse, header.options, header.lock, header.sort, header.zones }) do
+    for _, b in ipairs({ header.collapse, header.options, header.lock, header.sort, header.zones, header.add }) do
         paint(b, b.isActive and buttonColor(b) or IDLE)
     end
     if not S("locked") then paint(header.lock, ACCENT) end
@@ -388,8 +391,31 @@ local function toggleSection(key)
     Tracker.Refresh()
 end
 
--- The entries to draw: quests (grouped / sorted), then the recipes under
--- their own header.
+-- The task lists go on top; "this dungeon" is about the quests there only.
+-- Quests without zone headers get one of their own, or they would read as
+-- part of the last list.
+local function withTaskLists(quests, st)
+    local entries = st.instance and st.onlyHere and {} or ns.Tasks.Entries()
+    if #entries == 0 then return quests end
+    for _, e in ipairs(entries) do
+        if e.kind == "list" then
+            e.onAdd = function() ns.TaskUI.OpenAdd(e.list) end
+            e.onMenu = function(owner) ns.TaskUI.ListMenu(owner, e.list) end
+        end
+    end
+    local ungrouped = quests[1] and quests[1].kind == "quest"
+    local collapsed = ungrouped and st.sections.quests and true or false
+    if ungrouped then
+        entries[#entries + 1] = { kind = "section", key = "quests", count = #quests, collapsed = collapsed, name = L.HEADER_QUESTS }
+    end
+    if not collapsed then
+        for _, e in ipairs(quests) do entries[#entries + 1] = e end
+    end
+    return entries
+end
+
+-- The entries to draw: the task lists, quests (grouped / sorted), then the
+-- recipes under their own header.
 function Tracker.Entries(quests, recipes)
     local st = state()
     local entries = ns.Sort.Build(quests, {
@@ -401,6 +427,7 @@ function Tracker.Entries(quests, recipes)
         onlyZone = st.instance and st.onlyHere and st.instance or nil,
         hideComplete = S("hideCompleteQuests"),
     })
+    entries = withTaskLists(entries, st)
     if #recipes > 0 then
         local collapsed = st.sections.recipes and true or false
         entries[#entries + 1] = { kind = "section", key = "recipes", count = #recipes, collapsed = collapsed,
@@ -425,6 +452,8 @@ local function shapeOf(entries)
             parts[#parts + 1] = "q" .. q.id .. (q.isComplete and "c" or "") .. table.concat(done)
         elseif e.kind == "recipe" then
             parts[#parts + 1] = "r" .. e.recipe.id
+        elseif e.kind == "task" then
+            parts[#parts + 1] = "t" .. e.line.text .. (e.line.done and "1" or "0")
         else
             parts[#parts + 1] = e.kind .. (e.name or "") .. (e.collapsed and "-" or "+")
         end
@@ -497,20 +526,27 @@ function Tracker.Layout()
     -- so map buttons (wider than their column, with a glow when focused) are
     -- not cut off; the rows start `pad` in.
     child:SetWidth(inner + pad)
-    local y, nz, nq = pad, 0, 0
+    local y, nz, nq, nt = pad, 0, 0, 0
     itemRows = {}
     local index = 0
     for i, e in ipairs(entries) do
         local row, h
-        if e.kind == "zone" or e.kind == "section" then
+        if e.kind == "zone" or e.kind == "section" or e.kind == "list" then
             nz = nz + 1
             row = acquire(zoneRows, nz, Rows.NewZoneRow)
             if e.kind == "zone" then
                 h = Rows.LayoutZone(row, e, inner, e.name, toggleZone)
+            elseif e.kind == "list" then
+                h = Rows.LayoutZone(row, e, inner, e.list, ns.Tasks.ToggleList)
             else
                 h = Rows.LayoutZone(row, e, inner, e.key, toggleSection)
             end
             if i > 1 then y = y + 4 end
+        elseif e.kind == "task" then
+            nt = nt + 1
+            row = acquire(taskRows, nt, Rows.NewTaskRow)
+            h = Rows.LayoutTask(row, e, inner)
+            if i > 1 then y = y + S("questSpacing") end
         else
             nq = nq + 1
             row = acquire(questRows, nq, Rows.NewQuestRow)
@@ -530,6 +566,7 @@ function Tracker.Layout()
     end
     release(zoneRows, nz + 1)
     release(questRows, nq + 1)
+    release(taskRows, nt + 1)
 
     local unlocked = not S("locked")
     empty:SetShown(#entries == 0)

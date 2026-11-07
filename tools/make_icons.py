@@ -121,6 +121,20 @@ def check(draw):
     poly(draw, [(7, 17), (13, 23), (25, 10)], 3.4)
 
 
+def box(draw):
+    poly(draw, [(5, 5), (27, 5), (27, 27), (5, 27), (5, 5)], 2.6)
+
+
+def box_checked(draw):
+    box(draw)
+    poly(draw, [(10, 16), (14.5, 21), (22, 11)], 3)
+
+
+def plus(draw):
+    poly(draw, [(16, 7), (16, 25)], 2.6)
+    poly(draw, [(7, 16), (25, 16)], 2.6)
+
+
 def resize(draw):
     poly(draw, [(27, 13), (13, 27)], 2.2)
     poly(draw, [(27, 20), (20, 27)], 2.2)
@@ -144,6 +158,9 @@ ICONS = {
     "IconSortLevel": sort_level,
     "IconSortWatch": sort_watch,
     "IconCheck": check,
+    "IconBox": box,
+    "IconBoxChecked": box_checked,
+    "IconPlus": plus,
     "IconResize": resize,
     "IconArrowCorner": arrow_corner,
 }

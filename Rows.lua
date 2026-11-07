@@ -21,6 +21,8 @@ local BAR_GAP = 2       -- between an objective and its bar
 local COUNT_GAP = 6
 local CHECK_W = 15      -- a check mark and its gap
 local TAG_PAD = 4
+local LIST_BUTTON = 14
+local LIST_BUTTON_ALPHA = 0.7
 
 local function hex(c)
     return ("%02x%02x%02x"):format(math.floor(c[1] * 255 + 0.5), math.floor(c[2] * 255 + 0.5), math.floor(c[3] * 255 + 0.5))
@@ -37,7 +39,6 @@ local function newLine(parent)
     line.count = parent:CreateFontString(nil, "OVERLAY")
     line.count:SetJustifyH("RIGHT")
     line.icon = parent:CreateTexture(nil, "OVERLAY")
-    line.icon:SetTexture(Media.Icon("Check"))
     line.icon:SetSize(12, 12)
     line.barBg = parent:CreateTexture(nil, "ARTWORK")
     line.bar = parent:CreateTexture(nil, "ARTWORK", nil, 1)
@@ -70,6 +71,7 @@ end
 
 -- One line at (x, -y) of row, width w. o: { text, cur, max, done, percent }
 -- or a plain text line with a style ("done", "failed"). Returns its height.
+-- o.check draws o.icon (default the check mark) in front of the text.
 local function layoutLine(row, line, o, x, y, w, style, cfg)
     local isDone = o.done
     local textStyle = cfg.text(style or "objective")
@@ -89,6 +91,7 @@ local function layoutLine(row, line, o, x, y, w, style, cfg)
     local left = x + cfg.get("objectiveIndent")
     if o.check then
         left = math.max(left, x + CHECK_W)
+        line.icon:SetTexture(Media.Icon(o.icon or "Check"))
         line.icon:ClearAllPoints()
         line.icon:SetPoint("TOPLEFT", row, "TOPLEFT", left - CHECK_W, -y - 1)
         local c = textStyle.color
@@ -191,7 +194,47 @@ local function newZoneRow(parent)
     return row
 end
 
--- entry: { name, count, collapsed }, key: what onToggle gets.
+-- A small button beside a task list's name.
+local function newListButton(row, icon, tooltip)
+    local b = CreateFrame("Button", nil, row)
+    b:SetSize(LIST_BUTTON, LIST_BUTTON)
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b.icon:SetAllPoints()
+    b.icon:SetTexture(Media.Icon(icon))
+    b:SetScript("OnEnter", function(self)
+        self.icon:SetAlpha(1)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:SetText(tooltip, 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    b:SetScript("OnLeave", function(self)
+        self.icon:SetAlpha(LIST_BUTTON_ALPHA)
+        GameTooltip:Hide()
+    end)
+    b.icon:SetAlpha(LIST_BUTTON_ALPHA)
+    return b
+end
+
+local function layoutListButtons(row, entry, color)
+    if entry.onAdd and not row.add then
+        row.add = newListButton(row, "Plus", L.TIP_TASK_ADD)
+        row.add:SetPoint("LEFT", row.name, "RIGHT", 4, 0)
+        row.add:SetScript("OnClick", function(self) row.onAdd(self) end)
+        row.gear = newListButton(row, "Gear", L.TIP_TASK_MENU)
+        row.gear:SetPoint("LEFT", row.add, "RIGHT", 1, 0)
+        row.gear:SetScript("OnClick", function(self) row.onMenu(self) end)
+    end
+    row.onAdd, row.onMenu = entry.onAdd, entry.onMenu
+    if row.add then
+        row.add:SetShown(entry.onAdd ~= nil)
+        row.gear:SetShown(entry.onAdd ~= nil)
+        row.add.icon:SetVertexColor(color[1], color[2], color[3])
+        row.gear.icon:SetVertexColor(color[1], color[2], color[3])
+    end
+    row.rule:SetPoint("LEFT", entry.onAdd and row.gear or row.name, "RIGHT", 6, 0)
+end
+
+-- entry: { name, count, collapsed, onAdd, onMenu }, key: what onToggle gets.
 function Rows.LayoutZone(row, entry, width, key, onToggle, cfg)
     cfg = cfg or Rows.TRACKER
     row.key, row.onToggle = key, onToggle
@@ -202,11 +245,12 @@ function Rows.LayoutZone(row, entry, width, key, onToggle, cfg)
     row.count:SetTextColor(c[1] * 0.7, c[2] * 0.7, c[3] * 0.7)
     row.name:SetText(entry.name)
     row.name:SetWidth(0)
-    local maxName = width - 60
+    local maxName = width - 60 - (entry.onAdd and 2 * LIST_BUTTON + 5 or 0)
     if row.name:GetStringWidth() > maxName then row.name:SetWidth(maxName) end
     row.count:SetText(entry.count or "")
     row.chevron:SetTexture(Media.Icon(entry.collapsed and "ChevronRight" or "ChevronDown"))
     row.chevron:SetVertexColor(c[1], c[2], c[3])
+    layoutListButtons(row, entry, c)
     row.rule:SetColorTexture(1, 1, 1, 1)
     row.rule:SetGradient("HORIZONTAL", CreateColor(0.78, 0.59, 0.13, 0.4), CreateColor(0.78, 0.59, 0.13, 0))
     row.name:SetAlpha(0.9)
@@ -449,5 +493,43 @@ function Rows.LayoutRecipe(row, r, width, cfg)
     return y
 end
 
+-- Task list entries ----------------------------------------------------------
+
+local function newTaskRow(parent)
+    local row = CreateFrame("Button", nil, parent)
+    row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    row:EnableMouse(true)
+    row.hover = newHover(row)
+    row:SetScript("OnClick", function(self, button)
+        if button == "RightButton" then
+            ns.TaskUI.EntryMenu(self, self.list, self.task)
+        else
+            ns.Tasks.Toggle(self.task)
+        end
+    end)
+    row:SetScript("OnEnter", function(self)
+        self.hover:Show()
+        if self.task.itemID then
+            GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+            GameTooltip:SetItemByID(self.task.itemID)
+            GameTooltip:Show()
+        end
+    end)
+    row:SetScript("OnLeave", function(self)
+        self.hover:Hide()
+        ns.Actions.Leave()
+    end)
+    return row
+end
+
+-- e: an entry of Tasks.Entries.
+function Rows.LayoutTask(row, e, width)
+    row.list, row.task = e.list, e.task
+    local h = layoutLine(row, lines(row, 1)[1], e.line, 0, 0, width, nil, Rows.TRACKER)
+    row:SetSize(width, h)
+    return h
+end
+
+Rows.NewTaskRow = newTaskRow
 Rows.NewZoneRow = newZoneRow
 Rows.NewQuestRow = newQuestRow

@@ -1361,6 +1361,257 @@ check("combat: nothing bound", M.bindings["F8"], nil)
 M.state.combat = false
 ns.Window.Toggle()
 
+section("Announcement")
+do
+    local News = ns.News
+    local function shown()
+        local n = 0
+        for _, popup in ipairs(M.popups) do
+            if popup.which == "FOREVERQUESTLOG_NEWS" then n = n + 1 end
+        end
+        return n
+    end
+    local function loadingDone()
+        M.Fire("LOADING_SCREEN_DISABLED")
+        M.RunTimers()
+    end
+    check("the shipped version is announced", (io.open(ROOT .. "/" .. ADDON .. ".toc"):read("*a"):find("## Version: " .. News.VERSION, 1, true)) ~= nil, true)
+    check("fresh install: nothing shown", shown(), 0)
+    check("fresh install: recorded", ForeverQuestLogProfiles.newsSeen, News.VERSION)
+    loadingDone()
+    check("seen: nothing shown", shown(), 0)
+    ForeverQuestLogProfiles.newsSeen = nil
+    M.state.combat = true
+    loadingDone()
+    check("update, in combat: waits", shown(), 0)
+    check("update, in combat: not recorded", ForeverQuestLogProfiles.newsSeen, nil)
+    M.state.combat = false
+    M.Fire("PLAYER_REGEN_ENABLED")
+    check("update: shown after combat", shown(), 1)
+    check("update: names the version", M.popups[#M.popups].text:find(News.VERSION, 1, true) ~= nil, true)
+    check("update: recorded", ForeverQuestLogProfiles.newsSeen, News.VERSION)
+    loadingDone()
+    check("only once", shown(), 1)
+    ForeverQuestLogProfiles.newsSeen = "0.3.7"
+    M.popupBlocked = true
+    loadingDone()
+    check("blocked popup: not recorded", ForeverQuestLogProfiles.newsSeen, "0.3.7")
+    M.popupBlocked = nil
+    loadingDone()
+    check("blocked popup: shown next time", shown(), 2)
+    for code, strings in pairs(ns.Locales) do
+        check(code .. ": news text has no format codes", strings.NEWS_TEXT:find("%", 1, true), nil)
+    end
+end
+
+section("Task lists")
+do
+    local Tasks = ns.Tasks
+    check("search: real item", Tasks.Search("Runecloth")[1].id, 14047)
+    check("search: nothing under 3 letters", #Tasks.Search("Ru"), 0)
+    check("search: 3 letters do", #Tasks.Search("Run") > 0, true)
+    check("search: not case sensitive", Tasks.Search("rUNECLOTH")[1].id, 14047)
+    check("search: stops at the maximum", #Tasks.Search("potion"), Tasks.MAX_RESULTS)
+    local mana = Tasks.Search("Mana Potion")
+    check("search: starting with it comes first", mana[1].name:sub(1, 11), "Mana Potion")
+    check("search: inside a name too", (function()
+        for _, item in ipairs(mana) do if item.name:find("^%a+ Mana Potion") then return true end end
+    end)(), true)
+    check("search: Blizzard's leftovers are gone", #Tasks.Search("Deprecated"), 0)
+    check("exact name", Tasks.FindExact(" linen cloth ").id, 2589)
+    check("no exact name", Tasks.FindExact("Linen"), nil)
+    -- A capital umlaut: lower() must fold it for the German list.
+    local chunk = loadfile(ROOT .. "/ItemNames/deDE.lua")
+    local savedLocale, german = M.locale, {}
+    M.locale = "deDE"
+    chunk(ADDON, german)
+    M.locale = savedLocale
+    check("German names are there", german.ItemNames:find("14047\t1\tRunenstoff\n", 1, true) ~= nil, true)
+    check("names load in their language only", (function()
+        local other = {}
+        chunk(ADDON, other)
+        return other.ItemNames
+    end)(), nil)
+
+    check("no lists: entries unchanged", #Tasks.Entries(), 0)
+    check("empty name refused", Tasks.AddList("   "), nil)
+    local list = Tasks.AddList(" Shopping ")
+    check("name trimmed", list.name, "Shopping")
+    local cloth = Tasks.FindExact("Runecloth")
+    M.bags, M.bank = { [14047] = 7 }, { [14047] = 20 }
+    Tasks.AddItem(list, cloth, 20)
+    check("item line: count from the bags", Tasks.Line(list.entries[1]).cur, 7)
+    check("item line: open", Tasks.Line(list.entries[1]).done, false)
+    check("item line: empty box", Tasks.Line(list.entries[1]).icon, "Box")
+    check("bank is off by default", Settings.DEFAULTS.taskCountBank, false)
+    Settings.Set("taskCountBank", true)
+    check("bank counted when asked", Tasks.Line(list.entries[1]).done, true)
+    check("item line: ticks itself", Tasks.Line(list.entries[1]).icon, "BoxChecked")
+    Settings.Set("taskCountBank", nil)
+    Tasks.AddItem(list, cloth, 5)
+    check("same item: no second line", #list.entries, 1)
+    check("same item: new amount", list.entries[1].goal, 5)
+    check("item done without the bank", Tasks.Line(list.entries[1]).done, true)
+    Tasks.AddItem(list, cloth, 20)
+    Tasks.Toggle(list.entries[1])
+    check("an item cannot be ticked by hand", Tasks.Line(list.entries[1]).done, false)
+    check("amount refused: not a number", Tasks.SetAmount(list.entries[1], "x"), false)
+    check("amount refused: zero", Tasks.SetAmount(list.entries[1], "0"), false)
+    check("empty text refused", Tasks.AddText(list, " "), false)
+    Tasks.AddText(list, "See the trainer")
+    local note = list.entries[2]
+    check("text line: open", Tasks.Line(note).done, false)
+    local rows = Tasks.Entries()
+    check("rows: head and two entries", #rows, 3)
+    check("rows: head first", rows[1].kind, "list")
+    check("rows: count finished / all", rows[1].count, "0/2")
+    Tasks.Toggle(note)
+    check("text line: ticked by hand", Tasks.Line(note).done, true)
+    check("rows: count follows", Tasks.Entries()[1].count, "1/2")
+    Tasks.ToggleList(list)
+    check("collapsed: only the head", #Tasks.Entries(), 1)
+    check("collapsed: count stays", Tasks.Entries()[1].count, "1/2")
+    Tasks.ToggleList(list)
+
+    local tracked = Data.Quests()
+    Settings.Set("groupByZone", false)
+    local drawn = ns.Tracker.Entries(tracked, {})
+    check("tracker: the list on top", drawn[1].kind, "list")
+    local head = ns.Rows.NewZoneRow(UIParent)
+    ns.Rows.LayoutZone(head, drawn[1], 200, list, Tasks.ToggleList)
+    check("list head: + and gear shown", head.add:IsShown() and head.gear:IsShown(), true)
+    local opened = #M.menus
+    head.gear:GetScript("OnClick")(head.gear)
+    check("list head: the gear opens the menu", #M.menus, opened + 1)
+    check("list head: the menu has no second way to add", M.menus[#M.menus].entries[2].text, ns.L.TASK_RENAME)
+    local openAdd, addedTo = ns.TaskUI.OpenAdd, nil
+    ns.TaskUI.OpenAdd = function(target) addedTo = target end
+    head.add:GetScript("OnClick")(head.add)
+    ns.TaskUI.OpenAdd = openAdd
+    check("list head: + opens adding to this list", addedTo, list)
+    ns.Rows.LayoutZone(head, { name = "Duskwood", count = 1 }, 200, "Duskwood", function() end)
+    check("a zone on the same row: no + or gear", head.add:IsShown() or head.gear:IsShown(), false)
+    check("a zone on the same row: rule back at the name", head.rule._points.LEFT[1], head.name)
+    check("tracker: quests under their own header", drawn[4].key, "quests")
+    check("tracker: that header counts them", drawn[4].count, #drawn - 4)
+    check("tracker: then the quests", drawn[5].kind, "quest")
+    local st = ns.CharState()
+    st.instance, st.onlyHere = "Duskwood", true
+    check("this dungeon: no lists", ns.Tracker.Entries(tracked, {})[1].kind ~= "list", true)
+    st.instance, st.onlyHere = nil, nil
+    Settings.Set("groupByZone", true)
+    drawn = ns.Tracker.Entries(tracked, {})
+    check("zones: no extra quest header", drawn[4].kind, "zone")
+    Settings.Set("groupByZone", nil)
+    ns.Tracker.Layout()
+    check("layout with a list draws", true, true)
+
+    -- The window: suggestion or text from the same field.
+    local p = ns.TaskUI.OpenAdd(list)
+    local enter = p.edit:GetScript("OnEnterPressed")
+    local before = #list.entries
+    p.edit:SetText("Buy a mount")
+    enter(p.edit)
+    check("Enter on free text: a text entry", list.entries[before + 1].text, "Buy a mount")
+    check("field cleared for the next", p.edit:GetText(), "")
+    p.edit:SetText("Linen Cloth")
+    p.amount:SetText("12")
+    enter(p.edit)
+    check("Enter on an exact name: the item", list.entries[before + 2].itemID, 2589)
+    check("with the amount", list.entries[before + 2].goal, 12)
+    p.edit:SetText("Light Lea")
+    p.edit:GetScript("OnTextChanged")(p.edit, true)
+    check("typing suggests", p.list:IsShown(), true)
+    p.edit:GetScript("OnArrowPressed")(p.edit, "DOWN")
+    check("arrow down selects the first", p.selection, 1)
+    p.edit:GetScript("OnArrowPressed")(p.edit, "UP")
+    check("arrow up wraps", p.selection, #p.results)
+    p.edit:GetScript("OnArrowPressed")(p.edit, "DOWN")
+    enter(p.edit)
+    check("Enter on a selection: that item", list.entries[before + 3].itemID, 2318)
+    local amountArrow = p.amount:GetScript("OnArrowPressed")
+    p.amount:SetText("1")
+    amountArrow(p.amount, "UP")
+    amountArrow(p.amount, "UP")
+    check("amount: arrow up", p.amount:GetText(), "3")
+    amountArrow(p.amount, "DOWN")
+    check("amount: arrow down", p.amount:GetText(), "2")
+    amountArrow(p.amount, "LEFT")
+    check("amount: left and right move the cursor only", p.amount:GetText(), "2")
+    p.amount.stepUp:GetScript("OnClick")(p.amount.stepUp)
+    check("amount: arrow button up", p.amount:GetText(), "3")
+    p.amount.stepDown:GetScript("OnClick")(p.amount.stepDown)
+    check("amount: arrow button down", p.amount:GetText(), "2")
+    p.amount:SetText("1")
+    amountArrow(p.amount, "DOWN")
+    check("amount: not below one", p.amount:GetText(), "1")
+    p.amount:SetText("9999")
+    amountArrow(p.amount, "UP")
+    check("amount: not above the field's four digits", p.amount:GetText(), "9999")
+    p.amount:SetText("")
+    amountArrow(p.amount, "UP")
+    check("amount: empty counts as one", p.amount:GetText(), "2")
+    p.edit:GetScript("OnEscapePressed")(p.edit)
+    check("Escape closes", p:IsShown(), false)
+
+    local goal = list.entries[1]
+    goal.goal = 20
+    ns.TaskUI.OpenAmount(goal)
+    p.edit:GetScript("OnArrowPressed")(p.edit, "UP")
+    check("change amount: arrow up", p.edit:GetText(), "21")
+    p.edit.stepDown:GetScript("OnClick")(p.edit.stepDown)
+    p.edit.stepDown:GetScript("OnClick")(p.edit.stepDown)
+    check("change amount: arrow button", p.edit:GetText(), "19")
+    p.ok:GetScript("OnClick")(p.ok)
+    check("change amount: saved with OK", goal.goal, 19)
+    check("change amount: OK closes", p:IsShown(), false)
+    ns.TaskUI.OpenAmount(goal)
+    p.edit:SetText("23")
+    enter(p.edit)
+    check("change amount: saved with Enter", goal.goal, 23)
+    ns.TaskUI.OpenAdd(list)
+    p.edit:SetText("From the button")
+    p.ok:GetScript("OnClick")(p.ok)
+    check("adding: OK adds", list.entries[#list.entries].text, "From the button")
+    check("adding: OK leaves the window open", p:IsShown(), true)
+    Tasks.RemoveEntry(list, list.entries[#list.entries])
+    p.edit:GetScript("OnEscapePressed")(p.edit)
+    ns.TaskUI.OpenAdd(list)
+    check("adding: no arrows in the name field", p.edit.stepUp:IsShown(), false)
+    p.edit:GetScript("OnEscapePressed")(p.edit)
+
+    ns.TaskUI.OpenNewList()
+    p.edit:SetText("  ")
+    enter(p.edit)
+    check("empty list name keeps the window", p:IsShown(), true)
+    p.edit:SetText("Second")
+    enter(p.edit)
+    check("new list made", Tasks.Lists()[2].name, "Second")
+
+    Tasks.RemoveDone(list)
+    check("remove finished keeps open ones", list.entries[1].itemID, 14047)
+    for _, entry in ipairs(list.entries) do check("nothing finished left", Tasks.Line(entry).done, false) end
+    local second = Tasks.Lists()[2]
+    ns.TaskUI.OpenAdd(second)
+    ns.TaskUI.ListMenu(UIParent, second)
+    local deleteEntry
+    for _, e in ipairs(M.menus[#M.menus].entries) do
+        if e.text == ns.L.TASK_DELETE_LIST then deleteEntry = e end
+    end
+    local asked = #M.popups
+    deleteEntry.fn()
+    check("delete list: asks first", #M.popups, asked + 1)
+    check("delete list: names the list", M.popups[#M.popups].arg, "Second")
+    check("delete list: nothing gone yet", Tasks.Lists()[2], second)
+    StaticPopupDialogs[M.popups[#M.popups].which].OnAccept(nil, second)
+    check("delete list: gone once confirmed", Tasks.Lists()[2], nil)
+    check("delete list: its open window closes", p:IsShown(), false)
+    Tasks.RemoveList(list)
+    check("lists removed", #Tasks.Lists(), 0)
+    M.bags, M.bank = nil, nil
+    ns.Tracker.Layout()
+end
+
 section("Languages")
 local base = ns.Locales.enUS
 for code, strings in pairs(ns.Locales) do

@@ -101,6 +101,11 @@ local function generalRows()
         check("questTooltip", "OPT_QUEST_TOOLTIP"),
         check("showItems", "OPT_SHOW_ITEMS"),
         check("showRecipes", "OPT_SHOW_RECIPES"),
+        { type = "header", label = "OPT_TASK_LISTS" },
+        check("taskCountBank", "OPT_TASK_COUNT_BANK"),
+        { type = "buttons", buttons = {
+            { label = "OPT_TASK_NEW", width = 170, onClick = function() ns.TaskUI.OpenNewList() end },
+        } },
         { type = "header", label = "OPT_MINIMAP" },
         check("minimapShow", "OPT_MINIMAP_SHOW"),
         { type = "header", label = "OPT_BLIZZARD" },

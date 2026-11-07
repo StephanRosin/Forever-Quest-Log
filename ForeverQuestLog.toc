@@ -19,6 +19,10 @@ Locales\deDE.lua
 Locales\esES.lua
 Locales\frFR.lua
 Locale.lua
+ItemNames\enUS.lua
+ItemNames\deDE.lua
+ItemNames\esES.lua
+ItemNames\frFR.lua
 Core.lua
 Profiles.lua
 Settings.lua
@@ -32,6 +36,7 @@ Data.lua
 Sort.lua
 Actions.lua
 Items.lua
+Tasks.lua
 Rows.lua
 Tracker.lua
 WorldMap.lua
@@ -44,4 +49,6 @@ Options\Widgets.lua
 Options\Window.lua
 Options\Panel.lua
 Options\MinimapButton.lua
+TaskUI.lua
 Commands.lua
+News.lua

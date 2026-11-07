@@ -18,6 +18,7 @@ A new quest tracker for the right side of your screen, made for **WoW: Forever**
 - **Hover a quest** for its quest text; in a group the tooltip adds your party's progress.
 - Zones collapse on a click; the header counts your quests like the quest log does (15 / 40), the tooltip tells how many of them you track.
 - **Tracked recipes** in their own section, with every reagent and how many you have.
+- **Your own task lists** on top of the quests, each with its own heading like a zone: items with an amount (suggested as you type, counted from your bags, optionally the bank) and plain text entries you tick off yourself. Click **+** in the header for a new list. Each list has its own **+** and gear beside its name; right-click an entry to change or remove it.
 
 ## Nothing lost
 - **Left-click** a quest: details on the map. **Shift-click**: stop tracking. **Right-click**: Blizzard's own menu (focus, quest details, show on map, stop tracking, share in a group, abandon).
