@@ -41,6 +41,14 @@ ns.On("PLAYER_REGEN_ENABLED", function()
     for _, fn in pairs(pending) do fn() end
 end)
 
+-- Forever's controller navigation (Blizzard_GamepadSmartNavigation) treats any
+-- frame with a mouse script inside an open panel as a button. Selecting our
+-- drag handle there ran our code inside its secure flow: "blocked from an
+-- action", and the face buttons stopped working. Ignored frames are skipped.
+function ns.HideFromGamepad(frame)
+    if SmartNavigation_MarkFrameIgnored then SmartNavigation_MarkFrameIgnored(frame) end
+end
+
 function ns.PendingAfterCombat()
     local n = 0
     for _ in pairs(afterCombat) do n = n + 1 end

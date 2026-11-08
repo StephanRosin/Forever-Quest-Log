@@ -95,6 +95,7 @@ end
 -- portrait and the buttons, above Blizzard's border.
 local function createHandle()
     handle = CreateFrame("Frame", nil, map)
+    ns.HideFromGamepad(handle)
     handle:SetFrameStrata("HIGH")
     handle:SetFrameLevel(map.BorderFrame and (map.BorderFrame:GetFrameLevel() + 600) or 600)
     handle:SetPoint("TOPLEFT", map, "TOPLEFT", SIDE, 0)

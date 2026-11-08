@@ -27,6 +27,7 @@ end
 
 local function attach(frame)
     local handle = CreateFrame("Frame", nil, frame)
+    ns.HideFromGamepad(handle)
     local moving = false
 
     local function place()

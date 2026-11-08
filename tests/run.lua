@@ -1,5 +1,7 @@
 -- Tests for Forever Quest Log. Run with tests/run (Lua 5.1, as in WoW).
 local M = dofile("wowmock.lua")
+ignoredByGamepad = {}
+function SmartNavigation_MarkFrameIgnored(f) ignoredByGamepad[f] = true end
 local ROOT = ADDONDIR
 local ADDON = "ForeverQuestLog"
 
@@ -879,6 +881,7 @@ check("not dragged yet: Blizzard's place", wmf._lastPoint[4], 16)
 local handle
 for _, f in ipairs(M.frames) do if f._parent == WorldMapFrame and f._scripts.OnMouseDown then handle = f end end
 check("drag handle on the title bar", handle ~= nil, true)
+check("controller navigation skips the map handle", ignoredByGamepad[handle], true)
 handle._scripts.OnMouseDown(handle, "LeftButton")
 check("dragging moves the map", wmf._moving, true)
 wmf._rect = { 1200, 200, 1000, 700 }
@@ -942,6 +945,7 @@ local qf = M.questFrame
 local qfHandle
 for _, f in ipairs(M.frames) do if f._parent == QuestFrame and f._scripts.OnMouseDown then qfHandle = f end end
 check("drag handle on the title bar", qfHandle ~= nil, true)
+check("controller navigation skips the quest window handle", ignoredByGamepad[qfHandle], true)
 M.PanelManagerPlacesQuestFrame()
 qf._scripts.OnShow(qf)
 check("not dragged yet: Blizzard's place", qf._lastPoint[4], 16)
