@@ -153,7 +153,7 @@ function Notes.LayoutWindow(win)
     for i, entry in ipairs(list.entries) do
         local row = win.rows[i]
         if not row then
-            row = Rows.NewTaskRow(win.child)
+            row = ns.Tracker.Draggable(Rows.NewTaskRow, win.rows)(win.child)
             win.rows[i] = row
         end
         if i > 1 then y = y + S("questSpacing") end

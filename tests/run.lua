@@ -1546,6 +1546,18 @@ do
         for _, e in ipairs(list.entries) do if Tasks.Line(e).done then d = d + 1 end end
         return d
     end)() .. "/" .. #list.entries)
+    -- Dragging inside the note: the first entry below the second.
+    local noteTop, noteLow = win.rows[1], win.rows[2]
+    noteTop._rect, noteLow._rect = { 0, 500, 200, 20 }, { 0, 480, 200, 20 }
+    local movedTask = noteTop.task
+    check("note: rows can be dragged", noteTop._drag, true)
+    M.state.time = 5
+    noteTop:GetScript("OnDragStart")(noteTop)
+    M.state.cursorY = 470
+    noteTop:GetScript("OnDragStop")(noteTop)
+    check("note: dropped below", list.entries[2], movedTask)
+    Tasks.MoveEntry(list, movedTask, list.entries[1])
+    M.state.cursorY = nil
     win._rect = { 300, 400, 320, 260 }
     win:SetSize(320, 260)
     win.grip:GetScript("OnMouseUp")(win.grip)

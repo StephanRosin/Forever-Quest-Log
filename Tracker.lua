@@ -389,11 +389,12 @@ local dropLine
 
 local function isListHead(row) return row.onToggle == ns.Tasks.ToggleList end
 
--- The rows it can land among, top to bottom (the pools are in layout order).
+-- The rows it can land among, top to bottom (the pools are in layout order;
+-- a task row knows its pool: the tracker's or a note's).
 local function dropRows(row)
     local found = {}
     if row.task then
-        for _, r in ipairs(taskRows) do
+        for _, r in ipairs(row.dragPool) do
             if r:IsShown() and r.list == row.list then found[#found + 1] = r end
         end
     else
@@ -406,7 +407,7 @@ end
 
 -- The row it goes in front of, nil for the end.
 local function dropTarget()
-    local y = select(2, GetCursorPosition()) / child:GetEffectiveScale()
+    local y = select(2, GetCursorPosition()) / drag.row:GetEffectiveScale()
     for _, r in ipairs(drag.rows) do
         if y > (r:GetTop() + r:GetBottom()) / 2 then return r end
     end
@@ -415,6 +416,7 @@ end
 -- The end of the lists is below the last list's tasks.
 local function lastRow()
     if drag.row.task then return drag.rows[#drag.rows] end
+    -- Lists move in the tracker only.
     local last = drag.rows[#drag.rows]
     for _, r in ipairs(taskRows) do
         if r:IsShown() and r.list == last.key then last = r end
@@ -439,11 +441,13 @@ end
 local function startDrag(row)
     if not (row.task or isListHead(row)) then return end
     drag = { row = row, rows = dropRows(row) }
+    -- One line, on the frame of the rows being dragged (tracker or note).
     if not dropLine then
         dropLine = child:CreateTexture(nil, "OVERLAY")
         dropLine:SetHeight(2)
         dropLine:SetColorTexture(ACCENT[1], ACCENT[2], ACCENT[3], 1)
     end
+    dropLine:SetParent(row:GetParent())
     row:SetAlpha(0.5)
     row:SetScript("OnUpdate", showDrop)
 end
@@ -465,10 +469,12 @@ local function stopDrag(row)
 end
 Tracker.StartDrag, Tracker.StopDrag = startDrag, stopDrag
 
--- Task rows and zone heads (only those of lists move) can be dragged.
-local function draggable(make)
+-- Task rows and zone heads (only those of lists move) can be dragged; pool:
+-- the rows a task row moves among.
+local function draggable(make, pool)
     return function(parent)
         local row = make(parent)
+        row.dragPool = pool
         row:RegisterForDrag("LeftButton")
         row:SetScript("OnDragStart", startDrag)
         row:SetScript("OnDragStop", stopDrag)
@@ -480,7 +486,8 @@ local function draggable(make)
         return row
     end
 end
-local newZoneRow, newTaskRow = draggable(Rows.NewZoneRow), draggable(Rows.NewTaskRow)
+local newZoneRow, newTaskRow = draggable(Rows.NewZoneRow), draggable(Rows.NewTaskRow, taskRows)
+Tracker.Draggable = draggable
 
 local function toggleZone(name)
     local zones = state().zones
