@@ -216,7 +216,12 @@ C_Timer = { After = function(_, fn) M.timers[#M.timers + 1] = fn end }
 function CreateColor(r, g, b, a) return { r = r, g = g, b = b, a = a } end
 InterfaceOptions_AddCategory = function(panel) M.registered[#M.registered + 1] = panel.name end
 PixelUtil = { GetNearestPixelSize = function(v) return v end, GetPixelToUIUnitFactor = function() return 1 end }
-Enum = { UITextureSliceMode = { Stretched = 1 }, SpellBookSpellBank = { Player = 0 } }
+Enum = { UITextureSliceMode = { Stretched = 1 }, SpellBookSpellBank = { Player = 0 }, UIMapType = { Continent = 2, Zone = 3 } }
+M.maps = { [1446] = { name = "Tanaris", mapType = 3 }, [1434] = { name = "Stranglethorn Vale", mapType = 3 },
+           [1414] = { name = "Kalimdor", mapType = 2 }, [2000] = { name = "Tanaris", mapType = 3 },
+           [1440] = { name = "Ashenvale", mapType = 3 } }
+C_Map = { GetMapInfo = function(id) return M.maps[id] end }
+function GetTime() return M.state.time or 0 end
 POIButtonUtil = { Style = { QuestInProgress = 1, QuestComplete = 2 } }
 Constants = { QuestWatchConsts = { MAX_QUEST_WATCHES = 25 }, QuestLogConsts = { MAXIMUM_NUM_QUESTS_LOG_CAN_ACCEPT = 40 } }
 

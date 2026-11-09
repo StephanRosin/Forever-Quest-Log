@@ -1477,6 +1477,19 @@ do
     check("collapsed: only the head", #Tasks.Entries(), 1)
     check("collapsed: count stays", Tasks.Entries()[1].count, "1/2")
     Tasks.ToggleList(list)
+    -- Order: entries within their list, lists among the lists.
+    local first, second = list.entries[1], list.entries[2]
+    check("move: to the end", Tasks.MoveEntry(list, first, nil), true)
+    check("move: now second", list.entries[2], first)
+    Tasks.MoveEntry(list, first, second)
+    check("move: in front of another", list.entries[1], first)
+    check("move: onto itself does nothing", Tasks.MoveEntry(list, first, first), false)
+    local other = Tasks.AddList("Other")
+    Tasks.MoveList(other, list)
+    check("move list: in front", Tasks.Lists()[1], other)
+    Tasks.MoveList(other, nil)
+    check("move list: to the end", Tasks.Lists()[2], other)
+    Tasks.RemoveList(other)
 
     local tracked = Data.Quests()
     Settings.Set("groupByZone", false)
@@ -1484,7 +1497,8 @@ do
     check("tracker: the list on top", drawn[1].kind, "list")
     local head = ns.Rows.NewZoneRow(UIParent)
     ns.Rows.LayoutZone(head, drawn[1], 200, list, Tasks.ToggleList)
-    check("list head: + and gear shown", head.add:IsShown() and head.gear:IsShown(), true)
+    check("list head: +, undock and gear shown", head.add:IsShown() and head.undock:IsShown() and head.gear:IsShown(), true)
+    check("list head: undock beside the +", head.undock._points.LEFT[1], head.add)
     local opened = #M.menus
     head.gear:GetScript("OnClick")(head.gear)
     check("list head: the gear opens the menu", #M.menus, opened + 1)
@@ -1495,7 +1509,7 @@ do
     ns.TaskUI.OpenAdd = openAdd
     check("list head: + opens adding to this list", addedTo, list)
     ns.Rows.LayoutZone(head, { name = "Duskwood", count = 1 }, 200, "Duskwood", function() end)
-    check("a zone on the same row: no + or gear", head.add:IsShown() or head.gear:IsShown(), false)
+    check("a zone on the same row: no + or gear", head.add:IsShown() or head.gear:IsShown() or head.undock:IsShown(), false)
     check("a zone on the same row: rule back at the name", head.rule._points.LEFT[1], head.name)
     check("tracker: quests under their own header", drawn[4].key, "quests")
     check("tracker: that header counts them", drawn[4].count, #drawn - 4)
@@ -1510,6 +1524,74 @@ do
     Settings.Set("groupByZone", nil)
     ns.Tracker.Layout()
     check("layout with a list draws", true, true)
+    -- Undocked: a window of its own, the tracker without the list; closing docks it.
+    local undockHead = ns.Rows.NewZoneRow(UIParent)
+    local listEntry
+    for _, e in ipairs(ns.Tracker.Entries(Data.Quests(), {})) do if e.list == list and e.kind == "list" then listEntry = e end end
+    ns.Rows.LayoutZone(undockHead, listEntry, 200, list, Tasks.ToggleList)
+    undockHead.undock:GetScript("OnClick")(undockHead.undock)
+    check("undocked: not in the tracker", (function()
+        for _, e in ipairs(Tasks.Entries()) do if e.list == list then return true end end
+        return false
+    end)(), false)
+    local win = ns.Notes.windows[list]
+    check("undocked: a window", win ~= nil and win:IsShown(), true)
+    check("undocked: a row per entry", (function()
+        local n = 0
+        for _, r in ipairs(win.rows) do if r:IsShown() then n = n + 1 end end
+        return n
+    end)(), #list.entries)
+    check("undocked: name and count", win.name:GetText(), "Shopping  " .. (function()
+        local d = 0
+        for _, e in ipairs(list.entries) do if Tasks.Line(e).done then d = d + 1 end end
+        return d
+    end)() .. "/" .. #list.entries)
+    win._rect = { 300, 400, 320, 260 }
+    win:SetSize(320, 260)
+    win.grip:GetScript("OnMouseUp")(win.grip)
+    check("resized: kept on the list", list.note.w .. "x" .. list.note.h, "320x260")
+    check("moved: kept on the list", list.note.x, 300)
+    local menus = #M.menus
+    ns.TaskUI.ListMenu(UIParent, list)
+    check("undocked: the menu docks", (function()
+        for _, e in ipairs(M.menus[menus + 1].entries) do if e.text == ns.L.TASK_DOCK then return true end end
+        return false
+    end)(), true)
+    win.close:GetScript("OnClick")(win.close)
+    check("closed: docked again", list.undocked, nil)
+    check("closed: the window is gone", win:IsShown(), false)
+    check("closed: back in the tracker", Tasks.Entries()[1].list, list)
+    Tasks.Undock(list)
+    check("undocked again: where it was", ns.Notes.windows[list] and list.note.w, 320)
+    Tasks.Dock(list)
+    M.RunTimers()
+
+    -- Dragging in the tracker: a task below the other, then back.
+    local taskRows = {}
+    for _, f in ipairs(M.frames) do
+        if f:IsShown() and f.task and f.list == list and f._parent ~= win.child then taskRows[#taskRows + 1] = f end
+    end
+    check("drag: both tasks drawn", #taskRows, 2)
+    local top, low = taskRows[1], taskRows[2]
+    top._rect, low._rect = { 0, 500, 200, 20 }, { 0, 480, 200, 20 }
+    local firstTask = top.task
+    check("drag: rows can be dragged", top._drag, true)
+    M.state.time = 10
+    top:GetScript("OnDragStart")(top)
+    M.state.cursorY = 470
+    top:GetScript("OnDragStop")(top)
+    check("drag: dropped below the last", list.entries[2], firstTask)
+    local done = firstTask.done
+    top:GetScript("OnClick")(top, "LeftButton")
+    check("drag: the release is no tick", firstTask.done, done)
+    M.state.time = 11
+    M.RunTimers()
+    check("drag: relaid, the moved task is the lower row", low.task, firstTask)
+    low:GetScript("OnDragStart")(low)
+    M.state.cursorY = 515
+    low:GetScript("OnDragStop")(low)
+    check("drag: back on top", list.entries[1], firstTask)
+    M.state.cursorY = nil
 
     -- The window: suggestion or text from the same field.
     local p = ns.TaskUI.OpenAdd(list)
@@ -1534,6 +1616,83 @@ do
     p.edit:GetScript("OnArrowPressed")(p.edit, "DOWN")
     enter(p.edit)
     check("Enter on a selection: that item", list.entries[before + 3].itemID, 2318)
+    -- Zones: the name goes into the text, Enter then adds the text.
+    p.edit:SetText("Quests in tana")
+    p.edit:GetScript("OnTextChanged")(p.edit, true)
+    check("zone: suggested from the end of the text", p.results[1].name, "Tanaris")
+    check("zone: once, though two maps carry the name", #ns.Tasks.Search("Quests in tana"), 1)
+    p.edit:GetScript("OnArrowPressed")(p.edit, "DOWN")
+    enter(p.edit)
+    check("zone: put into the text", p.edit:GetText(), "Quests in Tanaris")
+    check("zone: no entry yet", #list.entries, before + 3)
+    check("zone: suggestions gone", p.list:IsShown(), false)
+    enter(p.edit)
+    check("zone: Enter adds the text", list.entries[before + 4].text, "Quests in Tanaris")
+    local placed = list.entries[before + 4]
+    check("zone: remembered with its map", placed.place and placed.place.mapID, 1446)
+    check("zone: symbol in front", ns.Tasks.Line(placed).text, ns.Tasks.PLACE_SYMBOL.zone .. " Quests in Tanaris")
+    local menus = #M.menus
+    ns.TaskUI.EntryMenu(UIParent, list, placed)
+    local showMap
+    for _, e in ipairs(M.menus[menus + 1].entries) do if e.text == ns.L.TASK_SHOW_MAP then showMap = e end end
+    check("zone: the menu shows it on the map", showMap ~= nil, true)
+    -- Dungeons: their own symbol, no map.
+    p.edit:SetText("Run deadmi")
+    p.edit:GetScript("OnTextChanged")(p.edit, true)
+    check("dungeon: kind", p.results[1].kind, "dungeon")
+    p.edit:GetScript("OnArrowPressed")(p.edit, "DOWN")
+    enter(p.edit)
+    enter(p.edit)
+    local run = list.entries[before + 5]
+    check("dungeon: symbol", ns.Tasks.Line(run).text, ns.Tasks.PLACE_SYMBOL.dungeon .. " Run Deadmines")
+    check("dungeon: no map", run.place.mapID, nil)
+    ns.TaskUI.EntryMenu(UIParent, list, run)
+    check("dungeon: no map entry", (function()
+        for _, e in ipairs(M.menus[#M.menus].entries) do if e.text == ns.L.TASK_SHOW_MAP then return true end end
+        return false
+    end)(), false)
+    check("raid: kind", ns.Tasks.Search("Clear core")[1].kind, "raid")
+    ns.Tasks.RemoveEntry(list, run)
+    check("typed by hand: no symbol", (function()
+        ns.Tasks.AddText(list, "Visit Tanaris")
+        local e = list.entries[#list.entries]
+        ns.Tasks.RemoveEntry(list, e)
+        return e.place
+    end)(), nil)
+    check("zone: continents are not zones", (function()
+        for _, r in ipairs(ns.Tasks.Search("Kalim")) do if r.zone then return true end end
+        return false
+    end)(), false)
+    check("dungeon: shipped, suggested", ns.Tasks.Search("Run deadmi")[1].name, "Deadmines")
+    check("raid: found by a later word", ns.Tasks.Search("Clear core")[1].name, "Molten Core")
+    check("dungeon: a name in both lists is a raid (Naxxramas)", (function()
+        for _, name in ipairs(ns.PlaceNames.dungeons) do if name == "Naxxramas" then return "dungeon" end end
+        for _, name in ipairs(ns.PlaceNames.raids) do if name == "Naxxramas" then return "raid" end end
+    end)(), "raid")
+    check("zone: the whole text too", ns.Tasks.Search("strangle")[1].name, "Stranglethorn Vale")
+    -- Editing a text entry suggests zones as well.
+    local edited = list.entries[before + 4]
+    local pe = ns.TaskUI.OpenEdit(edited)
+    pe.edit:SetText("Quests in Ashen")
+    pe.edit:GetScript("OnTextChanged")(pe.edit, true)
+    check("edit: zone suggested", pe.results[1] and pe.results[1].name, "Ashenvale")
+    check("edit: no items", #pe.results, 1)
+    pe.edit:GetScript("OnArrowPressed")(pe.edit, "DOWN")
+    enter(pe.edit)
+    check("edit: zone put into the text", pe.edit:GetText(), "Quests in Ashenvale")
+    check("edit: not saved yet", edited.text, "Quests in Tanaris")
+    enter(pe.edit)
+    check("edit: Enter saves", edited.text, "Quests in Ashenvale")
+    check("edit: the new place", edited.place.name, "Ashenvale")
+    ns.TaskUI.OpenEdit(edited)
+    pe.edit:SetText("Quests in Ashenvale today")
+    enter(pe.edit)
+    check("edit: the place stays while its name does", edited.place and edited.place.name, "Ashenvale")
+    ns.TaskUI.OpenEdit(edited)
+    pe.edit:SetText("Something else")
+    enter(pe.edit)
+    check("edit: name gone, symbol gone", edited.place, nil)
+    ns.Tasks.RemoveEntry(list, list.entries[before + 4])
     local amountArrow = p.amount:GetScript("OnArrowPressed")
     p.amount:SetText("1")
     amountArrow(p.amount, "UP")

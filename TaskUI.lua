@@ -12,6 +12,7 @@ local FIELD_H, AMOUNT_W = 22, 56
 local STEPPER_W, MAX_AMOUNT = 14, 9999
 local OK_W, OK_H, OK_GAP = 70, 24, 8
 local ROW_H, ICON = 20, 16
+local ZONE_ICON = "Interface\\Icons\\INV_Misc_Map_01"
 local FONT = "Friz Quadrata"
 
 local popup
@@ -97,6 +98,7 @@ local function showSuggestions(results)
         row:SetScript("OnEnter", function(self)
             popup.selection = self.index
             paintSuggestions()
+            if self.item.zone then return end
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetItemByID(self.item.id)
             GameTooltip:Show()
@@ -110,10 +112,18 @@ local function showSuggestions(results)
         row:SetShown(item ~= nil)
         if item then
             row.item = item
-            row.icon:SetTexture(C_Item.GetItemIconByID(item.id))
-            local r, g, b = C_Item.GetItemQualityColor(item.quality)
             row.text:SetText(item.name)
-            row.text:SetTextColor(r, g, b)
+            if item.kind == "dungeon" or item.kind == "raid" then
+                row.icon:SetAtlas(item.kind == "raid" and "Raid" or "Dungeon")
+                row.text:SetTextColor(1, 1, 1)
+            elseif item.zone then
+                row.icon:SetTexture(ZONE_ICON)
+                row.text:SetTextColor(1, 1, 1)
+            else
+                row.icon:SetTexture(C_Item.GetItemIconByID(item.id))
+                local r, g, b = C_Item.GetItemQualityColor(item.quality)
+                row.text:SetTextColor(r, g, b)
+            end
         end
     end
     list:SetHeight(#results * ROW_H + 2)
@@ -122,13 +132,25 @@ local function showSuggestions(results)
 end
 
 local function clearEntry()
+    popup.place = nil
     popup.edit:SetText("")
     popup.amount:SetText("1")
     showSuggestions({})
     popup.edit:SetFocus()
 end
 
+-- An item goes on the list; a zone only goes into the text, which the
+-- player finishes and adds with Enter.
 function TaskUI.AddSuggestion(item)
+    if item.zone then
+        local text = popup.edit:GetText():match("^%s*(.-)%s*$"):sub(1, item.from - 1) .. item.name
+        popup.edit:SetText(text)
+        popup.edit:SetCursorPosition(#text)
+        popup.place = item
+        showSuggestions({})
+        popup.edit:SetFocus()
+        return
+    end
     Tasks.AddItem(popup.addTo, item, popup.amount:GetText())
     clearEntry()
 end
@@ -144,11 +166,14 @@ end
 
 local function submit()
     local text = popup.edit:GetText()
-    if popup.addTo then
+    local picked = popup.results[popup.selection or 0]
+    if picked and picked.zone then
+        TaskUI.AddSuggestion(picked)
+    elseif popup.addTo then
         local item = popup.results[popup.selection or 0] or Tasks.FindExact(text)
         if item then
             TaskUI.AddSuggestion(item)
-        elseif Tasks.AddText(popup.addTo, text) then
+        elseif Tasks.AddText(popup.addTo, text, popup.place) then
             clearEntry()
         end
     elseif popup.onSubmit(text) == false then
@@ -215,7 +240,11 @@ local function createPopup()
     p.edit:SetScript("OnTextChanged", function(self, userInput)
         if not userInput then return end
         Style.SetBorderColor(self, "border")
-        if p.addTo then showSuggestions(Tasks.Search(self:GetText())) end
+        if p.addTo then
+            showSuggestions(Tasks.Search(self:GetText()))
+        elseif p.zones then
+            showSuggestions(Tasks.SearchZones(self:GetText()))
+        end
     end)
     local function arrowStep(key) return key == "UP" and 1 or key == "DOWN" and -1 or nil end
     p.edit:SetScript("OnArrowPressed", function(self, key)
@@ -237,10 +266,12 @@ local function createPopup()
 end
 
 -- opts: title, text (what the field starts with), hint, onSubmit(text)
--- (false: refused), addTo (a list: the item and text mode).
+-- (false: refused), addTo (a list: the item and text mode), zones (suggest
+-- zone names for the text).
 local function open(opts)
     if not popup then createPopup() end
-    popup.addTo, popup.onSubmit = opts.addTo, opts.onSubmit
+    popup.addTo, popup.onSubmit, popup.zones = opts.addTo, opts.onSubmit, opts.zones
+    popup.place = nil
     popup.title:SetText(opts.title)
     popup.hint:SetText(opts.hint or "")
     popup.amount:SetShown(opts.addTo ~= nil)
@@ -280,10 +311,12 @@ local function openRename(list)
 end
 
 local function openEdit(entry)
-    open({ title = L.TASK_PROMPT_EDIT, text = entry.text, onSubmit = function(text)
-        return Tasks.SetText(entry, text)
+    return open({ title = L.TASK_PROMPT_EDIT, text = entry.text, zones = true, onSubmit = function(text)
+        return Tasks.SetText(entry, text, popup.place)
     end })
 end
+
+TaskUI.OpenEdit = openEdit
 
 local function openAmount(entry)
     return open({ title = L.TASK_PROMPT_AMOUNT:format(entry.name), text = tostring(entry.goal), numeric = true,
@@ -312,6 +345,8 @@ function TaskUI.ListMenu(owner, list)
         root:CreateTitle(list.name)
         root:CreateButton(L.TASK_RENAME, function() openRename(list) end)
         root:CreateButton(L.TASK_REMOVE_DONE, function() Tasks.RemoveDone(list) end)
+        -- Undocking is the symbol beside the + (Rows.lua).
+        if list.undocked then root:CreateButton(L.TASK_DOCK, function() Tasks.Dock(list) end) end
         root:CreateButton(L.TASK_DELETE_LIST, function()
             StaticPopupDialogs[DELETE_DIALOG].text = L.POPUP_TASK_LIST_DELETE
             StaticPopup_Show(DELETE_DIALOG, list.name, nil, list)
@@ -325,6 +360,10 @@ function TaskUI.EntryMenu(owner, list, entry)
             root:CreateButton(L.TASK_CHANGE_AMOUNT, function() TaskUI.OpenAmount(entry) end)
         else
             root:CreateButton(L.TASK_EDIT, function() openEdit(entry) end)
+        end
+        local mapID = entry.place and entry.place.mapID
+        if mapID then
+            root:CreateButton(L.TASK_SHOW_MAP, function() ns.Actions.OpenMap(mapID) end)
         end
         root:CreateButton(L.TASK_REMOVE, function() Tasks.RemoveEntry(list, entry) end)
     end)

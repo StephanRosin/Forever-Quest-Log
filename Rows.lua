@@ -220,16 +220,19 @@ local function layoutListButtons(row, entry, color)
         row.add = newListButton(row, "Plus", L.TIP_TASK_ADD)
         row.add:SetPoint("LEFT", row.name, "RIGHT", 4, 0)
         row.add:SetScript("OnClick", function(self) row.onAdd(self) end)
+        row.undock = newListButton(row, "Undock", L.TASK_UNDOCK)
+        row.undock:SetPoint("LEFT", row.add, "RIGHT", 1, 0)
+        row.undock:SetScript("OnClick", function(self) row.onUndock(self) end)
         row.gear = newListButton(row, "Gear", L.TIP_TASK_MENU)
-        row.gear:SetPoint("LEFT", row.add, "RIGHT", 1, 0)
+        row.gear:SetPoint("LEFT", row.undock, "RIGHT", 1, 0)
         row.gear:SetScript("OnClick", function(self) row.onMenu(self) end)
     end
-    row.onAdd, row.onMenu = entry.onAdd, entry.onMenu
+    row.onAdd, row.onMenu, row.onUndock = entry.onAdd, entry.onMenu, entry.onUndock
     if row.add then
-        row.add:SetShown(entry.onAdd ~= nil)
-        row.gear:SetShown(entry.onAdd ~= nil)
-        row.add.icon:SetVertexColor(color[1], color[2], color[3])
-        row.gear.icon:SetVertexColor(color[1], color[2], color[3])
+        for _, b in ipairs({ row.add, row.undock, row.gear }) do
+            b:SetShown(entry.onAdd ~= nil)
+            b.icon:SetVertexColor(color[1], color[2], color[3])
+        end
     end
     row.rule:SetPoint("LEFT", entry.onAdd and row.gear or row.name, "RIGHT", 6, 0)
 end
@@ -245,7 +248,7 @@ function Rows.LayoutZone(row, entry, width, key, onToggle, cfg)
     row.count:SetTextColor(c[1] * 0.7, c[2] * 0.7, c[3] * 0.7)
     row.name:SetText(entry.name)
     row.name:SetWidth(0)
-    local maxName = width - 60 - (entry.onAdd and 2 * LIST_BUTTON + 5 or 0)
+    local maxName = width - 60 - (entry.onAdd and 3 * LIST_BUTTON + 6 or 0)
     if row.name:GetStringWidth() > maxName then row.name:SetWidth(maxName) end
     row.count:SetText(entry.count or "")
     row.chevron:SetTexture(Media.Icon(entry.collapsed and "ChevronRight" or "ChevronDown"))

@@ -23,6 +23,16 @@ if git -C "$HERE" rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
 fi
 # The tag marks HEAD while tests and package read the working tree: both must be the same.
 [ -z "$(git -C "$HERE" status --porcelain)" ] || { echo "uncommitted changes: commit first" >&2; exit 1; }
+# New dungeons from the installed client's build; a changed list is committed
+# by hand first. wago.tools down or behind: release with the list as it is.
+if python3 "$HERE/tools/make_place_names.py" >/dev/null; then
+    if [ -n "$(git -C "$HERE" status --porcelain -- PlaceNames.lua)" ]; then
+        echo "PlaceNames.lua changed (new dungeons): commit it and run again" >&2; exit 1
+    fi
+else
+    echo "warning: dungeon names not refreshed, releasing the current list" >&2
+    git -C "$HERE" checkout -- PlaceNames.lua 2>/dev/null || true
+fi
 # Never upload a build whose tests fail.
 LOG="$(mktemp)"
 if ! "$HERE/tests/run" > "$LOG" 2>&1; then

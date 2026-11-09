@@ -146,6 +146,13 @@ def arrow_corner(draw):
     poly(draw, [(13, 7), (25, 7), (25, 19)], 2.6)
 
 
+def undock(draw):
+    # A window with an arrow out of its top right corner: "pop out".
+    poly(draw, [(17, 7), (7, 7), (7, 25), (25, 25), (25, 15)], 2.4)
+    poly(draw, [(14, 18), (26, 6)], 2.4)
+    poly(draw, [(18, 6), (26, 6), (26, 14)], 2.4)
+
+
 ICONS = {
     "IconChevronDown": chevron_down,
     "IconChevronUp": chevron_up,
@@ -163,6 +170,7 @@ ICONS = {
     "IconPlus": plus,
     "IconResize": resize,
     "IconArrowCorner": arrow_corner,
+    "IconUndock": undock,
 }
 
 

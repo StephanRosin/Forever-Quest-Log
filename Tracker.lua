@@ -380,6 +380,108 @@ local function release(pool, from)
     for i = from, #pool do pool[i]:Hide() end
 end
 
+-- Dragging tasks and lists -------------------------------------------------
+
+-- A task moves within its list, a list among the lists. While dragging, a
+-- line shows where it lands: above the row under the cursor's upper half.
+local drag          -- { row, rows } while a row is dragged
+local dropLine
+
+local function isListHead(row) return row.onToggle == ns.Tasks.ToggleList end
+
+-- The rows it can land among, top to bottom (the pools are in layout order).
+local function dropRows(row)
+    local found = {}
+    if row.task then
+        for _, r in ipairs(taskRows) do
+            if r:IsShown() and r.list == row.list then found[#found + 1] = r end
+        end
+    else
+        for _, r in ipairs(zoneRows) do
+            if r:IsShown() and isListHead(r) then found[#found + 1] = r end
+        end
+    end
+    return found
+end
+
+-- The row it goes in front of, nil for the end.
+local function dropTarget()
+    local y = select(2, GetCursorPosition()) / child:GetEffectiveScale()
+    for _, r in ipairs(drag.rows) do
+        if y > (r:GetTop() + r:GetBottom()) / 2 then return r end
+    end
+end
+
+-- The end of the lists is below the last list's tasks.
+local function lastRow()
+    if drag.row.task then return drag.rows[#drag.rows] end
+    local last = drag.rows[#drag.rows]
+    for _, r in ipairs(taskRows) do
+        if r:IsShown() and r.list == last.key then last = r end
+    end
+    return last
+end
+
+local function showDrop()
+    local target = dropTarget()
+    dropLine:ClearAllPoints()
+    if target then
+        dropLine:SetPoint("BOTTOMLEFT", target, "TOPLEFT", 0, 1)
+        dropLine:SetPoint("BOTTOMRIGHT", target, "TOPRIGHT", 0, 1)
+    else
+        local last = lastRow()
+        dropLine:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -1)
+        dropLine:SetPoint("TOPRIGHT", last, "BOTTOMRIGHT", 0, -1)
+    end
+    dropLine:Show()
+end
+
+local function startDrag(row)
+    if not (row.task or isListHead(row)) then return end
+    drag = { row = row, rows = dropRows(row) }
+    if not dropLine then
+        dropLine = child:CreateTexture(nil, "OVERLAY")
+        dropLine:SetHeight(2)
+        dropLine:SetColorTexture(ACCENT[1], ACCENT[2], ACCENT[3], 1)
+    end
+    row:SetAlpha(0.5)
+    row:SetScript("OnUpdate", showDrop)
+end
+
+local function stopDrag(row)
+    if not drag or drag.row ~= row then return end
+    row:SetScript("OnUpdate", nil)
+    row:SetAlpha(1)
+    dropLine:Hide()
+    local target = dropTarget()
+    drag = nil
+    -- The mouse goes up over the row: no tick or toggle from this drag.
+    row.dragEnded = GetTime()
+    if row.task then
+        ns.Tasks.MoveEntry(row.list, row.task, target and target.task)
+    else
+        ns.Tasks.MoveList(row.key, target and target.key)
+    end
+end
+Tracker.StartDrag, Tracker.StopDrag = startDrag, stopDrag
+
+-- Task rows and zone heads (only those of lists move) can be dragged.
+local function draggable(make)
+    return function(parent)
+        local row = make(parent)
+        row:RegisterForDrag("LeftButton")
+        row:SetScript("OnDragStart", startDrag)
+        row:SetScript("OnDragStop", stopDrag)
+        local click = row:GetScript("OnClick")
+        row:SetScript("OnClick", function(self, ...)
+            if self.dragEnded == GetTime() then return end
+            click(self, ...)
+        end)
+        return row
+    end
+end
+local newZoneRow, newTaskRow = draggable(Rows.NewZoneRow), draggable(Rows.NewTaskRow)
+
 local function toggleZone(name)
     local zones = state().zones
     zones[name] = not zones[name] or nil
@@ -402,6 +504,7 @@ local function withTaskLists(quests, st)
         if e.kind == "list" then
             e.onAdd = function() ns.TaskUI.OpenAdd(e.list) end
             e.onMenu = function(owner) ns.TaskUI.ListMenu(owner, e.list) end
+            e.onUndock = function() ns.Tasks.Undock(e.list) end
         end
     end
     local ungrouped = quests[1] and quests[1].kind == "quest"
@@ -492,6 +595,7 @@ function Tracker.Layout()
     if not frame then return end
     Tracker.queued = false
     ns.Blizzard.Check()
+    ns.Notes.Layout()  -- item counts in the undocked lists follow the same events
     local quests = ns.Data.Quests()
     Tracker.hasTimedQuest = false
     for _, q in ipairs(quests) do
@@ -534,7 +638,7 @@ function Tracker.Layout()
         local row, h
         if e.kind == "zone" or e.kind == "section" or e.kind == "list" then
             nz = nz + 1
-            row = acquire(zoneRows, nz, Rows.NewZoneRow)
+            row = acquire(zoneRows, nz, newZoneRow)
             if e.kind == "zone" then
                 h = Rows.LayoutZone(row, e, inner, e.name, toggleZone)
             elseif e.kind == "list" then
@@ -545,7 +649,7 @@ function Tracker.Layout()
             if i > 1 then y = y + 4 end
         elseif e.kind == "task" then
             nt = nt + 1
-            row = acquire(taskRows, nt, Rows.NewTaskRow)
+            row = acquire(taskRows, nt, newTaskRow)
             h = Rows.LayoutTask(row, e, inner)
             if i > 1 then y = y + S("questSpacing") end
         else

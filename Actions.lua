@@ -21,6 +21,12 @@ local function showPanel(fn)
     ns.AfterCombat("panel", fn)
 end
 
+-- A zone of a task list on the world map.
+function Actions.OpenMap(mapID)
+    if not OpenWorldMap then return end
+    showPanel(function() OpenWorldMap(mapID) end)
+end
+
 local function openDetails(questID)
     if not QuestMapFrame_OpenToQuestDetails then return end
     showPanel(function() QuestMapFrame_OpenToQuestDetails(questID) end)
