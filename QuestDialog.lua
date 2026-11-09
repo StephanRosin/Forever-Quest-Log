@@ -85,7 +85,8 @@ local function attach(frame)
     handle:SetScript("OnLeave", function() GameTooltip:Hide() end)
     -- Runs only while the window is open (a child of it).
     handle:SetScript("OnUpdate", watch)
-    frame:HookScript("OnShow", place)
+    -- Not a hook on Blizzard's window (taint, see WorldMap.Build): our child shows with it.
+    handle:SetScript("OnShow", place)
 end
 
 function QuestDialog.Build()

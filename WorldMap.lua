@@ -231,7 +231,10 @@ function WorldMap.Build()
     createHandle()
     -- Runs only while the map is open (a child of it).
     handle:SetScript("OnUpdate", watch)
-    map:HookScript("OnShow", function()
+    -- Our own child's OnShow, not a hook on the map: a hook ran inside
+    -- Blizzard's opening of the panel, and the controller UI then carried
+    -- our taint into closing the map (action blocked, face buttons dead).
+    handle:SetScript("OnShow", function()
         WorldMap.Place()
         WorldMap.ApplyLook()
     end)
