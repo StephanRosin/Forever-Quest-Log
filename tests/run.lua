@@ -176,7 +176,10 @@ local tiger = questRows()[1]
 check("title with level", (tiger.title._text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")), "[34] Tiger Mastery")
 check("level in its colour", tiger.title._text:find("|cff", 1, true) == 1, true)
 check("map button for the quest", tiger.poi.questID, 185)
-check("map button style: in progress", tiger.poi.style, POIButtonUtil.Style.QuestInProgress)
+check("map button style: in progress", tiger.poi.icon._atlas, "Quest-In-Progress-Icon-yellow")
+local blizzardPOI = 0
+for _, f in ipairs(M.frames) do if f._template == "POIButtonTemplate" then blizzardPOI = blizzardPOI + 1 end end
+check("map buttons are not Blizzard's (QuestCache taint)", blizzardPOI, 0)
 local function lineTexts(row)
     local t = {}
     for _, line in ipairs(row.lines or {}) do
@@ -190,7 +193,9 @@ check("the bar 70 % full", tiger.lines[1].bar._w / tiger.lines[1].barBg._w, 0.7)
 local ears = questRows()[3]
 check("complete: only how to turn it in", lineTexts(ears), "Return to Kin'weelay at Grom'gol.")
 check("complete: check mark", ears.lines[1].icon._shown, true)
-check("complete: map button style", ears.poi.style, POIButtonUtil.Style.QuestComplete)
+check("complete: map button style", ears.poi.icon._atlas, "UI-QuestIcon-TurnIn-Normal")
+ears.poi:GetScript("OnClick")(ears.poi, "LeftButton")
+check("map button click focuses the quest", M.superTracked, ears.quest.id)
 local watch = questRows()[4]
 check("finished objective dimmed", watch.lines[1].text._textColor[1], S("objectiveDoneColor")[1])
 check("finished objective: no bar", watch.lines[1].barBg._shown, false)

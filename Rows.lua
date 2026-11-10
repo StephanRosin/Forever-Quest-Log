@@ -295,32 +295,41 @@ local function layoutTag(tag, text, titleStyle)
     return w
 end
 
--- POI button: Blizzard's own, so clicking super-tracks exactly as on the
--- map. Its template comes with Blizzard_POIButton; without it a plain
--- number stands in.
+-- POI button: Blizzard's look, our own button. Blizzard's POIButtonTemplate
+-- fills the shared QuestCache from our code; the map's quest pins read that
+-- cache, so opening the map ran tainted (controller: "action blocked").
+local POI_ATLAS = {
+    normal = "UI-QuestPoi-QuestNumber", tracked = "UI-QuestPoi-QuestNumber-SuperTracked",
+    progress = "Quest-In-Progress-Icon-yellow", progressTracked = "Quest-In-Progress-Icon-Brown",
+    complete = "UI-QuestIcon-TurnIn-Normal", highlight = "UI-QuestPoi-InnerGlow",
+}
+
 local function newPOI(row)
-    local ok, button = pcall(CreateFrame, "Button", nil, row, "POIButtonTemplate")
-    if ok and button and button.SetQuestID then return button end
-    local plain = CreateFrame("Frame", nil, row)
-    plain:SetSize(18, 18)
-    plain.text = plain:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    plain.text:SetPoint("CENTER")
-    plain.isPlain = true
-    return plain
+    local b = CreateFrame("Button", nil, row)
+    b:SetSize(20, 20)
+    b.bg = b:CreateTexture(nil, "BACKGROUND")
+    b.bg:SetPoint("CENTER")
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b.icon:SetPoint("CENTER")
+    b.glow = b:CreateTexture(nil, "HIGHLIGHT")
+    b.glow:SetPoint("CENTER")
+    b.glow:SetAtlas(POI_ATLAS.highlight, true)
+    b.glow:SetBlendMode("ADD")
+    b:SetScript("OnClick", function(self)
+        if self.questID then C_SuperTrack.SetSuperTrackedQuestID(self.questID) end
+    end)
+    return b
 end
 
-local function layoutPOI(poi, quest, index)
-    if poi.isPlain then
-        poi.text:SetText(index or "")
-        return
-    end
-    local style = POIButtonUtil and POIButtonUtil.Style
-    if style then
-        poi:SetQuestID(quest.id)
-        poi:SetStyle(quest.isComplete and style.QuestComplete or style.QuestInProgress)
-        poi:SetSelected(quest.superTracked)
-        poi:UpdateButtonStyle()
-    end
+-- shortcut: one look for all quests (no campaign / legendary shapes), add C_QuestInfoSystem.GetQuestClassification if missed.
+local function layoutPOI(poi, quest)
+    poi.questID = quest.id
+    poi.selected = quest.superTracked and true or false
+    poi.complete = quest.isComplete
+    poi.bg:SetAtlas(poi.selected and POI_ATLAS.tracked or POI_ATLAS.normal, true)
+    local icon = quest.isComplete and POI_ATLAS.complete
+        or (poi.selected and POI_ATLAS.progressTracked or POI_ATLAS.progress)
+    poi.icon:SetAtlas(icon, true)
 end
 
 -- Quests --------------------------------------------------------------------
@@ -438,7 +447,7 @@ function Rows.LayoutQuest(row, q, width, index, cfg)
         -- Centred on the title's first line; the button itself is wider than
         -- the column (the scroll area leaves room to the left).
         row.poi:SetPoint("CENTER", row, "TOPLEFT", Rows.POI_W / 2 - 3, -cfg.get("titleSize") / 2)
-        layoutPOI(row.poi, q, index)
+        layoutPOI(row.poi, q)
         row.poi:Show()
     else
         row.poi:Hide()

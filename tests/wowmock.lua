@@ -152,17 +152,10 @@ end
 M.newWidget = newWidget
 
 function CreateFrame(kind, name, parent, template)
-    if template == "POIButtonTemplate" and M.noPOI then error("no such template") end
     local f = newWidget(name, kind)
     f._parent, f._template = parent, template
     M.frames[#M.frames + 1] = f
     if name then M.byName[name] = f; _G[name] = f end
-    if template == "POIButtonTemplate" then
-        function f:SetQuestID(id) self.questID = id end
-        function f:SetStyle(s) self.style = s end
-        function f:SetSelected(v) self.selected = v end
-        function f:UpdateButtonStyle() end
-    end
     if template == "SecureActionButtonTemplate" then f._secure = true end
     if template == "CooldownFrameTemplate" then
         function f:SetCooldown(s, d) self._cooldown = { s, d } end
