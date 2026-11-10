@@ -12,6 +12,7 @@ local FIELD_H, AMOUNT_W = 22, 56
 local STEPPER_W, MAX_AMOUNT = 14, 9999
 local OK_W, OK_H, OK_GAP = 70, 24, 8
 local ROW_H, ICON = 20, 16
+local GOAL_ICON = { level = "Interface\\Icons\\Spell_ChargePositive", money = "Interface\\Icons\\INV_Misc_Coin_01" }
 local FONT = "Friz Quadrata"
 
 local popup
@@ -97,7 +98,7 @@ local function showSuggestions(results)
         row:SetScript("OnEnter", function(self)
             popup.selection = self.index
             paintSuggestions()
-            if self.item.zone then return end
+            if not self.item.id then return end  -- only items have a tooltip
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:SetItemByID(self.item.id)
             GameTooltip:Show()
@@ -116,6 +117,10 @@ local function showSuggestions(results)
             if place then
                 row.icon:SetTexture(place[1])
                 row.icon:SetTexCoord(place[2], place[3], place[4], place[5])
+                row.text:SetTextColor(1, 1, 1)
+            elseif item.goal then
+                row.icon:SetTexture(GOAL_ICON[item.goal])
+                row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
                 row.text:SetTextColor(1, 1, 1)
             elseif item.zone then -- a client without atlas info
                 row.icon:SetAtlas(item.kind == "raid" and "Raid" or "Dungeon")
@@ -142,9 +147,14 @@ local function clearEntry()
     popup.edit:SetFocus()
 end
 
--- An item goes on the list; a zone only goes into the text, which the
--- player finishes and adds with Enter.
+-- An item or a goal goes on the list; a zone only goes into the text, which
+-- the player finishes and adds with Enter.
 function TaskUI.AddSuggestion(item)
+    if item.goal then
+        Tasks.AddGoal(popup.addTo, item.goal, item.amount or popup.amount:GetText())
+        clearEntry()
+        return
+    end
     if item.zone then
         local text = popup.edit:GetText():match("^%s*(.-)%s*$"):sub(1, item.from - 1) .. item.name
         popup.edit:SetText(text)
@@ -322,7 +332,7 @@ end
 TaskUI.OpenEdit = openEdit
 
 local function openAmount(entry)
-    return open({ title = L.TASK_PROMPT_AMOUNT:format(entry.name), text = tostring(entry.goal), numeric = true,
+    return open({ title = L.TASK_PROMPT_AMOUNT:format(Tasks.Line(entry).text), text = tostring(entry.goal), numeric = true,
         onSubmit = function(text) return Tasks.SetAmount(entry, text) end })
 end
 
@@ -359,9 +369,9 @@ end
 
 function TaskUI.EntryMenu(owner, list, entry)
     MenuUtil.CreateContextMenu(owner, function(_, root)
-        if entry.itemID then
+        if entry.itemID or entry.goalKind then
             root:CreateButton(L.TASK_CHANGE_AMOUNT, function() TaskUI.OpenAmount(entry) end)
-        else
+        elseif not entry.questID then
             root:CreateButton(L.TASK_EDIT, function() openEdit(entry) end)
         end
         local mapID = entry.place and entry.place.mapID

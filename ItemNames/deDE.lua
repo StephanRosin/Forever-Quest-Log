@@ -8,75 +8,34 @@ ns.ItemNames = [==[
 235785	1	"Schlüssel" für Totenwindkäfig
 11085	1	'Kunde des Monats'-Kastenschlüssel
 14649	1	'Tal der Prüfungen'-Geschenkgutschein
-18163	1	10% Test Speed Boots
 6292	1	10-pfündiger Matschschnapper
-19810	3	1000 Test dagger 60 blue
 13917	1	103-pfündiger Machtfisch
 13909	1	12-pfündiger Hummer
 6294	1	12-pfündiger Matschschnapper
-18164	1	13% Test Speed Boots
-19313	3	1300 Test Dagger 63 blue
-18165	1	15% Test Speed Boots
 13910	1	15-pfündiger Hummer
 13901	1	15-pfündiger Lachs
 6295	1	15-pfündiger Matschschnapper
-19427	3	1500 Test sword 63 blue
-19457	4	1500 Test sword 80 purple
 6309	1	17-pfündiger Wels
 13902	1	18-pfündiger Lachs
-19622	3	1800 Test Dagger 63 blue
 13911	1	19-pfündiger Hummer
 6310	1	19-pfündiger Wels
 1977	1	20-Platz-Tasche
-19314	3	2000 Test Dagger 63 blue
-21782	3	2000 Test sword 63 blue
 13912	1	21-pfündiger Hummer
-19185	3	2100 Test 2h Axe 63 blue
 13913	1	22-pfündiger Hummer
 13903	1	22-pfündiger Lachs
 6311	1	22-pfündiger Wels
-19188	3	2200 Test 2h Axe 63 blue
-19502	3	2200 Test sword 63 blue
-19504	4	2200 Test sword 70 purple
-19503	4	2200 Test sword 80 purple
-19189	3	2300 Test 2h Axe 63 blue
-19190	3	2400 Test 2h Axe 63 blue
 13904	1	25-pfündiger Lachs
-19809	3	2500 Test 2h Axe 60 blue
-19811	3	2500 Test 2h Axe 60 blue (bear)
-19191	3	2500 Test 2h Axe 63 blue
 6363	1	26-pfündiger Wels
-19192	3	2600 Test 2h Axe 63 blue
-19186	3	2700 Test 2h Axe 63 blue
-19193	3	2800 Test 2h Axe 63 blue
-19490	3	2800 Test Bow 63 Blue
 13905	1	29-pfündiger Lachs
-19194	3	2900 Test 2h Axe 63 blue
-19428	3	2900 Test sword 63 blue
-19456	4	2900 Test sword 80 purple
-215235	3	2hander Animation as 1hander test copy
-19195	3	3000 Test 2h Axe 63 blue
-19196	3	3100 Test 2h Axe 63 blue
 13906	1	32-pfündiger Lachs
 6364	1	32-pfündiger Wels
-19187	3	3200 Test 2h Axe 63 blue
-19197	3	3300 Test 2h Axe 63 blue
-19489	3	3300 Test Crossbow 63 blue
 13885	1	34-pfündiger Rotkiemen
-19198	3	3400 Test 2h Axe 63 blue
-19199	3	3500 Test 2h Axe 63 blue
-19455	4	3500 Test 2h Axe 70 purple
-19662	4	3500 Test 2h Axe 80 purple
-19200	3	3600 Test 2h Axe 63 blue
 13886	1	37-pfündiger Rotkiemen
-19201	3	3700 Test 2h Axe 63 blue
-19184	3	3800 Test 2h Axe 63 blue
 13876	1	40-pfündiger Gelbschwanz
 13882	1	42-pfündiger Rotkiemen
 13883	1	45-pfündiger Rotkiemen
 13877	1	47-pfündiger Gelbschwanz
 13884	1	49-pfündiger Rotkiemen
-18161	1	5% Test Speed Boots
 21028	1	500 Pfund-Hühnchen
 13887	1	52-pfündiger Rotkiemen
 13878	1	53-pfündiger Gelbschwanz
@@ -123,7 +82,6 @@ ns.ItemNames = [==[
 13880	1	68-pfündiger Gelbschwanz
 13907	1	7-pfündiger Hummer
 13914	1	70-pfündiger Machtfisch
-18162	1	8% Test Speed Boots
 13915	1	85-pfündiger Machtfisch
 13908	1	9-pfündiger Hummer
 20324	4	90 Epic Frost Belt
@@ -906,7 +864,6 @@ ns.ItemNames = [==[
 10044	2	Aschenstoffstiefel
 14044	2	Aschenstoffumhang
 14042	2	Aschenstoffweste
-16024	1	Ashbringer Test 001
 22648	1	Ashischwarmprotokoll
 17310	1	Aspekt von Neptulon
 236354	1	Aspirantensiegel der Dämmerung
@@ -1668,8 +1625,6 @@ ns.ItemNames = [==[
 19222	1	Billiges Bier
 21308	1	Bimmelglöckchen
 229056	0	Bimssteinbrocken
-8688	0	Bind On Acquire Test Item
-1258	0	Bind On Use Test Item
 5275	2	Bindegurt
 22011	3	Bindungen der Tierherrschaft
 22063	3	Bindungen der Zauberkünste
@@ -1686,7 +1641,6 @@ ns.ItemNames = [==[
 2784	1	Bisamwurzel
 276275	3	Bitteres Würmchen
 18283	3	Biznicks 247x128 treffsicheres Zielfernrohr
-907	1	Black Mail Shoulderpads of might (Test)
 2788	1	Blackclaw-Starkbier
 211845	2	Blackfathom-Wetzstein
 18987	1	Blackhands Befehl
@@ -2393,7 +2347,6 @@ ns.ItemNames = [==[
 2561	1	Chok'suls Kopf
 276070	1	Chol'aruks Kopf
 276886	2	Chol'aruks Trophäenschwert
-1018	1	Chows Blade of DOOM! (Test)
 2615	1	Chromatische Robe
 19157	4	Chromatische Stulpen
 18182	2	Chromatischer Mantel der Dämmerung
@@ -2414,7 +2367,6 @@ ns.ItemNames = [==[
 14647	1	Coldridgetal-Geschenkgutschein
 17542	1	Coldtooth-Vorräte
 281631	1	Collector's Edition: Wappenrock
-3249	1	Conjured test Item
 6313	1	Cormas Herz
 4056	1	Cortellos Rätsel
 5851	1	Cozzles Schlüssel
@@ -2960,7 +2912,6 @@ ns.ItemNames = [==[
 4892	1	Durotar-Tigerfell
 9519	2	Durtfeet-Stampfer
 15455	2	Dustfall-Roben
-1163	1	Dwarven Explorer's Monocle (Test)
 206381	2	Dyadisches Symbol
 5021	1	Dynamitstange von Gann
 15936	2	Dämmergewirkter Zweig
@@ -3598,8 +3549,6 @@ ns.ItemNames = [==[
 20004	1	Erhebliches Trollblutelixier
 18488	4	Erhitzte Uralte Klinge
 228696	4	Erhitzte Uralte Klinge
-17162	1	Eric Test Item A
-17163	1	Eric Test Item B
 11682	1	Eridans Phiole
 11617	1	Eridans Tasche
 205946	2	Erinnerung an den Verrat eines Anführers
@@ -4387,24 +4336,6 @@ ns.ItemNames = [==[
 276068	1	Fass mit Portwein aus Powderfuse
 277986	1	Fass mit Rohöl
 3085	1	Fass mit Schimmerstarkbier
-5551	0	Fast Test 1H Axe
-5553	0	Fast Test 1H Mace
-5555	0	Fast Test 1H Sword
-5552	0	Fast Test 2H Axe
-5554	0	Fast Test 2H Mace
-5556	0	Fast Test 2H Sword
-19286	0	Fast Test Ammo
-5548	0	Fast Test Bow
-5546	0	Fast Test Crossbow
-5549	0	Fast Test Dagger
-19226	0	Fast Test Fist
-5561	0	Fast Test Generic
-5550	0	Fast Test Gun
-5545	0	Fast Test Polearm
-5557	0	Fast Test Spear
-5558	0	Fast Test Staff
-5559	1	Fast Test Thrown
-5560	0	Fast Test Wand
 286339	1	Fast trockenes Feuerholz
 1598	1	Faulblüte
 20605	1	Faule Eier
@@ -5462,7 +5393,6 @@ ns.ItemNames = [==[
 16748	0	Gefüttertes Futter
 6452	1	Gegengift
 205944	2	Gegenseitige Offenbarung
-18747	3	Gegenstandsfähigkeiten - Test
 1844	1	Gegerbte Lederarmschienen
 844	1	Gegerbte Lederhandschuhe
 845	1	Gegerbte Lederhose
@@ -7370,7 +7300,6 @@ ns.ItemNames = [==[
 18245	4	Horn des schwarzen Kriegswolfs
 1041	3	Horn des schwarzen Wolfs
 220916	1	Horn eines Donnerstampferstegodons
-12789	1	Horn of Uber Buffing (test)
 4841	1	Horn von Arra'chea
 10327	1	Horn von Echeyakee
 9530	1	Horn von Hasskralle
@@ -7601,8 +7530,6 @@ ns.ItemNames = [==[
 3621	1	Ivars Kopf
 10642	1	Iverrons Gegengift
 18663	1	J'eevees Glas
-17342	1	JYoo Random Item Test
-1259	0	JYoo test item
 10820	2	Jacksaat-Gürtel
 1529	2	Jade
 15388	2	Jadefeuergürtel
@@ -8844,8 +8771,6 @@ ns.ItemNames = [==[
 17011	3	Lavakern
 10054	1	Lavendelfarbenes Magiestoffhemd
 19482	1	LeCraft-Kaninchenfell
-1021	1	Leather Helmet A (test)
-1020	1	Leather Helmet D (Test)
 15059	3	Lebendige Brustplatte
 15447	1	Lebendige Fäulnis
 15060	3	Lebendige Gamaschen
@@ -9218,95 +9143,6 @@ ns.ItemNames = [==[
 270338	1	Leuchtfeuer des Mondlichts
 5326	2	Leuchtfeuerbaton
 8051	1	Leuchtfeuerwaffe
-13642	1	Level 15 Test Gear Cloth - Mage/Priest/Warlock
-13643	1	Level 15 Test Gear Leather - Druid/Shaman
-13644	1	Level 15 Test Gear Leather - Hunter/Rogue
-13645	1	Level 15 Test Gear Mail - Paladin/Warrior
-13646	1	Level 20 Test Gear Cloth - Mage/Priest/Warlock
-13660	1	Level 20 Test Gear Leather - Druid/Shaman
-13664	1	Level 20 Test Gear Leather - Hunter/Rogue
-13656	1	Level 20 Test Gear Mail - Paladin/Warrior
-13647	1	Level 25 Test Gear Cloth - Mage/Priest/Warlock
-13661	1	Level 25 Test Gear Leather - Druid/Shaman
-13665	1	Level 25 Test Gear Leather - Hunter/Rogue
-13657	1	Level 25 Test Gear Mail - Paladin/Warrior
-13648	1	Level 30 Test Gear Cloth - Mage/Priest/Warlock
-13662	1	Level 30 Test Gear Leather - Druid/Shaman
-13666	1	Level 30 Test Gear Leather - Hunter/Rogue
-13658	1	Level 30 Test Gear Mail - Paladin/Warrior
-13649	1	Level 35 Test Gear Cloth - Mage/Priest/Warlock
-13663	1	Level 35 Test Gear Leather - Druid/Shaman
-13667	1	Level 35 Test Gear Leather - Hunter/Rogue
-13659	1	Level 35 Test Gear Mail - Paladin/Warrior
-13650	1	Level 40 Test Gear Cloth - Mage/Priest/Warlock
-13668	1	Level 40 Test Gear Leather - Druid
-13674	1	Level 40 Test Gear Leather - Rogue
-13686	1	Level 40 Test Gear Mail - Hunter
-13692	1	Level 40 Test Gear Mail - Shaman
-13680	1	Level 40 Test Gear Plate - Paladin/Warrior
-13651	1	Level 45 Test Gear Cloth - Mage/Priest/Warlock
-13669	1	Level 45 Test Gear Leather - Druid
-13675	1	Level 45 Test Gear Leather - Rogue
-13687	1	Level 45 Test Gear Mail - Hunter
-13693	1	Level 45 Test Gear Mail - Shaman
-13681	1	Level 45 Test Gear Plate - Paladin/Warrior
-13652	1	Level 50 Test Gear Cloth - Mage/Priest/Warlock
-17843	1	Level 50 Test Gear Cloth - Mage/Priest/Warlock 2
-13670	1	Level 50 Test Gear Leather - Druid
-17844	1	Level 50 Test Gear Leather - Druid 2
-13676	1	Level 50 Test Gear Leather - Rogue
-17845	1	Level 50 Test Gear Leather - Rogue 2
-13688	1	Level 50 Test Gear Mail - Hunter
-17846	1	Level 50 Test Gear Mail - Hunter 2
-13694	1	Level 50 Test Gear Mail - Shaman
-17847	1	Level 50 Test Gear Mail - Shaman 2
-13682	1	Level 50 Test Gear Plate - Paladin/Warrior
-17848	1	Level 50 Test Gear Plate - Paladin/Warrior 2
-13653	1	Level 55 Test Gear Cloth - Mage/Priest/Warlock
-17837	1	Level 55 Test Gear Cloth - Mage/Priest/Warlock 2
-13671	1	Level 55 Test Gear Leather - Druid
-17838	1	Level 55 Test Gear Leather - Druid 2
-13677	1	Level 55 Test Gear Leather - Rogue
-17839	1	Level 55 Test Gear Leather - Rogue 2
-13689	1	Level 55 Test Gear Mail - Hunter
-17840	1	Level 55 Test Gear Mail - Hunter 2
-13695	1	Level 55 Test Gear Mail - Shaman
-17841	1	Level 55 Test Gear Mail - Shaman 2
-13683	1	Level 55 Test Gear Plate - Paladin/Warrior
-17842	1	Level 55 Test Gear Plate - Paladin/Warrior 2
-13654	1	Level 60 Test Gear Cloth - Mage/Priest/Warlock
-17831	1	Level 60 Test Gear Cloth - Mage/Priest/Warlock 2
-13672	1	Level 60 Test Gear Leather - Druid
-17832	1	Level 60 Test Gear Leather - Druid 2
-13678	1	Level 60 Test Gear Leather - Rogue
-17833	1	Level 60 Test Gear Leather - Rogue 2
-13690	1	Level 60 Test Gear Mail - Hunter
-17834	1	Level 60 Test Gear Mail - Hunter 2
-13696	1	Level 60 Test Gear Mail - Shaman
-17835	1	Level 60 Test Gear Mail - Shaman 2
-13684	1	Level 60 Test Gear Plate - Paladin/Warrior
-17836	1	Level 60 Test Gear Plate - Paladin/Warrior 2
-13655	1	Level 65 Test Gear Cloth - Mage
-17851	1	Level 65 Test Gear Cloth - Mage 2
-17824	1	Level 65 Test Gear Cloth - Priest
-17852	1	Level 65 Test Gear Cloth - Priest 2
-17825	1	Level 65 Test Gear Cloth - Warlock
-17853	1	Level 65 Test Gear Cloth - Warlock 2
-13673	1	Level 65 Test Gear Leather - Druid
-17854	1	Level 65 Test Gear Leather - Druid 2
-13679	1	Level 65 Test Gear Leather - Rogue
-17855	1	Level 65 Test Gear Leather - Rogue 2
-17856	1	Level 65 Test Gear Leather - Rogue 3
-13691	1	Level 65 Test Gear Mail - Hunter
-17857	1	Level 65 Test Gear Mail - Hunter 2
-17858	1	Level 65 Test Gear Mail - Hunter 3
-13697	1	Level 65 Test Gear Mail - Shaman
-17859	1	Level 65 Test Gear Mail - Shaman 2
-13685	1	Level 65 Test Gear Plate - Paladin
-17860	1	Level 65 Test Gear Plate - Paladin 2
-17826	1	Level 65 Test Gear Plate - Warrior
-17861	1	Level 65 Test Gear Plate - Warrior 2
-17862	1	Level 65 Test Gear Plate - Warrior 3
 15998	1	Lewis' Notiz
 20394	1	Lexikon der Twilight - Kapitel 1
 20395	1	Lexikon der Twilight - Kapitel 2
@@ -9414,7 +9250,6 @@ ns.ItemNames = [==[
 5072	1	Loks Schädel
 5790	1	Lonebrows Tagebuch
 18586	3	Lonetrees Ring
-746	1	Lord Brandon's Tabard (Test)
 18804	1	Lord Graysons Ranzen
 280610	1	Lord Sarthiss' Kopf
 22048	1	Lord Valthalaks Amulett
@@ -9511,9 +9346,6 @@ ns.ItemNames = [==[
 19621	4	Mahlstroms Zorn
 248823	1	Mahrblatt
 286273	0	Maiev Shadowsongs Silbermünze
-1027	1	Mail Helmet A (Test)
-1023	1	Mail Helmet C (test)
-1022	1	Mail Helmet D (test)
 269682	3	Majestätischer Windschreiter
 253987	3	Makellose Gamaschen
 253913	3	Makellose Handschuhe
@@ -11034,7 +10866,6 @@ ns.ItemNames = [==[
 274799	4	Ockerfarbenes Skelettschlachtross
 7081	1	Odem des Windes
 286317	0	Ofalos Kupfermünze
-3145	1	Off Hand Test Dagger
 18258	2	Ogeranzug der Gordok
 213426	1	Ogerblitzschlagrute
 1993	2	Ogergeistring
@@ -11379,16 +11210,11 @@ ns.ItemNames = [==[
 6520	1	Pionierumhang
 19986	3	Piraten-Augenklappe
 9276	1	Piraten-Schließkiste
-1162	1	Pirates Patch (Test)
 4831	2	Pirsch-Hose
 4801	1	Pirscherklauen
 238637	1	Pirschersteak
 274027	4	Placeholder
 251400	3	Plans: Stiefel der Wacht
-1025	1	Plate Helmet D1 (Test)
-1024	1	Plate Helmet D2 (test)
-1026	1	Plate Helmet D3 (test)
-908	1	Plate Shoulderpad (Test)
 16546	4	Platten-Armschützer des Kriegsherrn
 16404	3	Platten-Handgelenkschutz des Kürassiers
 16511	3	Platten-Sattelgurt des Zornbringers
@@ -11882,7 +11708,6 @@ ns.ItemNames = [==[
 260307	1	Postbeutel des Hyjal
 257808	1	Postsendung
 257809	1	Postsendung
-278069	1	Potion of Tradeskill Testing - Level 60
 257879	1	Prachtkrallen-Tierhautschützer
 252670	1	Prachtkrallenpelz
 5808	1	Prachtschwingengiftbeutel
@@ -12214,7 +12039,6 @@ ns.ItemNames = [==[
 281060	3	Replik des Ironforge-Luftgewehrs
 266434	1	Resaans Erbstück
 20643	2	Reservistenkappe Undercitys
-10555	1	Resist Test Item
 221488	2	Resolute Offenbarung
 16581	1	Resonitkristall
 3083	1	Restabilisationszahnrad
@@ -12578,10 +12402,6 @@ ns.ItemNames = [==[
 288927	4	Ring des rasanten Schlags
 23063	4	Ring des verseuchten Herzens
 21707	4	Ring des wirren Gedankens
-18968	4	Ring of Critical Testing
-18970	4	Ring of Critical Testing 2
-18971	4	Ring of Critical Testing 3
-18982	4	Ring of Critical Testing 4
 5445	1	Ring von Zoram
 15587	2	Ringtail-Gurt
 250073	1	Rippchen vom tobenden Raptor
@@ -12654,7 +12474,6 @@ ns.ItemNames = [==[
 10505	1	Robustes Sprengpulver
 22085	3	Rock des Tugendhaften
 2282	1	Rodentia-Kurzschwert
-6036	0	Rogue Test Dagger
 18819	1	Rohans Weihrauchschwenker
 6303	1	Rohe Glitschhautmakrele
 8365	1	Rohe Mithrilkopfforelle
@@ -13064,7 +12883,6 @@ ns.ItemNames = [==[
 213122	2	Rune des zuverlässigen Schusses
 3745	1	Rune des Öffnens
 210817	2	Rune des Überlebens
-202316	1	Runecarving Test - Crippling Poison
 6284	1	Runen der Beschwörung
 209850	1	Runen der Zaubererkönige
 14341	1	Runenfaden
@@ -14701,7 +14519,6 @@ ns.ItemNames = [==[
 21522	4	Shadowsongs Kummer
 18685	1	Shadowy Potion OLD
 9324	1	Shadras Gift
-5378	1	Shane Test (DELETE ME)
 12904	2	Shawns Supersonder-Swamihut
 1353	1	Shaws Bericht
 9189	1	Shays Glocke
@@ -14817,7 +14634,6 @@ ns.ItemNames = [==[
 5269	0	Silithidensekret
 8072	1	Silixiz' Turmschlüssel
 274979	1	Silphium des Hyjal
-909	1	Silver Mail Shoulderpads (Test)
 281145	1	Silvias Schwert
 22380	3	Simones Hammer der Kultivierung
 18952	1	Simones Kopf
@@ -15522,7 +15338,6 @@ ns.ItemNames = [==[
 278002	2	Talknüppel
 8050	1	Tallonkais Juwel
 7667	1	Talvashs Wahrsagephiole
-906	1	Tan Leather Shoulderpads (Test)
 15801	2	Tapferes Kurzschwert
 3498	1	Tarethas Halskette
 3630	1	Targorrs Kopf
@@ -15566,8 +15381,6 @@ ns.ItemNames = [==[
 893	0	Terrorwolf-Fangzahn
 210053	1	Terrorwolftatze
 274935	1	Tessas Tonikum
-13214	0	TestBoots - Puffed Mail Green
-23656	1	Testgegenstand für Promotion
 266997	1	Teufelsasche
 268813	1	Teufelsaschenprobe
 248824	1	Teufelsbalg
@@ -15701,7 +15514,6 @@ ns.ItemNames = [==[
 4107	2	Tigerjäger-Handschuhe
 3444	1	Tillers Weste
 2779	1	Tilloaträne
-240994	1	Tim's Test Ranged Weapon 2
 15886	1	Timolains Phylakterium
 282064	2	Tims verlorene Rippe
 12438	1	Tinkees Brief
@@ -15923,9 +15735,7 @@ ns.ItemNames = [==[
 2222	0	Turmschild
 7923	1	Turmschlüssel der Defias
 270066	2	Turmstiefel
-6896	0	Twain Component Test
 7170	0	Twain Random Sword FOO
-7707	0	Twain Test
 6174	0	Twain-Zufallschwert
 4728	1	Twains Schulter
 5879	1	Twilightanhänger
@@ -16888,8 +16698,6 @@ ns.ItemNames = [==[
 6637	1	Wassersapta
 7813	1	Wassersplitter
 5177	1	Wassertotem
-5418	1	Weapon of Mass Destruction (test)
-5417	1	Weapon of Massive Destruction (test)
 279959	1	Webstuhl
 8493	1	Weeglis Fass
 10653	2	Wegbereiter-Stiefel
@@ -17892,9 +17700,6 @@ ns.ItemNames = [==[
 23227	1	iCoke Gift Box Voucher
 19642	1	iCoke Prize Voucher
 22822	1	iCoke Prize Voucher
-4842	1	test
-12385	1	test
-5091	1	test Eric Shirt
 7609	2	Ältestenbernsteinstock
 5776	1	Ältestenkrückstock
 13305	1	Ältestenplatz, Briefkastenschlüssel

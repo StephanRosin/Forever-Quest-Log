@@ -7,7 +7,7 @@ local L = ns.L
 local News = {}
 ns.News = News
 
-News.VERSION = "0.4.4"
+News.VERSION = "0.4.8"
 local SHOW_DELAY = 3    -- seconds: UIParent showing after the loading screen closes open windows
 local DIALOG = "FOREVERQUESTLOG_NEWS"
 

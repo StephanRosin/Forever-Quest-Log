@@ -3,8 +3,9 @@ local Settings = ns.Settings
 local S = Settings.Get
 
 -- The player's own task lists, shown above the quests: per character, each a
--- name and entries, either an item with an amount (counted from the bags) or
--- a line of text ticked by hand. TaskUI.lua is the window and the menus.
+-- name and entries: an item with an amount (counted from the bags), a goal
+-- the game counts (level, gold), a quest (done once turned in) or a line of
+-- text ticked by hand. TaskUI.lua is the window and the menus.
 local Tasks = {}
 ns.Tasks = Tasks
 
@@ -118,6 +119,56 @@ local function placeIn(text, place)
     end
 end
 
+-- Level and gold: what the player has now, for an entry { goalKind, goal }.
+Tasks.GOALS = {
+    level = function() return UnitLevel("player") end,
+    money = function() return math.floor(GetMoney() / 10000) end,
+}
+
+-- Like an item: the same goal again changes the amount.
+function Tasks.AddGoal(list, kind, amount)
+    for _, entry in ipairs(list.entries) do
+        if entry.goalKind == kind then
+            entry.goal = validAmount(amount)
+            changed()
+            return
+        end
+    end
+    table.insert(list.entries, { goalKind = kind, goal = validAmount(amount) })
+    changed()
+end
+
+-- The level as the tracker shows it, while the quest is in the log.
+local function questLevel(questID)
+    local level = C_QuestLog.GetQuestDifficultyLevel and C_QuestLog.GetQuestDifficultyLevel(questID)
+    if level and level > 0 then return level end
+    local logIndex = C_QuestLog.GetLogIndexForQuestID(questID)
+    local info = logIndex and C_QuestLog.GetInfo(logIndex)
+    return info and info.level and info.level > 0 and info.level or nil
+end
+
+-- Title and level are kept for when the client no longer knows the quest.
+function Tasks.AddQuest(list, questID, title)
+    for _, entry in ipairs(list.entries) do
+        if entry.questID == questID then return end
+    end
+    table.insert(list.entries, { questID = questID, text = title, level = questLevel(questID) })
+    changed()
+end
+
+-- The quest giver's "!" while running, "?" once ready to turn in. Not the
+-- tracker's symbols: without their round badge those are a few dots. These
+-- fill nearly all their height, so they need no cut.
+Tasks.QUEST_SYMBOL = {
+    progress = "|A:QuestNormal:14:14|a",
+    complete = "|A:QuestTurnin:14:14|a",
+}
+
+local function questDone(questID)
+    local flagged = C_QuestLog.IsQuestFlaggedCompleted or IsQuestFlaggedCompleted
+    return flagged and flagged(questID) and true or false
+end
+
 function Tasks.AddText(list, text, place)
     text = trim(text)
     if text == "" then return false end
@@ -173,9 +224,9 @@ for kind, t in pairs(Tasks.PLACE_TEXTURE) do
     Tasks.PLACE_SYMBOL[kind] = ("|T%s:14:14:0:0:10000:10000:%d:%d:%d:%d|t"):format(t[1], c(t[2]), c(t[3]), c(t[4]), c(t[5]))
 end
 
--- Items tick themselves when the amount is there.
+-- Items, goals and quests tick themselves.
 function Tasks.Toggle(entry)
-    if entry.itemID then return end
+    if entry.itemID or entry.goalKind or entry.questID then return end
     entry.done = not entry.done or nil
     changed()
 end
@@ -189,6 +240,23 @@ function Tasks.Line(entry)
         -- languages the addon has no names for.
         line = { text = C_Item.GetItemNameByID(entry.itemID) or entry.name,
             cur = have, max = entry.goal, done = have >= entry.goal }
+    elseif entry.goalKind then
+        local have = Tasks.GOALS[entry.goalKind]()
+        line = { text = ns.L["TASK_GOAL_" .. entry.goalKind:upper()]:format(entry.goal),
+            cur = have, max = entry.goal, done = have >= entry.goal }
+    elseif entry.questID then
+        local id = entry.questID
+        local done = questDone(id)
+        local ready = C_QuestLog.IsComplete and C_QuestLog.IsComplete(id)
+        local text = (ready and Tasks.QUEST_SYMBOL.complete or Tasks.QUEST_SYMBOL.progress) .. " "
+            .. (C_QuestLog.GetTitleForQuestID(id) or entry.text or "")
+        -- "(46)" in the tracker's difficulty colour; gone once turned in, like a zone's range.
+        local level = not done and (questLevel(id) or entry.level)
+        if level then
+            local c = GetQuestDifficultyColor(level)
+            text = text .. (" |cff%02x%02x%02x(%d)|r"):format(c.r * 255, c.g * 255, c.b * 255, level)
+        end
+        line = { text = text, done = done }
     else
         local place = entry.place
         local symbol = place and Tasks.PLACE_SYMBOL[place.kind]
@@ -199,6 +267,8 @@ function Tasks.Line(entry)
             if at then text = text:sub(1, at - 1) .. label .. text:sub(at + #place.name) end
         end
         line = { text = symbol and (symbol .. " " .. text) or text, done = entry.done and true or false }
+        -- Where the player is now: coloured like a quest title.
+        if place and not entry.done and Tasks.IsHere(place.name) then line.color = S("titleColor") end
     end
     line.check = true
     line.icon = line.done and "BoxChecked" or "Box"
@@ -309,11 +379,57 @@ end
 
 function Tasks.SearchZones(text) return searchZones(trim(text)) end
 
--- Zones first (few, matching the end of the text), then items whose name
+-- In a dungeon the zone text is the instance's name, as in PlaceNames.lua.
+function Tasks.IsHere(name)
+    local here = GetRealZoneText and GetRealZoneText()
+    return here ~= nil and here ~= "" and lower(here) == lower(name)
+end
+
+-- Goals ---------------------------------------------------------------------
+
+-- The word for level or gold alone ("Gold": the amount comes from the box
+-- on the right) or with a number ("Level 50", "100 gold", "100g") suggests
+-- the goal; Enter without picking it keeps a plain text.
+local function hasWord(text, words)
+    for word in words:gmatch("%S+") do
+        if (" " .. text .. " "):find("[^%a]" .. word .. "[^%a]") then return true end
+    end
+end
+
+local function isWord(text, words)
+    for word in words:gmatch("%S+") do
+        if text == word then return true end
+    end
+end
+
+local function searchGoals(text)
+    local t, L, found = lower(text), ns.L, {}
+    local n = tonumber(t:match("%d+"))
+    if n and n < 1 then return found end
+    local kinds = {
+        { "level", L.TASK_WORDS_LEVEL .. " level lvl", L.TASK_GOAL_LEVEL, L.TASK_GOAL_LEVEL_AMOUNT },
+        { "money", L.TASK_WORDS_GOLD .. " gold", L.TASK_GOAL_MONEY, L.TASK_GOAL_MONEY_AMOUNT },
+    }
+    for _, k in ipairs(kinds) do
+        local kind, words = k[1], k[2]
+        if n and (hasWord(t, words) or (kind == "money" and t:find("%d%s*g$"))) then
+            found[#found + 1] = { goal = kind, amount = n, name = k[3]:format(n) }
+        elseif not n and isWord(t, words) then
+            found[#found + 1] = { goal = kind, name = k[4] }
+        end
+    end
+    return found
+end
+
+-- Goals first (at most two), then zones (few, matching the end of the text), then items whose name
 -- contains the text: those starting with it first, each group alphabetical
 -- (the shipped order).
 function Tasks.Search(text)
-    local starts = searchZones(trim(text))
+    local starts = searchGoals(trim(text))
+    for _, zone in ipairs(searchZones(trim(text))) do
+        if #starts == Tasks.MAX_RESULTS then return starts end
+        starts[#starts + 1] = zone
+    end
     local query = lower(trim(text))
     if letterCount(query) < Tasks.MIN_SEARCH then return starts end
     if #starts == Tasks.MAX_RESULTS then return starts end

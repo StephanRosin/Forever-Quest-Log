@@ -1717,6 +1717,108 @@ do
     enter(pe.edit)
     check("edit: name gone, symbol gone", edited.place, nil)
     ns.Tasks.RemoveEntry(list, list.entries[before + 4])
+    -- Where the player is: a place entry there is coloured like a quest title.
+    ns.Tasks.AddText(list, "Quests in Tanaris", { kind = "zone", name = "Tanaris", mapID = 1446 })
+    local there = list.entries[#list.entries]
+    M.state.zone = "Elwynn Forest"
+    check("here: elsewhere, plain", ns.Tasks.Line(there).color, nil)
+    M.state.zone = "tanaris"
+    check("here: in the zone, title colour", ns.Tasks.Line(there).color, Settings.Get("titleColor"))
+    there.done = true
+    check("here: done, plain", ns.Tasks.Line(there).color, nil)
+    M.state.zone = nil
+    ns.Tasks.RemoveEntry(list, there)
+    -- Goals: suggested for a number with a word, counted by the game.
+    local function goals(text)
+        local kinds = {}
+        for _, r in ipairs(ns.Tasks.Search(text)) do if r.goal then kinds[#kinds + 1] = r.goal .. (r.amount or "") end end
+        return table.concat(kinds, ",")
+    end
+    check("goal: level", goals("Level 50"), "level50")
+    check("goal: lvl", goals("lvl 50"), "level50")
+    check("goal: gold", goals("100 gold"), "money100")
+    check("goal: 100g", goals("100g"), "money100")
+    check("goal: not inside a word", goals("Leveln in Tanaris"), "")
+    check("goal: the word alone, amount from the box", goals("Gold"), "money")
+    check("goal: the word alone, any case", goals("level"), "level")
+    check("goal: the word in a sentence without a number is text", goals("Gold Ore holen"), "")
+    check("goal: not inside a word (Goldshire 5)", goals("Goldshire 5"), "")
+    check("goal: German word", ns.Locales.deDE.TASK_WORDS_LEVEL, "stufe")
+    check("items: Blizzard's test gear is left out", ns.ItemNames:find("Test Gear", 1, true), nil)
+    check("items: a real item with Test in its name stays", ns.ItemNames:find("High Test Eternium Fishing Line", 1, true) ~= nil, true)
+    ns.TaskUI.OpenAdd(list)
+    p.edit:SetText("Level 50")
+    p.edit:GetScript("OnTextChanged")(p.edit, true)
+    check("goal: first suggestion", p.results[1].goal, "level")
+    p.edit:GetScript("OnArrowPressed")(p.edit, "DOWN")
+    enter(p.edit)
+    local lvl = list.entries[#list.entries]
+    check("goal: picked, added", lvl.goalKind, "level")
+    M.state.level = 47
+    local gl = ns.Tasks.Line(lvl)
+    check("goal: shows level and count", gl.text .. " " .. gl.cur .. "/" .. gl.max, "Level 50 47/50")
+    check("goal: not reached", gl.done, false)
+    ns.Tasks.Toggle(lvl)
+    check("goal: no ticking by hand", lvl.done, nil)
+    M.state.level = 50
+    check("goal: reached ticks itself", ns.Tasks.Line(lvl).done, true)
+    M.state.level = nil
+    local count = #list.entries
+    ns.Tasks.AddGoal(list, "level", 55)
+    check("goal: again changes the amount", lvl.goal .. " " .. #list.entries, 55 .. " " .. count)
+    ns.TaskUI.EntryMenu(UIParent, list, lvl)
+    check("goal: menu changes the amount", M.menus[#M.menus].entries[1].text, ns.L.TASK_CHANGE_AMOUNT)
+    ns.Tasks.RemoveEntry(list, lvl)
+    p.edit:SetText("Level 50")
+    p.edit:GetScript("OnTextChanged")(p.edit, true)
+    enter(p.edit)
+    check("goal: Enter without picking keeps a text", list.entries[#list.entries].text, "Level 50")
+    ns.Tasks.RemoveEntry(list, list.entries[#list.entries])
+    p.edit:SetText("Gold")
+    p.edit:GetScript("OnTextChanged")(p.edit, true)
+    p.amount:SetText("250")
+    p.edit:GetScript("OnArrowPressed")(p.edit, "DOWN")
+    enter(p.edit)
+    local boxed = list.entries[#list.entries]
+    check("goal: Gold with the amount box", (boxed.goalKind or "") .. (boxed.goal or ""), "money250")
+    ns.Tasks.RemoveEntry(list, boxed)
+    local hadMoney = M.state.money
+    M.state.money = 563 * 10000 + 99
+    ns.Tasks.AddGoal(list, "money", 1000)
+    local gold = list.entries[#list.entries]
+    check("goal: gold counts whole gold", ns.Tasks.Line(gold).cur, 563)
+    M.state.money = hadMoney
+    ns.Tasks.RemoveEntry(list, gold)
+    p.edit:GetScript("OnEscapePressed")(p.edit)
+    -- Quests from the tracker's menu: ticked once turned in.
+    local turnedIn = {}
+    C_QuestLog.IsQuestFlaggedCompleted = function(id) return turnedIn[id] end
+    local qrow = questRows()[1]
+    qrow:GetScript("OnClick")(qrow, "RightButton")
+    local addQuest
+    for _, e in ipairs(M.menus[#M.menus].entries) do if e.text == list.name then addQuest = e end end
+    check("quest: the menu offers the list", addQuest ~= nil, true)
+    addQuest.fn()
+    local qe = list.entries[#list.entries]
+    check("quest: symbol, title, level", ns.Tasks.Line(qe).text:gsub("|cff%x+", ""):gsub("|r", ""),
+        ns.Tasks.QUEST_SYMBOL.progress .. " " .. C_QuestLog.GetTitleForQuestID(qe.questID) .. " (" .. qe.level .. ")")
+    count = #list.entries
+    addQuest.fn()
+    check("quest: not twice", #list.entries, count)
+    check("quest: open", ns.Tasks.Line(qe).done, false)
+    ns.Tasks.Toggle(qe)
+    check("quest: no ticking by hand", qe.done, nil)
+    turnedIn[qe.questID] = true
+    check("quest: turned in ticks itself", ns.Tasks.Line(qe).done, true)
+    check("quest: turned in, no level", ns.Tasks.Line(qe).text:find("(", 1, true), nil)
+    ns.TaskUI.EntryMenu(UIParent, list, qe)
+    check("quest: no edit in its menu", (function()
+        for _, e in ipairs(M.menus[#M.menus].entries) do if e.text == ns.L.TASK_EDIT then return true end end
+        return false
+    end)(), false)
+    C_QuestLog.IsQuestFlaggedCompleted = nil
+    ns.Tasks.RemoveEntry(list, qe)
+    ns.TaskUI.OpenAdd(list)
     local amountArrow = p.amount:GetScript("OnArrowPressed")
     p.amount:SetText("1")
     amountArrow(p.amount, "UP")

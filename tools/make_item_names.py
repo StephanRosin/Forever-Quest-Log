@@ -16,7 +16,11 @@ URL = "https://wago.tools/db2/ItemSparse/csv?build={build}&locale={locale}"
 # Blizzard's leftovers: no player can get these. Judged on the English names,
 # so all languages list the same items.
 LEFTOVER = re.compile(r"^(OLD|Deprecated|DEPRECATED|Monster - |UNUSED|Unused|\[|DEBUG|zz|QA|Test\b|\(DNT\)|\(OLD\))"
-                      r"|\b(DEP|DEPRECATED|Deprecated|UNUSED|TEST|PH)\b")
+                      r"|\b(DEP|DEPRECATED|Deprecated|UNUSED|TEST|PH)\b"
+                      # "Level 50 Test Gear", "Fast Test Axe", "(test)", "TestBoots"; not "Testament"
+                      r"|\b[Tt]est(\b|[A-Z0-9])|(Critical|Tradeskill) Testing")
+# Real items the patterns above would drop.
+KEEP = {"High Test Eternium Fishing Line"}
 # File's locale -> the client locales it serves; English serves all others.
 LOCALES = {"deDE": ["deDE"], "esES": ["esES", "esMX"], "frFR": ["frFR"], "enUS": None}
 OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "ItemNames")
@@ -52,7 +56,8 @@ def main():
         sys.exit(__doc__)
     build = sys.argv[1]
     english = fetch(build, "enUS")
-    wanted = {int(r["ID"]) for r in english if r["Display_lang"] and not LEFTOVER.search(r["Display_lang"])}
+    wanted = {int(r["ID"]) for r in english if r["Display_lang"]
+              and (r["Display_lang"] in KEEP or not LEFTOVER.search(r["Display_lang"]))}
     print("%d of %d items kept" % (len(wanted), len(english)))
     os.makedirs(OUT_DIR, exist_ok=True)
     for locale in LOCALES:

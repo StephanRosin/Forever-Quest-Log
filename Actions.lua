@@ -54,6 +54,16 @@ local function questMenu(owner, questID)
             root:CreateButton(SHARE_QUEST, function() QuestUtil.ShareQuest(questID) end)
         end
         root:CreateButton(ABANDON_QUEST_ABBREV, function() QuestMapQuestOptions_AbandonQuest(questID) end)
+        -- Ours, after Blizzard's: onto a task list, ticked once turned in.
+        local lists = ns.Tasks.Lists()
+        if #lists > 0 then
+            local add = root:CreateButton(ns.L.TASK_ADD_QUEST)
+            for _, list in ipairs(lists) do
+                add:CreateButton(list.name, function()
+                    ns.Tasks.AddQuest(list, questID, C_QuestLog.GetTitleForQuestID(questID))
+                end)
+            end
+        end
     end)
 end
 
