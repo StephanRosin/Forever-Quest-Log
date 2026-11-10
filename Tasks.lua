@@ -172,8 +172,15 @@ function Tasks.Line(entry)
         line = { text = C_Item.GetItemNameByID(entry.itemID) or entry.name,
             cur = have, max = entry.goal, done = have >= entry.goal }
     else
-        local symbol = entry.place and Tasks.PLACE_SYMBOL[entry.place.kind]
-        line = { text = symbol and (symbol .. " " .. entry.text) or entry.text, done = entry.done and true or false }
+        local place = entry.place
+        local symbol = place and Tasks.PLACE_SYMBOL[place.kind]
+        local text = entry.text
+        local label = place and not entry.done and ns.ZoneLevels.Label(place.name)
+        if label then
+            local at = text:find(place.name, 1, true)
+            if at then text = text:sub(1, at - 1) .. label .. text:sub(at + #place.name) end
+        end
+        line = { text = symbol and (symbol .. " " .. text) or text, done = entry.done and true or false }
     end
     line.check = true
     line.icon = line.done and "BoxChecked" or "Box"

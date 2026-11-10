@@ -94,6 +94,7 @@ local function generalRows()
         check("showLevel", "OPT_SHOW_LEVEL"),
         visibleIf(check("levelColors", "OPT_LEVEL_COLORS"), function() return S("showLevel") end),
         check("showTags", "OPT_SHOW_TAGS"),
+        check("zoneLevels", "OPT_ZONE_LEVELS"),
         check("showPOI", "OPT_SHOW_POI"),
         check("showDoneObjectives", "OPT_SHOW_DONE"),
         check("hideCompleteQuests", "OPT_HIDE_COMPLETE"),

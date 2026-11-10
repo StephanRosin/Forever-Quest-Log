@@ -255,6 +255,16 @@ function IsInInstance()
     return false, "none"
 end
 function GetInstanceInfo() return M.state.instance and M.state.instance.name or "" end
+-- Blizzard's thresholds (DifficultyUtil.lua), grey beyond 8 under.
+QuestDifficultyColors = { impossible = { r = 1, g = 0.1, b = 0.1 }, verydifficult = { r = 1, g = 0.5, b = 0.25 },
+    difficult = { r = 1, g = 0.82, b = 0 }, standard = { r = 0.25, g = 0.75, b = 0.25 }, trivial = { r = 0.5, g = 0.5, b = 0.5 } }
+function UnitLevel() return M.state.level or 30 end
+function GetQuestDifficultyColor(level)
+    local d, c = level - UnitLevel("player"), QuestDifficultyColors
+    if d >= 5 then return c.impossible elseif d >= 3 then return c.verydifficult
+    elseif d >= -4 then return c.difficult elseif -d <= 8 then return c.standard end
+    return c.trivial
+end
 function GetDifficultyColor(d) return ({ { r = 1, g = 0.1, b = 0.1 }, { r = 1, g = 0.5, b = 0.25 },
     { r = 1, g = 1, b = 0 }, { r = 0.25, g = 0.75, b = 0.25 }, { r = 0.5, g = 0.5, b = 0.5 } })[d] end
 C_PlayerInfo = { GetContentDifficultyQuestForPlayer = function(id)

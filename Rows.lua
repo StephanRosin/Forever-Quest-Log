@@ -246,7 +246,7 @@ function Rows.LayoutZone(row, entry, width, key, onToggle, cfg)
     Media.ApplyText(row.count, style)
     local c = style.color
     row.count:SetTextColor(c[1] * 0.7, c[2] * 0.7, c[3] * 0.7)
-    row.name:SetText(entry.name)
+    row.name:SetText(entry.kind == "zone" and ns.ZoneLevels.Label(entry.name) or entry.name)
     row.name:SetWidth(0)
     local maxName = width - 60 - (entry.onAdd and 3 * LIST_BUTTON + 6 or 0)
     if row.name:GetStringWidth() > maxName then row.name:SetWidth(maxName) end
