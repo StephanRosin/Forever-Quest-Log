@@ -12,7 +12,6 @@ local FIELD_H, AMOUNT_W = 22, 56
 local STEPPER_W, MAX_AMOUNT = 14, 9999
 local OK_W, OK_H, OK_GAP = 70, 24, 8
 local ROW_H, ICON = 20, 16
-local ZONE_ICON = "Interface\\Icons\\INV_Misc_Map_01"
 local FONT = "Friz Quadrata"
 
 local popup
@@ -88,9 +87,9 @@ local function showSuggestions(results)
         row.selected:SetColorTexture(c[1], c[2], c[3], 0.25)
         row.icon = row:CreateTexture(nil, "ARTWORK")
         row.icon:SetSize(ICON, ICON)
-        row.icon:SetPoint("LEFT", 4, 0)
+        row.icon:SetPoint("CENTER", row, "LEFT", 4 + ICON / 2, 0)
         row.text = Style.Text(row, 12)
-        row.text:SetPoint("LEFT", row.icon, "RIGHT", 6, 0)
+        row.text:SetPoint("LEFT", 4 + ICON + 6, 0)
         row.text:SetPoint("RIGHT", -4, 0)
         row.text:SetJustifyH("LEFT")
         row.text:SetWordWrap(false)
@@ -113,14 +112,18 @@ local function showSuggestions(results)
         if item then
             row.item = item
             row.text:SetText(item.name)
-            if item.kind == "dungeon" or item.kind == "raid" then
-                row.icon:SetAtlas(item.kind == "raid" and "Raid" or "Dungeon")
+            local place = Tasks.PLACE_TEXTURE[item.kind or ""]
+            if place then
+                row.icon:SetTexture(place[1])
+                row.icon:SetTexCoord(place[2], place[3], place[4], place[5])
                 row.text:SetTextColor(1, 1, 1)
-            elseif item.zone then
-                row.icon:SetTexture(ZONE_ICON)
+            elseif item.zone then -- a client without atlas info
+                row.icon:SetAtlas(item.kind == "raid" and "Raid" or "Dungeon")
                 row.text:SetTextColor(1, 1, 1)
             else
                 row.icon:SetTexture(C_Item.GetItemIconByID(item.id))
+                -- cut the frame like the zone icon; also clears the coords of a reused place row
+                row.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
                 local r, g, b = C_Item.GetItemQualityColor(item.quality)
                 row.text:SetTextColor(r, g, b)
             end

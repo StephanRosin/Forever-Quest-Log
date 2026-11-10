@@ -1232,7 +1232,7 @@ do
     local function layout(line)
         ns.Rows.LayoutQuest(row, { title = "T", objectives = { line } }, 200, 1)
         local l = row.lines[1]
-        return l.text._points.TOPLEFT[3], l.icon:IsShown() and l.icon._points.TOPLEFT[3] or nil
+        return l.text._points.TOPLEFT[3], l.icon:IsShown() and l.icon._points.LEFT[3] or nil
     end
     local open, done = { text = "open" }, { text = "done", check = true }
     local base = layout(open)

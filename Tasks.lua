@@ -149,11 +149,29 @@ function Tasks.SetText(entry, text, place)
     return true
 end
 
-Tasks.PLACE_SYMBOL = {
-    zone = "|TInterface\\Icons\\INV_Misc_Map_01:0|t",
-    dungeon = "|A:Dungeon:14:14|a",
-    raid = "|A:Raid:14:14|a",
-}
+-- What each place shows: file and tex coords (0..1). The map legend's
+-- Dungeon/Raid atlases are mostly glow; the ring spans texels 9-41 of 50, so
+-- they are cut to that like the map icon to its picture, and all look as wide.
+-- Their spot in the file comes from the client: Forever packs it elsewhere.
+local RING_FROM, RING_TO = 9 / 50, 41 / 50
+Tasks.PLACE_TEXTURE = { zone = { "Interface\\Icons\\INV_Misc_Map_01", 5 / 64, 59 / 64, 5 / 64, 59 / 64 } }
+Tasks.PLACE_SYMBOL = {}
+for kind, atlas in pairs({ dungeon = "Dungeon", raid = "Raid" }) do
+    local a = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(atlas)
+    if a then
+        local w, h = a.rightTexCoord - a.leftTexCoord, a.bottomTexCoord - a.topTexCoord
+        Tasks.PLACE_TEXTURE[kind] = { a.file,
+            a.leftTexCoord + w * RING_FROM, a.leftTexCoord + w * RING_TO,
+            a.topTexCoord + h * RING_FROM, a.topTexCoord + h * RING_TO }
+    else
+        Tasks.PLACE_SYMBOL[kind] = "|A:" .. atlas .. ":14:14|a"
+    end
+end
+-- Markup takes texel coords; on a scale of 10000 the fractions stay exact enough.
+for kind, t in pairs(Tasks.PLACE_TEXTURE) do
+    local c = function(f) return math.floor(f * 10000 + 0.5) end
+    Tasks.PLACE_SYMBOL[kind] = ("|T%s:14:14:0:0:10000:10000:%d:%d:%d:%d|t"):format(t[1], c(t[2]), c(t[3]), c(t[4]), c(t[5]))
+end
 
 -- Items tick themselves when the amount is there.
 function Tasks.Toggle(entry)

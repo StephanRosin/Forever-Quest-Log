@@ -93,7 +93,8 @@ local function layoutLine(row, line, o, x, y, w, style, cfg)
         left = math.max(left, x + CHECK_W)
         line.icon:SetTexture(Media.Icon(o.icon or "Check"))
         line.icon:ClearAllPoints()
-        line.icon:SetPoint("TOPLEFT", row, "TOPLEFT", left - CHECK_W, -y - 1)
+        -- centred on the first text line, whatever the font size
+        line.icon:SetPoint("LEFT", row, "TOPLEFT", left - CHECK_W, -y - textStyle.size / 2)
         local c = textStyle.color
         line.icon:SetVertexColor(c[1], c[2], c[3])
         line.icon:Show()
