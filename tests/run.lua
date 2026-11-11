@@ -170,7 +170,7 @@ local unknown = { { id = 1, title = "X", level = 1, watchIndex = 1 } }
 check("quest without header: Other", Sort.Build(unknown, { groupByZone = true })[1].name, ns.L.ZONE_OTHER)
 
 section("The list on screen")
-check("zones shown", zoneNames(), "Stranglethorn Vale |cffffd100(30-45)|r,Duskwood |cff3fbf3f(18-30)|r")
+check("zones shown", zoneNames(), "Stranglethorn Vale |cffff7f3f(30-45)|r,Duskwood |cff3fbf3f(18-30)|r")
 check("quests in zone order", questTitles(), "Tiger Mastery,Singing Blue Shards,Bloodscalp Ears,The Night Watch,Mor'Ladim")
 local tiger = questRows()[1]
 check("title with level", (tiger.title._text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")), "[34] Tiger Mastery")
@@ -1671,7 +1671,7 @@ do
     enter(p.edit)
     enter(p.edit)
     local run = list.entries[before + 5]
-    check("dungeon: symbol", ns.Tasks.Line(run).text, ns.Tasks.PLACE_SYMBOL.dungeon .. " Run Deadmines |cff3fbf3f(17-26)|r")
+    check("dungeon: symbol", ns.Tasks.Line(run).text, ns.Tasks.PLACE_SYMBOL.dungeon .. " Run Deadmines |cff7f7f7f(17-26)|r")
     check("dungeon: no map", run.place.mapID, nil)
     ns.TaskUI.EntryMenu(UIParent, list, run)
     check("dungeon: no map entry", (function()
@@ -1909,15 +1909,17 @@ section("Zone levels")
 do
     local Z, grey, green, yellow = ns.ZoneLevels, QuestDifficultyColors.trivial, QuestDifficultyColors.standard, QuestDifficultyColors.difficult
     local function at(level, lo, hi) M.state.level = level; return Z.Color(lo, hi, level) end
-    check("zone level: red far below", at(20, 30, 40), QuestDifficultyColors.impossible)
-    check("zone level: orange 3 below", at(27, 30, 40), QuestDifficultyColors.verydifficult)
-    check("zone level: yellow inside", at(35, 30, 40), yellow)
+    check("zone level: red 1 below", at(29, 30, 40), QuestDifficultyColors.impossible)
+    check("zone level: orange at the bottom", at(30, 30, 40), QuestDifficultyColors.verydifficult)
+    check("zone level: orange 1 in", at(31, 30, 40), QuestDifficultyColors.verydifficult)
+    check("zone level: yellow 2 in", at(32, 30, 40), yellow)
     check("zone level: yellow 2 under the top", at(38, 30, 40), yellow)
-    check("zone level: green 1 under the top", at(39, 30, 40), green)
+    check("zone level: green in the last tenth", at(39, 30, 40), green)
     check("zone level: green at the top", at(40, 30, 40), green)
-    check("zone level: green well above", at(46, 30, 40), green)
-    check("zone level: grey far above", at(50, 30, 40), grey)
-    check("zone level: Riverglades green at 45", at(45, 35, 45), green)
+    check("zone level: grey 1 above", at(41, 30, 40), grey)
+    check("zone level: Zephras green from 11", at(11, 1, 12), green)
+    check("zone level: Zephras yellow at 10", at(10, 1, 12), yellow)
+    check("zone level: one-level raid orange", at(60, 60, 60), QuestDifficultyColors.verydifficult)
     M.state.level = 40
     head = CreateFrame("Button")
     head.name, head.count, head.chevron = head:CreateFontString(), head:CreateFontString(), head:CreateTexture()

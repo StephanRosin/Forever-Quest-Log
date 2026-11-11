@@ -1,18 +1,17 @@
--- Zone and instance names with their level range, the range coloured like Blizzard's
--- map labels: red/orange below the range, yellow inside, green from one
--- level under its top, grey far above (ZoneLevelData.lua has the ranges).
+-- Zone and instance names with their level range, the range coloured by Stephan's rule:
+-- red below, orange in the first two levels, yellow inside, green in the last tenth,
+-- grey above (ZoneLevelData.lua has the ranges).
 local _, ns = ...
 local ZoneLevels = {}
 ns.ZoneLevels = ZoneLevels
 
 function ZoneLevels.Color(lo, hi, level)
-    if level < lo then return GetQuestDifficultyColor(lo) end
-    if level < hi - 1 then return QuestDifficultyColors.difficult end
-    -- From top - 1 green (Stephan's rule; Blizzard's green starts 5 under),
-    -- grey once Blizzard greys the top itself.
-    local top = GetQuestDifficultyColor(hi)
-    if top == QuestDifficultyColors.trivial then return top end
-    return QuestDifficultyColors.standard
+    local c = QuestDifficultyColors
+    if level < lo then return c.impossible end
+    if level > hi then return c.trivial end
+    if level <= lo + 1 then return c.verydifficult end
+    if level >= hi - (hi - lo) * 0.1 then return c.standard end
+    return c.difficult
 end
 
 -- "Tanaris (40-50)", the range in its colour, or nil: unknown place or the option off.
