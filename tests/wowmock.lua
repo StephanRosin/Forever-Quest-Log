@@ -349,6 +349,7 @@ function IsQuestLogSpecialItemInRange() return 1 end
 C_SuperTrack = {
     GetSuperTrackedQuestID = function() return M.superTracked end,
     SetSuperTrackedQuestID = function(id) M.superTracked = id; record("SetSuperTrackedQuestID", id) end,
+    ClearAllSuperTracked = function() M.superTracked = 0; record("ClearAllSuperTracked") end,
 }
 QuestUtil = {
     CanRemoveQuestWatch = function() return true end,

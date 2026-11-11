@@ -317,7 +317,13 @@ local function newPOI(row)
     b.glow:SetAtlas(POI_ATLAS.highlight, true)
     b.glow:SetBlendMode("ADD")
     b:SetScript("OnClick", function(self)
-        if self.questID then C_SuperTrack.SetSuperTrackedQuestID(self.questID) end
+        if not self.questID then return end
+        -- Like Blizzard's POIButton: a second click on the focused quest clears the focus.
+        if C_SuperTrack.GetSuperTrackedQuestID() == self.questID then
+            C_SuperTrack.ClearAllSuperTracked()
+        else
+            C_SuperTrack.SetSuperTrackedQuestID(self.questID)
+        end
     end)
     return b
 end
