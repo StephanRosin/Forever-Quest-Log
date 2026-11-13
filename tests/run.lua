@@ -1366,6 +1366,12 @@ check("taken from another action: said so", #M.chat > 0, true)
 keyRow.button:GetScript("OnClick")(keyRow.button, "LeftButton")
 keyRow.button:GetScript("OnKeyDown")(keyRow.button, "ESCAPE")
 check("escape: key kept", M.bindings["F7"], "FOREVERQUESTLOG_LOCK")
+keyRow.button:GetScript("OnClick")(keyRow.button, "LeftButton")
+M.state.shift, M.state.ctrl = true, true
+keyRow.button:GetScript("OnGamePadButtonDown")(keyRow.button, "PADDUP")
+M.state.shift, M.state.ctrl = false, false
+check("controller button with its modifiers", M.bindings["CTRL-SHIFT-PADDUP"], "FOREVERQUESTLOG_LOCK")
+check("controller: listening ended", keyRow.button:GetScript("OnGamePadButtonDown"), nil)
 keyRow.button:GetScript("OnClick")(keyRow.button, "RightButton")
 check("right click: no key", M.bindings["F7"], nil)
 check("right click: shown", keyRow.button.text._text, "Not bound")

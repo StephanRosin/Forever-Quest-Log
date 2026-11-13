@@ -616,7 +616,9 @@ function Widgets.Keybind(parent, opts)
     local function stopListening()
         b.listening = false
         b:EnableKeyboard(false)
+        b:EnableGamePadButton(false)
         b:SetScript("OnKeyDown", nil)
+        b:SetScript("OnGamePadButtonDown", nil)
         row:Refresh()
     end
     b:SetScript("OnClick", function(_, mouseButton)
@@ -628,13 +630,17 @@ function Widgets.Keybind(parent, opts)
         b.listening = true
         b.text:SetText(L.KEY_PRESS)
         b:EnableKeyboard(true)
-        b:SetScript("OnKeyDown", function(_, key)
+        -- A controller button too, as on Blizzard's key binding page.
+        b:EnableGamePadButton(true)
+        local function onKey(_, key)
             if key == "ESCAPE" then return stopListening() end
             local chord = opts.combination(key)
             if not chord then return end
             opts.set(chord)
             stopListening()
-        end)
+        end
+        b:SetScript("OnKeyDown", onKey)
+        b:SetScript("OnGamePadButtonDown", onKey)
     end)
     b:SetScript("OnHide", function() if b.listening then stopListening() end end)
 
