@@ -405,6 +405,7 @@ check("pitwall: note icons white, a plain X", vertex3(note.close.icon) .. " " ..
     "0.949/0.953/0.961 0.949/0.953/0.961 0.949/0.953/0.961 IconClose.tga")
 check("pitwall: note grip grey", vertex3(note.grip.icon), "0.604/0.631/0.671")
 check("pitwall: note shade none, so no uneven margin", note.themeArt.shade:IsShown(), false)
+check("pitwall: air between the title band and the first entry", -note.scroll._points.TOPLEFT[4] - note.titleH, 6)
 Themes.Switch("CLASSIC")
 M.RunTimers()
 for _, id in ipairs(Themes.IDS) do

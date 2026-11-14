@@ -10,6 +10,7 @@ local Notes = {}
 ns.Notes = Notes
 
 local TITLE_H, PAD, BUTTON, GRIP = 24, 8, 14, 16
+local BAND_AIR = 6
 local MIN_W, MIN_H, MAX_W, MAX_H = 160, 80, 700, 900
 local ACCENT = { 0.31, 0.76, 0.97 }
 local CLOSE = "Interface\\Buttons\\UI-StopButton"
@@ -152,14 +153,15 @@ function Notes.LayoutWindow(win)
     local spec = ns.Themes.Spec(ns.Themes.Current())
     Media.ApplyText(win.name, style)
     -- A theme's larger title font gets a taller title row; a shaded theme
-    -- (Glass, Frost) keeps its band of air between title and first entry.
+    -- (Glass, Frost) keeps its band of air between title and first entry,
+    -- a title band with a rule under it (Pitwall) the same air below it.
     local themed = ns.Themes.Current() ~= "CLASSIC"
     local art = spec.art or {}
     local titleH = themed and math.max(TITLE_H, style.size + 12) or TITLE_H
     -- Past the theme's title wedge (Pitwall), as in the tracker.
     local indent = ns.Themes.TitleIndent(titleH)
     win.name:SetPoint("LEFT", indent > 0 and indent - PAD or 0, 0)
-    local top = titleH + (art.shade and art.shadeInset or 0)
+    local top = titleH + (art.shade and art.shadeInset or art.band and art.band.rule and BAND_AIR or 0)
     if win.titleH ~= titleH or win.top ~= top then
         win.titleH, win.top = titleH, top
         win.title:SetHeight(titleH)
