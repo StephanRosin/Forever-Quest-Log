@@ -315,7 +315,7 @@ local function layoutHeader(tracked)
     Media.ApplyText(header.title, headerStyle)
     header.title:SetText(L.HEADER_QUESTS)
     header.title:ClearAllPoints()
-    header.title:SetPoint("LEFT", unlocked and 26 or 10, 0)
+    header.title:SetPoint("LEFT", (unlocked and 26 or 10) + (ns.Themes.Spec(ns.Themes.Current()).titleIndent or 0), 0)
     header.grip:SetShown(unlocked)
     local countStyle = Settings.TextStyle("objective")
     countStyle.size = math.max(8, S("headerSize") - 3)
@@ -351,7 +351,7 @@ local function applyLook()
     local radius = ns.Corners.Clamp(S("cornerRadius"), w, h)
     ns.Corners.Fit(frame.clip, frame, radius, { frame.bg, header.shine })
     local look = {
-        style = S("borderStyle"), size = S("borderSize"), color = S("borderColor"), radius = radius,
+        style = S("borderStyle"), size = S("borderSize"), color = ns.Themes.Rim(S("borderColor")), radius = radius,
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
     ns.Border.Draw(frame, frame, look)

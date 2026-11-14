@@ -24,6 +24,13 @@ Media.BLIZZARD = {
         { name = "Marcellus", path = MEDIA .. "Fonts\\Marcellus-Regular.ttf" },
         { name = "Space Grotesk", path = MEDIA .. "Fonts\\SpaceGrotesk-Bold.ttf" },
         { name = "VT323", path = MEDIA .. "Fonts\\VT323-Regular.ttf" },
+        { name = "Inter Tight Bold", path = MEDIA .. "Fonts\\InterTight-Bold.ttf" },
+        { name = "Inter Tight", path = MEDIA .. "Fonts\\InterTight-Regular.ttf" },
+        { name = "Inter Tight Light", path = MEDIA .. "Fonts\\InterTight-Light.ttf" },
+        { name = "IBM Plex Sans Condensed Bold", path = MEDIA .. "Fonts\\IBMPlexSansCondensed-Bold.ttf" },
+        { name = "IBM Plex Mono", path = MEDIA .. "Fonts\\IBMPlexMono-Regular.ttf" },
+        { name = "Titillium Web Bold Italic", path = MEDIA .. "Fonts\\TitilliumWeb-BoldItalic.ttf" },
+        { name = "Titillium Web SemiBold", path = MEDIA .. "Fonts\\TitilliumWeb-SemiBold.ttf" },
     },
     background = {
         { name = "Blizzard Dialog Background Dark", path = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark" },
@@ -46,6 +53,7 @@ Media.BLIZZARD = {
 local THEME_ART = {
     { "Wood", "Wood", 0.5 }, { "Tech", "Tech", 1 }, { "Parchment", "Parchment", 0.45 }, { "Stone", "Stone", 0.55 },
     { "Glass", "Glass", 1 }, { "Comic", "Comic", 0.7 }, { "Frost", "Frost", 0.55 }, { "Pixel", "Pixel", 1 },
+    { "Swiss", "Swiss", 1 }, { "Console", "Console", 1 }, { "Pitwall", "Pitwall", 1 },
 }
 for _, a in ipairs(THEME_ART) do
     local name, file, tint = "FQL " .. a[1], MEDIA .. "Themes\\" .. a[2], a[3]

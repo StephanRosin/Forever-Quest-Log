@@ -222,7 +222,8 @@ Settings.DEFAULTS = {
 
 -- The themes (Themes.lua); CLASSIC is the player's own setup. Same ids as
 -- Forever Unit Frames' themes.
-Settings.THEMES = { "CLASSIC", "WOOD", "TECH", "PARCHMENT", "RUNESTONE", "GLASS", "COMIC", "FROST", "PIXEL" }
+Settings.THEMES = { "CLASSIC", "WOOD", "TECH", "PARCHMENT", "RUNESTONE", "GLASS", "COMIC", "FROST", "PIXEL", "SWISS", "CONSOLE",
+    "PITWALL" }
 
 -- Slider ranges, used by the options window and to clamp typed values.
 Settings.RANGES = {

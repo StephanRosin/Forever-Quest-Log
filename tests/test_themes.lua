@@ -124,7 +124,8 @@ local function texture() return frame.bg._texture:match("[^\\]+$") end
 check("colour: comic grey by default", registry.Color(), "GREY")
 check("colour: the comic nine", table.concat(registry.Colors(), " "),
     "GREY DARKGREY BLACK WHITE YELLOW BLUE RED GREEN PURPLE")
-check("colour: by theme", table.concat(registry.Colors("PIXEL"), " "), "NAVY PLUM FOREST BROWN GREY BLACK TEAL PURPLE")
+check("colour: by theme", table.concat(registry.Colors("PIXEL"), " "),
+    "NAVY PLUM FOREST BROWN GREY BLACK TEAL PURPLE HANDHELD")
 check("colour: none for classic", #registry.Colors("CLASSIC"), 0)
 check("colour: classic has none", registry.Color("CLASSIC"), nil)
 check("comic colour: grey keeps dark ink", Themes.OnPaper(S("objectiveColor"))[1], 0.1)
@@ -217,7 +218,7 @@ for _, row in ipairs(ns.Window.PAGES[1].rows()) do
     if row.label == "OPT_THEME_COLOR" then colorRow = row end
 end
 Themes.Switch("PIXEL")
-check("menu: pixel's colours", colorRow.visible() and #colorRow.choices(), 8)
+check("menu: pixel's colours", colorRow.visible() and #colorRow.choices(), 9)
 check("menu: their names", colorRow.choices()[2].label, "Plum")
 check("menu: current checked", colorRow.get(), "NAVY")
 colorRow.set("TEAL")
@@ -246,6 +247,90 @@ check("tech: no corner pieces", Themes.SPECS.TECH.art, nil)
 check("revision", Themes.REVISION, 4)
 Themes.Switch("CLASSIC")
 check("classic after the body fonts", snapshot(), classic)
+
+-- Swiss, Console, Pitwall: display face for display texts only, the text
+-- face for the body, no size growth.
+local function ringColor() return table.concat(ns.Border.Pieces(frame)[1]._vertex, "/", 1, 3) end
+local function wedge() return frame.themeArt.ornaments[1] end
+local themeRow
+for _, row in ipairs(ns.Window.PAGES[1].rows()) do
+    if row.label == "OPT_THEME_CHOICE" then themeRow = row end
+end
+local listed = {}
+for _, c in ipairs(themeRow.choices()) do listed[#listed + 1] = c.value end
+check("new: in the options' list, appended", table.concat(listed, " ", 10), "SWISS CONSOLE PITWALL")
+check("new: their names", themeRow.choices()[10].label, "Swiss")
+local titleSize = S("titleSize")
+Themes.Switch("SWISS")
+M.RunTimers()
+check("swiss: display face", S("titleFont") .. "/" .. S("zoneFont") .. "/" .. S("headerFont"),
+    "Inter Tight Bold/Inter Tight Bold/Inter Tight Bold")
+check("swiss: body face", S("objectiveFont") .. "/" .. S("doneFont"), "Inter Tight/Inter Tight")
+check("swiss: no size growth", S("titleSize") .. "/" .. S("objectiveSize"), titleSize .. "/" .. bodySize)
+check("swiss: its backdrop", texture() .. " " .. frame.bg._vertex[1], "SwissBack.tga 1")
+check("swiss: hairline ring", ringColor(), "0.165/0.165/0.165")
+check("swiss: white rule on top", frame.themeArt.band:IsShown() and frame.themeArt.band:GetHeight(), 3)
+check("swiss: no ornaments", wedge():IsShown(), false)
+check("swiss: red accent", table.concat(Themes.Accent(S("headerColor")), "/"), "1/0.176/0.125")
+check("swiss: colours", table.concat(registry.Colors(), " "), "RED BLUE YELLOW WHITE")
+registry.SetColor("BLUE")
+M.RunTimers()
+check("swiss blue: accent", Themes.Accent(S("headerColor"))[3], 1)
+check("swiss blue: backdrop stays", texture() .. " " .. frame.bg._vertex[1], "SwissBack.tga 1")
+check("swiss blue: ring stays", ringColor(), "0.165/0.165/0.165")
+registry.SetColor("RED")
+Themes.Switch("CONSOLE")
+M.RunTimers()
+check("console: fonts", S("titleFont") .. "/" .. S("objectiveFont"), "IBM Plex Sans Condensed Bold/IBM Plex Mono")
+check("console: mint ring", ringColor(), "0.306/0.929/0.69")
+check("console: no band", frame.themeArt.band:IsShown(), false)
+check("console: colours", table.concat(registry.Colors(), " "), "MINT AMBER PHOSPHOR VIOLET")
+registry.SetColor("AMBER")
+M.RunTimers()
+check("console amber: the ring follows", ringColor(), "1/0.69/0")
+check("console amber: accent", table.concat(Themes.Accent(S("headerColor")), "/"), "1/0.69/0")
+check("console amber: backdrop stays", texture() .. " " .. frame.bg._vertex[1], "ConsoleBack.tga 1")
+check("console amber: not stored", S("borderColor")[1], 0.306)
+registry.SetColor("MINT")
+M.RunTimers()
+check("console mint: ring as stored", ringColor(), "0.306/0.929/0.69")
+Themes.Switch("PITWALL")
+M.RunTimers()
+check("pitwall: fonts", S("titleFont") .. "/" .. S("objectiveFont"), "Titillium Web Bold Italic/Titillium Web SemiBold")
+check("pitwall: no ring", ns.Border.Pieces(frame)[1]:IsShown(), false)
+check("pitwall: title strip as high as the header", frame.themeArt.band:GetHeight(), 32)
+check("pitwall: red wedge", wedge():IsShown() and table.concat(wedge()._vertex, "/", 1, 3), "0.882/0.024/0")
+local headerTitle
+for _, fs in ipairs(M.fontStrings) do
+    local point, rel = fs:GetPoint()
+    if fs:GetText() == ns.L.HEADER_QUESTS and point == "LEFT" and rel == nil then headerTitle = fs end
+end
+check("pitwall: title right of the wedge", select(4, headerTitle:GetPoint()), (S("locked") and 10 or 26) + 14)
+check("pitwall: content on a card", frame.themeArt.shade:IsShown(), true)
+check("pitwall: colours", table.concat(registry.Colors(), " "), "RED ORANGE TEAL SILVER")
+registry.SetColor("TEAL")
+M.RunTimers()
+check("pitwall teal: wedge", table.concat(wedge()._vertex, "/", 1, 3), "0/0.631/0.612")
+check("pitwall teal: header as stored", Themes.Accent(S("headerColor")), S("headerColor"))
+check("pitwall teal: backdrop stays", texture() .. " " .. frame.bg._vertex[1], "PitwallBack.tga 1")
+registry.SetColor("RED")
+-- Pixel's handheld: four greens, the rim too.
+Themes.Switch("PIXEL")
+check("pixel: handheld appended", registry.Colors()[9], "HANDHELD")
+registry.SetColor("HANDHELD")
+M.RunTimers()
+check("handheld: grey pixel at back / mean", texture() .. " " .. vertex(),
+    "PixelBackGrey.tga " .. (0.059 / 0.8) .. "/" .. (0.122 / 0.8) .. "/" .. (0.059 / 0.8))
+check("handheld: green rim", ringColor(), "0.784/0.941/0.439")
+check("handheld: green accent", table.concat(Themes.Accent(S("headerColor")), "/", 1, 3), "0.784/0.941/0.439")
+registry.SetColor("NAVY")
+M.RunTimers()
+check("navy: rim as stored", ringColor(), "1/0.95/0.91")
+Themes.Switch("CLASSIC")
+M.RunTimers()
+for _, id in ipairs({ "SWISS", "CONSOLE", "PITWALL", "PIXEL" }) do sets()[id] = nil end
+check("classic after the new themes", snapshot(), classic)
+check("classic: no band left", frame.themeArt.band:IsShown(), false)
 
 -- Latin fonts only on Latin clients.
 M.locale = "koKR"

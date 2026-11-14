@@ -42,7 +42,10 @@ local LATIN_CLIENTS = { enUS = true, enGB = true, deDE = true, frFR = true, esES
 -- left, 4 bottom right), ornamentInset = how far in from the ring's outer
 -- corner (negative: further out), hardShadow = offset of a solid shadow,
 -- shade = a colour laid over the backdrop behind the content (below the
--- header, inside a band of shadeInset), so a busy backdrop only frames it.
+-- header, inside a band of shadeInset), so a busy backdrop only frames it;
+-- band = a strip { color, height } along the top inside the edge (height
+-- nil: the header's). titleIndent: the header title moved right (past an
+-- ornament).
 Themes.SPECS = {
     CLASSIC = {},
     -- Oak boards, a gold rim, brass rivets.
@@ -114,6 +117,41 @@ Themes.SPECS = {
             headerColor = { 1, 0.95, 0.91 }, titleColor = { 0.55, 1, 0.55 } },
         art = {},
     },
+    -- Swiss style: flat black, a white rule along the top, grey hairlines,
+    -- one red accent.
+    SWISS = {
+        font = "Inter Tight Bold", bodyFont = "Inter Tight", bar = "FQL Swiss",
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.165, 0.165, 0.165, 1 }, cornerRadius = 0,
+            shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Swiss", bgAlpha = 100, headerShine = false,
+            headerLine = false, headerColor = { 1, 0.176, 0.125 }, zoneColor = { 0.549, 0.549, 0.549 },
+            titleColor = { 0.949, 0.949, 0.949 }, objectiveColor = { 0.949, 0.949, 0.949 },
+            objectiveDoneColor = { 0.549, 0.549, 0.549 } },
+        art = { band = { color = { 0.949, 0.949, 0.949, 1 }, height = 3 } },
+    },
+    -- A terminal: near black, a mint line, monospaced text.
+    CONSOLE = {
+        font = "IBM Plex Sans Condensed Bold", bodyFont = "IBM Plex Mono", bar = "FQL Console",
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.306, 0.929, 0.69, 1 }, cornerRadius = 0,
+            shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Console", bgAlpha = 100, headerShine = false,
+            headerLine = false, headerColor = { 0.306, 0.929, 0.69 }, zoneColor = { 0.627, 0.471, 1 },
+            titleColor = { 0.902, 0.91, 0.933 }, objectiveColor = { 0.902, 0.91, 0.933 },
+            objectiveDoneColor = { 0.545, 0.565, 0.627 } },
+    },
+    -- A motorsport timing screen: carbon, a dark title strip with a red
+    -- wedge, the content on a dark card.
+    PITWALL = {
+        font = "Titillium Web Bold Italic", bodyFont = "Titillium Web SemiBold", bar = "FQL Pitwall",
+        look = { borderStyle = "NONE", cornerRadius = 0, shadowEnabled = false, bgMode = "TEXTURE",
+            bgTexture = "FQL Pitwall", bgAlpha = 100, headerShine = false, headerLine = false,
+            headerColor = { 0.949, 0.953, 0.961 }, zoneColor = { 0.604, 0.631, 0.671 },
+            titleColor = { 0.949, 0.953, 0.961 }, objectiveColor = { 0.949, 0.953, 0.961 },
+            objectiveDoneColor = { 0.604, 0.631, 0.671 }, doneColor = { 0.133, 0.773, 0.369 } },
+        -- The header title moves right of the wedge.
+        titleIndent = 14,
+        art = { band = { color = { 0.137, 0.149, 0.173, 1 } }, ornament = "PitwallWedge", corners = { 1 },
+            ornamentSize = 32, ornamentColor = { 0.882, 0.024, 0, 1 },
+            shade = { 0.086, 0.094, 0.11, 0.85 }, shadeInset = 4 },
+    },
 }
 
 -- Raised whenever SPECS change a look: theme sets made before are made anew
@@ -147,10 +185,12 @@ function Themes.Spec(id) return Themes.SPECS[id] or Themes.SPECS.CLASSIC end
 -- paper what is dark ink elsewhere is drawn light. back (every other
 -- theme): the mean colour the backdrop is drawn in, from a grey version of
 -- the theme's texture (<Name>BackGrey.tga). accent: the heading colour
--- instead of the theme's; none = the theme's.
+-- instead of the theme's; none = the theme's. rim: the border colour
+-- instead of the stored one; ornament: the ornaments' colour.
 local YELLOW_ACCENT = { 1.00, 0.90, 0.10 }
 local BLUE_ACCENT = { 0.15, 0.45, 0.95 }
 local PICO_YELLOW = { 1, 0.93, 0.15 }
+local HANDHELD_GREEN = { 0.784, 0.941, 0.439, 1 }
 Themes.COLORS = {
     WOOD = {
         { id = "OAK" },
@@ -220,10 +260,33 @@ Themes.COLORS = {
         { id = "BLACK", back = { 0.03, 0.03, 0.04 }, accent = { 0, 0.89, 0.21 } },
         { id = "TEAL", back = { 0.02, 0.17, 0.22 }, accent = { 0.16, 0.68, 1 } },
         { id = "PURPLE", back = { 0.15, 0.10, 0.25 }, accent = { 1, 0.47, 0.66 } },
+        { id = "HANDHELD", back = { 0.059, 0.122, 0.059 }, accent = HANDHELD_GREEN, rim = HANDHELD_GREEN },
+    },
+    -- The backdrop stays in every colour of the last three.
+    SWISS = {
+        { id = "RED" },
+        { id = "BLUE", accent = { 0.176, 0.42, 1 } },
+        { id = "YELLOW", accent = { 1, 0.82, 0 } },
+        { id = "WHITE", accent = { 0.949, 0.949, 0.949 } },
+    },
+    -- The line follows the accent.
+    CONSOLE = {
+        { id = "MINT" },
+        { id = "AMBER", accent = { 1, 0.69, 0 }, rim = { 1, 0.69, 0, 1 } },
+        { id = "PHOSPHOR", accent = { 0.224, 1, 0.078 }, rim = { 0.224, 1, 0.078, 1 } },
+        { id = "VIOLET", accent = { 0.627, 0.471, 1 }, rim = { 0.627, 0.471, 1, 1 } },
+    },
+    -- The wedge's colour.
+    PITWALL = {
+        { id = "RED" },
+        { id = "ORANGE", ornament = { 1, 0.541, 0, 1 } },
+        { id = "TEAL", ornament = { 0, 0.631, 0.612, 1 } },
+        { id = "SILVER", ornament = { 0.788, 0.808, 0.839, 1 } },
     },
 }
 -- The mean grey of each <Name>BackGrey.tga: a backdrop colour is drawn as
--- vertex colour back / mean (at most 1).
+-- vertex colour back / mean (at most 1). Swiss, Console and Pitwall have
+-- no back colours, so no grey file.
 Themes.GREY_MEAN = { Wood = 0.800, Tech = 0.705, Parchment = 0.799, Stone = 0.800, Glass = 0.777, Frost = 0.796,
     Pixel = 0.800 }
 
@@ -283,6 +346,12 @@ end
 function Themes.Accent(color)
     local p = palette()
     return p and p.accent or color
+end
+
+-- The border colour to draw: the colour's rim, or color as stored.
+function Themes.Rim(color)
+    local p = palette()
+    return p and p.rim or color
 end
 
 -- Light ink for a dark paper: body text and the header icons.
@@ -523,6 +592,7 @@ local function artOf(owner)
     end
     -- Over the background (BACKGROUND), under every text (child frames).
     a.shade = owner:CreateTexture(nil, "BORDER")
+    a.band = owner:CreateTexture(nil, "BORDER", nil, 1)
     -- Above the ring (OVERLAY sublevels 0 and 1, Border.lua).
     for i = 1, 4 do a.ornaments[i] = owner:CreateTexture(nil, "OVERLAY", nil, 7) end
     owner.themeArt = a
@@ -545,7 +615,8 @@ local function placeOrnaments(pieces, box, art, extent)
     local wanted = {}
     for _, i in ipairs(art.ornament and art.corners or {}) do wanted[i] = true end
     local size, inset = art.ornamentSize or 12, (art.ornamentInset or 0) - extent
-    local c = art.ornamentColor or { 1, 1, 1, 1 }
+    local p = palette()
+    local c = p and p.ornament or art.ornamentColor or { 1, 1, 1, 1 }
     for i, piece in ipairs(pieces) do
         piece:SetShown(wanted[i] == true)
         if wanted[i] then
@@ -573,6 +644,17 @@ local function placeShade(shade, box, art, top)
     shade:SetColorTexture(c[1], c[2], c[3], c[4])
 end
 
+local function placeBand(band, box, art, top)
+    band:SetShown(art.band ~= nil)
+    if not art.band then return end
+    local c = art.band.color
+    band:ClearAllPoints()
+    band:SetPoint("TOPLEFT", box, "TOPLEFT", 0, 0)
+    band:SetPoint("TOPRIGHT", box, "TOPRIGHT", 0, 0)
+    band:SetHeight(art.band.height or top or 0)
+    band:SetColorTexture(c[1], c[2], c[3], c[4])
+end
+
 -- owner's art around box for the current theme; look is the one just given
 -- to Border.Draw (the ring's extent), top the height of a header the shade
 -- leaves out.
@@ -583,6 +665,7 @@ function Themes.DrawArt(owner, box, look, top)
     local a, extent = artOf(owner), ns.Border.Extent(look)
     placeOrnaments(a.ornaments, box, art, extent)
     placeShade(a.shade, box, art, top)
+    placeBand(a.band, box, art, top)
     for _, strip in ipairs(a.shadow) do strip:SetShown(art.hardShadow ~= nil) end
     if art.hardShadow then placeShadow(a.shadow, box, art.hardShadow) end
 end
