@@ -17,6 +17,13 @@ check("starts classic", Themes.Current(), "CLASSIC")
 local registry = _G.ForeverThemes and _G.ForeverThemes.ForeverQuestLog
 check("registry: entry", registry and registry.title, "Forever Quest Log")
 check("registry: current", registry.Current(), "CLASSIC")
+ns.DB().width = 301
+registry.Refresh()
+M.RunTimers()
+check("registry: refresh lays out the stored width", ForeverQuestLogFrame:GetWidth(), 301)
+ns.DB().width = nil
+registry.Refresh()
+M.RunTimers()
 
 -- A theme the first time: the classic setup with the theme's look.
 check("registry: switch to wood", registry.Switch("WOOD"), true)

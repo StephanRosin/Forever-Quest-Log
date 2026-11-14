@@ -311,6 +311,9 @@ _G.ForeverThemes[ADDON] = {
     title = "Forever Quest Log",
     Current = function() return Themes.Current() end,
     Switch = function(id) return Themes.Switch(id) end,
+    -- After another addon (the InfoPanel's right column) wrote the stored
+    -- settings: apply them as after a change in the options.
+    Refresh = function() Settings.Changed(nil) end,
 }
 
 -- Art --------------------------------------------------------------------------
