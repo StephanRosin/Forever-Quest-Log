@@ -20,6 +20,7 @@ local OFF = { 0.45, 0.42, 0.36 }
 -- icons), else the ones above.
 local function icons() return ns.Themes.Icons() or {} end
 local function idle() return icons().idle or IDLE end
+local function accent() return icons().grip or ACCENT end
 local WHEEL_STEP = 40
 local GRIP = 12
 local GRIP_IN = 5                          -- how far an arrow reaches into the frame: the header's empty margin
@@ -315,7 +316,11 @@ local function layoutHeader(tracked)
     Media.ApplyText(header.title, headerStyle)
     header.title:SetText(L.HEADER_QUESTS)
     header.title:ClearAllPoints()
-    header.title:SetPoint("LEFT", (unlocked and 26 or 10) + (ns.Themes.Spec(ns.Themes.Current()).titleIndent or 0), 0)
+    local indent = ns.Themes.TitleIndent(topHeight())
+    header.title:SetPoint("LEFT", (unlocked and 26 or 10) + indent, 0)
+    header.grip:SetPoint("LEFT", 8 + indent, 0)
+    local g = accent()
+    header.grip:SetVertexColor(g[1], g[2], g[3])
     header.grip:SetShown(unlocked)
     local countStyle = Settings.TextStyle("objective")
     countStyle.size = math.max(8, S("headerSize") - 3)
@@ -333,13 +338,13 @@ local function layoutHeader(tracked)
     header.shine:SetShown(S("headerShine"))
     header.collapse.icon:SetTexture(Media.Icon(state().collapsed and "ChevronDown" or "ChevronUp"))
     header.lock.icon:SetTexture(Media.Icon(S("locked") and "Lock" or "Unlock"))
-    header.lock.activeColor = ACCENT
+    header.lock.activeColor = accent()
     header.lock.isActive = function() return not S("locked") end
     header.sort.icon:SetTexture(Media.Icon(S("sortBy") == "LEVEL" and "SortLevel" or "SortWatch"))
     for _, b in ipairs({ header.collapse, header.options, header.lock, header.sort, header.zones, header.add }) do
         paint(b, b.isActive and buttonColor(b) or idle())
     end
-    if not S("locked") then paint(header.lock, ACCENT) end
+    if not S("locked") then paint(header.lock, accent()) end
     layoutChip()
 end
 
@@ -362,7 +367,10 @@ end
 local function layoutUnlocked()
     local unlocked = not S("locked")
     for _, e in ipairs(outline) do e:SetShown(unlocked) end
-    for _, g in ipairs(grips) do g:SetShown(unlocked) end
+    for _, g in ipairs(grips) do
+        g:SetShown(unlocked)
+        paint(g, accent())
+    end
     readout:SetShown(unlocked or resizing ~= nil)
     if not unlocked then return end
     local v = anchorPoint():find("TOP") and "BOTTOM" or "TOP"
@@ -869,13 +877,13 @@ local function createGrips()
             if button == nil or button == "LeftButton" then Tracker.FinishResize() end
         end)
         grip:SetScript("OnEnter", function(self)
-            self.icon:SetVertexColor(GRIP_BRIGHT[1], GRIP_BRIGHT[2], GRIP_BRIGHT[3])
+            paint(self, icons().grip and icons().hover or GRIP_BRIGHT)
             GameTooltip:SetOwner(self, "ANCHOR_LEFT")
             GameTooltip:SetText(L.TIP_RESIZE, 1, 1, 1, 1, true)
             GameTooltip:Show()
         end)
         grip:SetScript("OnLeave", function(self)
-            self.icon:SetVertexColor(ACCENT[1], ACCENT[2], ACCENT[3])
+            paint(self, accent())
             GameTooltip:Hide()
         end)
         grips[#grips + 1] = grip

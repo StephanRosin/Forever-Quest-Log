@@ -12,6 +12,7 @@ ns.Notes = Notes
 local TITLE_H, PAD, BUTTON, GRIP = 24, 8, 14, 16
 local MIN_W, MIN_H, MAX_W, MAX_H = 160, 80, 700, 900
 local ACCENT = { 0.31, 0.76, 0.97 }
+local CLOSE = "Interface\\Buttons\\UI-StopButton"
 
 local windows = {}          -- list -> its window
 
@@ -41,12 +42,12 @@ local function applyLook(win)
     }
     ns.Border.Draw(win, win, look)
     ns.Themes.DrawArt(win, win, look, win.titleH or TITLE_H)
-    -- Dark icons on a theme's light paper (Themes.SPECS icons).
-    local ink = ns.Themes.Icons()
-    local c = ink and ink.idle or { 1, 1, 1 }
-    for _, b in ipairs({ win.close, win.gear, win.add }) do
-        if b then b.icon:SetVertexColor(c[1], c[2], c[3]) end
-    end
+    -- A theme's own icon colours (Themes.SPECS icons): dark on light paper.
+    local ink = ns.Themes.Icons() or {}
+    local c, g = ink.idle or { 1, 1, 1 }, ink.grip or ACCENT
+    win.close.icon:SetTexture(ink.close and Media.Icon(ink.close) or CLOSE)
+    for _, b in ipairs({ win.close, win.gear, win.add }) do b.icon:SetVertexColor(c[1], c[2], c[3]) end
+    win.grip.icon:SetVertexColor(g[1], g[2], g[3])
 end
 
 local function titleButton(win, texture, tooltip, onClick)
@@ -103,7 +104,7 @@ local function create(list)
         save(win)
         place(win)
     end)
-    win.close = titleButton(win, "Interface\\Buttons\\UI-StopButton", L.TASK_DOCK, function() ns.Tasks.Dock(win.list) end)
+    win.close = titleButton(win, CLOSE, L.TASK_DOCK, function() ns.Tasks.Dock(win.list) end)
     win.close:SetPoint("RIGHT", 0, 0)
     win.gear = titleButton(win, Media.Icon("Gear"), L.TIP_TASK_MENU, function(self) ns.TaskUI.ListMenu(self, win.list) end)
     win.gear:SetPoint("RIGHT", win.close, "LEFT", -4, 0)
@@ -134,7 +135,6 @@ local function create(list)
     win.grip.icon = win.grip:CreateTexture(nil, "OVERLAY")
     win.grip.icon:SetAllPoints()
     win.grip.icon:SetTexture(Media.Icon("Resize"))
-    win.grip.icon:SetVertexColor(ACCENT[1], ACCENT[2], ACCENT[3])
     win.grip:SetScript("OnMouseDown", function() win:StartSizing("BOTTOMRIGHT") end)
     win.grip:SetScript("OnMouseUp", function()
         win:StopMovingOrSizing()
@@ -149,15 +149,16 @@ end
 function Notes.LayoutWindow(win)
     local list = win.list
     local style = Settings.TextStyle("zone")
+    local spec = ns.Themes.Spec(ns.Themes.Current())
     Media.ApplyText(win.name, style)
     -- A theme's larger title font gets a taller title row; a shaded theme
     -- (Glass, Frost) keeps its band of air between title and first entry.
     local themed = ns.Themes.Current() ~= "CLASSIC"
-    local spec = ns.Themes.Spec(ns.Themes.Current())
     local art = spec.art or {}
-    -- Past the theme's title ornament (Pitwall's wedge), where the tracker's title starts.
-    win.name:SetPoint("LEFT", spec.titleIndent and spec.titleIndent + 10 - PAD or 0, 0)
     local titleH = themed and math.max(TITLE_H, style.size + 12) or TITLE_H
+    -- Past the theme's title wedge (Pitwall), 10 beyond it as in the tracker.
+    local indent = ns.Themes.TitleIndent(titleH)
+    win.name:SetPoint("LEFT", indent > 0 and indent + 10 - PAD or 0, 0)
     local top = titleH + (art.shade and art.shadeInset or 0)
     if win.titleH ~= titleH or win.top ~= top then
         win.titleH, win.top = titleH, top

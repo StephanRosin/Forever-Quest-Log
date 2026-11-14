@@ -135,6 +135,11 @@ def plus(draw):
     poly(draw, [(7, 16), (25, 16)], 2.6)
 
 
+def close(draw):
+    poly(draw, [(9, 9), (23, 23)], 2.6)
+    poly(draw, [(23, 9), (9, 23)], 2.6)
+
+
 def resize(draw):
     poly(draw, [(27, 13), (13, 27)], 2.2)
     poly(draw, [(27, 20), (20, 27)], 2.2)
@@ -168,6 +173,7 @@ ICONS = {
     "IconBox": box,
     "IconBoxChecked": box_checked,
     "IconPlus": plus,
+    "IconClose": close,
     "IconResize": resize,
     "IconArrowCorner": arrow_corner,
     "IconUndock": undock,

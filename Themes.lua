@@ -44,8 +44,11 @@ local LATIN_CLIENTS = { enUS = true, enGB = true, deDE = true, frFR = true, esES
 -- shade = a colour laid over the backdrop behind the content (below the
 -- header, inside a band of shadeInset), so a busy backdrop only frames it;
 -- band = a strip { color, height } along the top inside the edge (height
--- nil: the header's). titleIndent: the header title moved right (past an
--- ornament).
+-- nil: the header's), with wedge = a piece in Media/Themes at its start, as
+-- high and as wide as the band (wedgeColor), and rule = a 1 px line's colour
+-- under it. icons: the header icons' colours (idle, hover, on, off), grip =
+-- the resize grips', close = the close button's icon (Media.Icon) instead of
+-- the game's gold X.
 Themes.SPECS = {
     CLASSIC = {},
     -- Oak boards, a gold rim, brass rivets.
@@ -143,21 +146,21 @@ Themes.SPECS = {
         font = "Titillium Web Bold Italic", bodyFont = "Titillium Web SemiBold", bar = "FQL Pitwall",
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.043, 0.047, 0.055, 1 }, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Swiss", bgAlpha = 100, headerShine = false, headerLine = false,
-            headerColor = { 0.949, 0.953, 0.961 }, zoneColor = { 0.604, 0.631, 0.671 },
+            headerColor = { 0.949, 0.953, 0.961 }, zoneColor = { 0.949, 0.953, 0.961 },
             titleColor = { 0.949, 0.953, 0.961 }, objectiveColor = { 0.949, 0.953, 0.961 },
             objectiveDoneColor = { 0.604, 0.631, 0.671 }, doneColor = { 0.133, 0.773, 0.369 } },
-        -- The header title moves right of the wedge.
-        titleIndent = 14,
-        art = { band = { color = { 0, 0, 0, 1 } }, ornament = "PitwallWedge", corners = { 1 },
-            ornamentSize = 32, ornamentInset = 1, ornamentColor = { 0.882, 0.024, 0, 1 },
-            shade = { 0, 0, 0, 0.85 }, shadeInset = 4 },
+        -- White and grey icons, a plain X; red is the wedge's alone.
+        icons = { idle = { 0.949, 0.953, 0.961 }, hover = { 1, 1, 1 }, on = { 0.949, 0.953, 0.961 },
+            off = { 0.604, 0.631, 0.671 }, grip = { 0.604, 0.631, 0.671 }, close = "Close" },
+        art = { band = { color = { 0, 0, 0, 1 }, wedge = "PitwallWedge", wedgeColor = { 0.882, 0.024, 0, 1 },
+            rule = { 0.137, 0.149, 0.173, 1 } } },
     },
 }
 
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 5
+Themes.REVISION = 6
 
 -- What "Take positions from" takes over: where the frames sit, not how big
 -- they are.
@@ -188,7 +191,7 @@ function Themes.Spec(id) return Themes.SPECS[id] or Themes.SPECS.CLASSIC end
 -- instead of the theme's; none = the theme's. rim: the border colour
 -- instead of the stored one (only Console's colours and Handheld: every
 -- Forever addon draws the same ring per theme and colour); ornament: the
--- ornaments' colour.
+-- ornaments' colour and the band's wedge's.
 local YELLOW_ACCENT = { 1.00, 0.90, 0.10 }
 local BLUE_ACCENT = { 0.15, 0.45, 0.95 }
 local PICO_YELLOW = { 1, 0.93, 0.15 }
@@ -633,6 +636,8 @@ local function artOf(owner)
     -- Over the background (BACKGROUND), under every text (child frames).
     a.shade = owner:CreateTexture(nil, "BORDER")
     a.band = owner:CreateTexture(nil, "BORDER", nil, 1)
+    a.rule = owner:CreateTexture(nil, "BORDER", nil, 2)
+    a.wedge = owner:CreateTexture(nil, "BORDER", nil, 3)
     -- Above the ring (OVERLAY sublevels 0 and 1, Border.lua).
     for i = 1, 4 do a.ornaments[i] = owner:CreateTexture(nil, "OVERLAY", nil, 7) end
     owner.themeArt = a
@@ -684,14 +689,53 @@ local function placeShade(shade, box, art, top)
     shade:SetColorTexture(c[1], c[2], c[3], c[4])
 end
 
-local function placeBand(band, box, art, top)
+-- The wedge texture is square with the slanted piece in its left part:
+-- that part only, as wide as the band is high, as in Forever Unit Frames.
+local WEDGE_PART = 0.53
+
+local function bandHeight(art, top) return art.band and (art.band.height or top) or 0 end
+
+-- How far a header title moves right to clear the wedge of a band top high.
+function Themes.TitleIndent(top)
+    local art = Themes.Spec(Themes.Current()).art
+    return art and art.band and art.band.wedge and bandHeight(art, top) or 0
+end
+
+local function placeWedge(wedge, band, b, h)
+    wedge:SetShown(b.wedge ~= nil and h > 0)
+    if not wedge:IsShown() then return end
+    local p = palette()
+    local c = p and p.ornament or b.wedgeColor or { 1, 1, 1, 1 }
+    wedge:ClearAllPoints()
+    wedge:SetPoint("TOPLEFT", band, "TOPLEFT", 0, 0)
+    wedge:SetSize(h, h)
+    wedge:SetTexture(ART .. b.wedge)
+    wedge:SetTexCoord(0, WEDGE_PART, 0, 1)
+    wedge:SetVertexColor(c[1], c[2], c[3], c[4])
+end
+
+local function placeRule(rule, band, b)
+    rule:SetShown(b.rule ~= nil)
+    if not b.rule then return end
+    local c = b.rule
+    rule:ClearAllPoints()
+    rule:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 0, 0)
+    rule:SetPoint("TOPRIGHT", band, "BOTTOMRIGHT", 0, 0)
+    rule:SetHeight(ns.Border.Snap(1, 1))
+    rule:SetColorTexture(c[1], c[2], c[3], c[4])
+end
+
+local function placeBand(a, box, art, top)
+    local band, b = a.band, art.band or {}
     band:SetShown(art.band ~= nil)
+    placeWedge(a.wedge, band, b, bandHeight(art, top))
+    placeRule(a.rule, band, b)
     if not art.band then return end
-    local c = art.band.color
+    local c = b.color
     band:ClearAllPoints()
     band:SetPoint("TOPLEFT", box, "TOPLEFT", 0, 0)
     band:SetPoint("TOPRIGHT", box, "TOPRIGHT", 0, 0)
-    band:SetHeight(art.band.height or top or 0)
+    band:SetHeight(bandHeight(art, top))
     band:SetColorTexture(c[1], c[2], c[3], c[4])
 end
 
@@ -705,7 +749,7 @@ function Themes.DrawArt(owner, box, look, top)
     local a, extent = artOf(owner), ns.Border.Extent(look)
     placeOrnaments(a.ornaments, box, art, extent)
     placeShade(a.shade, box, art, top)
-    placeBand(a.band, box, art, top)
+    placeBand(a, box, art, top)
     for _, strip in ipairs(a.shadow) do strip:SetShown(art.hardShadow ~= nil) end
     if art.hardShadow then placeShadow(a.shadow, box, art.hardShadow) end
 end

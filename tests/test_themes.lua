@@ -244,14 +244,14 @@ Themes.Switch("WOOD")
 check("wood: body in Friz", S("objectiveFont"), "Friz Quadrata")
 check("wood: level colour as it is", ns.Themes.Ink(lvl), lvl)
 check("tech: no corner pieces", Themes.SPECS.TECH.art, nil)
-check("revision", Themes.REVISION, 5)
+check("revision", Themes.REVISION, 6)
 Themes.Switch("CLASSIC")
 check("classic after the body fonts", snapshot(), classic)
 
 -- Swiss, Console, Pitwall: display face for display texts only, the text
 -- face for the body, no size growth.
 local function ringColor() return table.concat(ns.Border.Pieces(frame)[1]._vertex, "/", 1, 3) end
-local function wedge() return frame.themeArt.ornaments[1] end
+local function wedge() return frame.themeArt.wedge end
 local themeRow
 for _, row in ipairs(ns.Window.PAGES[1].rows()) do
     if row.label == "OPT_THEME_CHOICE" then themeRow = row end
@@ -270,7 +270,7 @@ check("swiss: no size growth", S("titleSize") .. "/" .. S("objectiveSize"), titl
 check("swiss: its backdrop", texture() .. " " .. frame.bg._vertex[1], "SwissBack.tga 1")
 check("swiss: hairline ring", ringColor(), "0.165/0.165/0.165")
 check("swiss: white rule on top", frame.themeArt.band:IsShown() and frame.themeArt.band:GetHeight(), 3)
-check("swiss: no ornaments", wedge():IsShown(), false)
+check("swiss: no ornaments", frame.themeArt.ornaments[1]:IsShown() or wedge():IsShown(), false)
 check("swiss: red accent", table.concat(Themes.Accent(S("headerColor")), "/"), "1/0.176/0.125")
 check("swiss: colours", table.concat(registry.Colors(), " "), "RED BLUE YELLOW WHITE")
 registry.SetColor("BLUE")
@@ -305,8 +305,24 @@ for _, fs in ipairs(M.fontStrings) do
     local point, rel = fs:GetPoint()
     if fs:GetText() == ns.L.HEADER_QUESTS and point == "LEFT" and rel == nil then headerTitle = fs end
 end
-check("pitwall: title right of the wedge", select(4, headerTitle:GetPoint()), (S("locked") and 10 or 26) + 14)
-check("pitwall: content on a black card", frame.themeArt.shade:IsShown() and table.concat(frame.themeArt.shade._texColor, "/"), "0/0/0/0.85")
+check("pitwall: wedge as high as the band, flush top left", wedge():GetHeight() .. "x" .. wedge():GetWidth() .. " "
+    .. table.concat(wedge()._points.TOPLEFT, "/", 3), "32x32 0/0")
+check("pitwall: no corner ornaments", frame.themeArt.ornaments[1]:IsShown(), false)
+check("pitwall: title right of the wedge", select(4, headerTitle:GetPoint()), (S("locked") and 10 or 26) + 32)
+check("pitwall: hairline under the band", frame.themeArt.rule:IsShown() and table.concat(frame.themeArt.rule._texColor, "/")
+    .. " " .. frame.themeArt.rule._points.TOPLEFT[2], "0.137/0.149/0.173/1 BOTTOMLEFT")
+check("pitwall: content on the backdrop edge to edge, no inset shade", frame.themeArt.shade:IsShown(), false)
+local function vertex3(t) return table.concat(t._vertex, "/", 1, 3) end
+-- The tracker's header button showing icon (its header is the frame's child).
+local function headerIcon(icon)
+    for _, f in ipairs(M.frames) do
+        local p = f._parent
+        if f.icon and f.icon._texture == ns.Media.Icon(icon) and p and p._parent == frame then return f.icon end
+    end
+end
+check("pitwall: header icons white", vertex3(headerIcon("Gear")) .. " " .. vertex3(headerIcon("Plus")), "0.949/0.953/0.961 0.949/0.953/0.961")
+check("pitwall: inactive icon grey", vertex3(headerIcon("Zones")), S("groupByZone") and "0.949/0.953/0.961" or "0.604/0.631/0.671")
+check("pitwall: zone headers white", table.concat(S("zoneColor"), "/"), "0.949/0.953/0.961")
 check("pitwall: colours", table.concat(registry.Colors(), " "), "RED ORANGE TEAL SILVER")
 registry.SetColor("TEAL")
 M.RunTimers()
@@ -377,7 +393,16 @@ end
 Themes.Switch("PITWALL")
 M.RunTimers()
 ns.Notes.LayoutWindow(windows[2])
-check("pitwall: note title past the wedge", windows[2].name._points.LEFT[3], 16)
+local note = windows[2]
+check("pitwall: note wedge as high as its title band", note.themeArt.wedge:GetHeight() .. " " .. note.themeArt.band:GetHeight()
+    .. " " .. note.titleH, note.titleH .. " " .. note.titleH .. " " .. note.titleH)
+check("pitwall: note title past the wedge", note.name._points.LEFT[3], note.titleH + 10 - 8)
+check("pitwall: note title in the text colour", table.concat(note.name._textColor or {}, "/", 1, 3), "0.949/0.953/0.961")
+check("pitwall: note icons white, a plain X", vertex3(note.close.icon) .. " " .. vertex3(note.gear.icon) .. " "
+    .. vertex3(note.add.icon) .. " " .. note.close.icon._texture:match("[^\\]+$"),
+    "0.949/0.953/0.961 0.949/0.953/0.961 0.949/0.953/0.961 IconClose.tga")
+check("pitwall: note grip grey", vertex3(note.grip.icon), "0.604/0.631/0.671")
+check("pitwall: note shade none, so no uneven margin", note.themeArt.shade:IsShown(), false)
 Themes.Switch("CLASSIC")
 M.RunTimers()
 for _, id in ipairs(Themes.IDS) do
@@ -386,6 +411,9 @@ end
 for _, id in ipairs({ "SWISS", "CONSOLE", "PITWALL", "PIXEL" }) do sets()[id] = nil end
 ns.Notes.LayoutWindow(windows[2])
 check("classic: note title at the edge", windows[2].name._points.LEFT[3], 0)
+check("classic: note X and grip as before", windows[2].close.icon._texture .. " " .. vertex3(windows[2].grip.icon),
+    "Interface\\Buttons\\UI-StopButton 0.31/0.76/0.97")
+check("classic: no wedge, no rule", windows[2].themeArt.wedge:IsShown() or windows[2].themeArt.rule:IsShown(), false)
 check("classic after the new themes", snapshot(), classic)
 check("classic: no band left", frame.themeArt.band:IsShown(), false)
 
