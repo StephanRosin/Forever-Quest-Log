@@ -443,3 +443,34 @@ check("refused: the client's font meanwhile", (fs:GetFont()), ns.Media.DEFAULT.f
 M.RunTimers()
 check("tried again: taken", (fs:GetFont()), cinzel)
 check("shipped fonts are listed", cinzel:find("Media\\Fonts\\Cinzel", 1, true) ~= nil, true)
+
+-- "Apply to all Forever addons": only with another addon listed; puts it on
+-- this theme and colour, skips it when it lacks the theme.
+local allRow
+for _, row in ipairs(ns.Window.PAGES[1].rows()) do
+    if row.buttons and row.buttons[1].label == "OPT_THEME_ALL" then allRow = row end
+end
+check("apply all: hidden alone", allRow.visible(), false)
+local other, known = { theme = "CLASSIC" }, { CLASSIC = {}, PIXEL = { "NAVY", "TEAL" } }
+_G.ForeverThemes.FakeOther = {
+    title = "Fake", Current = function() return other.theme end,
+    Switch = function(id)
+        if not known[id] then return nil, "UNKNOWN" end
+        other.theme = id
+        return true
+    end,
+    Colors = function(theme) return known[theme] end,
+    SetColor = function(id) other.color = id; return true end,
+}
+check("apply all: shown with another", allRow.visible(), true)
+Themes.Switch("PIXEL")
+registry.SetColor("TEAL")
+M.chat = {}
+allRow.buttons[1].onClick()
+check("apply all: theme and colour", other.theme .. " " .. tostring(other.color), "PIXEL TEAL")
+check("apply all: says how many", (M.chat[1] or ""):find("1 other", 1, true) ~= nil, true)
+Themes.Switch("WOOD")
+check("apply all: unknown theme skipped", Themes.ApplyToAll() .. " " .. other.theme, "0 PIXEL")
+_G.ForeverThemes.FakeOther = nil
+registry.SetColor("NAVY", "PIXEL")
+Themes.Switch("CLASSIC")

@@ -16,6 +16,7 @@ Themes (beta, first on the General page): Classic (your own setup) or one of
 eight looks (wood, tech, parchment, runestone, stained glass, comic, frost,
 pixel) for the tracker, the focus frame and notes. Every theme keeps all its
 settings for itself and starts from your Classic setup the first time.
+"Apply to all Forever addons" puts the other Forever addons on the same theme and colour.
 The theme fonts are under the SIL Open Font License ([Media/Fonts](Media/Fonts/)).
 
 Design notes: [docs/specs/](docs/specs/).

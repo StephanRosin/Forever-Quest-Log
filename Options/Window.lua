@@ -124,6 +124,11 @@ local function themeRows()
             end,
         }, function() return #Themes.Colors() > 0 end),
         { type = "text", label = "OPT_THEME_HINT", height = 88 },
+        visibleIf({ type = "buttons", buttons = {
+            { label = "OPT_THEME_ALL", width = 240, onClick = function()
+                ns.Print(L.MSG_THEME_ALL, Themes.ApplyToAll())
+            end },
+        } }, Themes.HasOthers),
         {
             type = "select", label = "OPT_THEME_COPY",
             choices = function()
