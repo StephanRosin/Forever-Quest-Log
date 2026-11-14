@@ -86,7 +86,7 @@ Themes.SPECS = {
     },
     -- Thick ink line, halftone paper, a solid shadow.
     COMIC = {
-        font = "Bangers", bodyFont = "Friz Quadrata", bar = "FQL Comic", fontSizeAdd = 2, flag = "THICKOUTLINE",
+        font = "Bangers", bodyFont = "Friz Quadrata", bar = "FQL Comic", fontSizeAdd = 2, flag = "OUTLINE",
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.07, 0.07, 0.07, 1 }, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Comic", bgAlpha = 100, headerShine = false,
             headerColor = { 1, 0.9, 0.1 }, titleColor = { 1, 1, 1 }, objectiveColor = { 0.1, 0.1, 0.1 },
@@ -119,7 +119,7 @@ Themes.SPECS = {
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 2
+Themes.REVISION = 3
 
 -- What "Take positions from" takes over: where the frames sit, not how big
 -- they are.
