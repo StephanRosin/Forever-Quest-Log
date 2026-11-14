@@ -58,8 +58,6 @@ Themes.SPECS = {
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.25, 0.88, 0.94, 0.9 }, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Tech", bgAlpha = 100, headerShine = false,
             headerColor = { 0.25, 0.88, 0.94 }, titleColor = { 0.62, 0.93, 1 } },
-        art = { ornament = "Bracket", corners = { 1, 2, 3, 4 }, ornamentSize = 12, ornamentInset = -3,
-            ornamentColor = { 0.25, 0.88, 0.94, 1 } },
     },
     -- Parchment, a brown ink line, a wax seal.
     PARCHMENT = {
@@ -94,6 +92,8 @@ Themes.SPECS = {
             headerColor = { 1, 0.9, 0.1 }, titleColor = { 1, 1, 1 }, objectiveColor = { 0.1, 0.1, 0.1 },
             objectiveDoneColor = { 0.33, 0.33, 0.33 }, doneColor = { 0.05, 0.4, 0.1 } },
         bodyFlag = "",
+        -- Level colours in body text (light on the paper) darkened this much.
+        ink = 0.55,
         art = { hardShadow = 5 },
     },
     -- Translucent ice, a pale rim, rounded.
@@ -134,6 +134,14 @@ end
 function Themes.Current() return Settings.Get("theme") end
 
 function Themes.Spec(id) return Themes.SPECS[id] or Themes.SPECS.CLASSIC end
+
+-- A colour for body text: darkened on a theme with dark ink (COMIC), so
+-- the client's light level colours stay readable without an outline.
+function Themes.Ink(c)
+    local ink = Themes.Spec(Themes.Current()).ink
+    if not ink then return c end
+    return { r = c.r * ink, g = c.g * ink, b = c.b * ink }
+end
 
 -- The active profile's stored sets; stale ones (an older REVISION) dropped.
 local function storedSets()

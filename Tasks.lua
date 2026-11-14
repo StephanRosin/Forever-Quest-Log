@@ -253,7 +253,7 @@ function Tasks.Line(entry)
         -- "(46)" in the tracker's difficulty colour; gone once turned in, like a zone's range.
         local level = not done and (questLevel(id) or entry.level)
         if level then
-            local c = GetQuestDifficultyColor(level)
+            local c = ns.Themes.Ink(GetQuestDifficultyColor(level))
             text = text .. (" |cff%02x%02x%02x(%d)|r"):format(c.r * 255, c.g * 255, c.b * 255, level)
         end
         line = { text = text, done = done }
@@ -261,7 +261,7 @@ function Tasks.Line(entry)
         local place = entry.place
         local symbol = place and Tasks.PLACE_SYMBOL[place.kind]
         local text = entry.text
-        local label = place and not entry.done and ns.ZoneLevels.Label(place.name)
+        local label = place and not entry.done and ns.ZoneLevels.Label(place.name, true)
         if label then
             local at = text:find(place.name, 1, true)
             if at then text = text:sub(1, at - 1) .. label .. text:sub(at + #place.name) end
