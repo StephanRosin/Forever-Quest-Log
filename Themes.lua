@@ -47,7 +47,7 @@ Themes.SPECS = {
     CLASSIC = {},
     -- Oak boards, a gold rim, brass rivets.
     WOOD = {
-        font = "Cinzel", bar = "FQL Wood",
+        font = "Cinzel", bodyFont = "Friz Quadrata", bar = "FQL Wood",
         look = { borderStyle = "GOLD", borderSize = 3, cornerRadius = 4, shadowEnabled = true, shadowSize = 6,
             shadowAlpha = 60, bgMode = "TEXTURE", bgTexture = "FQL Wood", bgAlpha = 100, headerShine = false },
         art = { ornament = "Rivet", corners = { 1, 2, 3, 4 }, ornamentSize = 11, ornamentInset = 1 },
@@ -119,7 +119,7 @@ Themes.SPECS = {
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 3
+Themes.REVISION = 4
 
 -- What "Take positions from" takes over: where the frames sit, not how big
 -- they are.

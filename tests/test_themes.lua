@@ -240,10 +240,10 @@ check("colour: comicColor moves in", registry.Color() .. " " .. tostring(sets().
 sets().themeColors = nil
 
 Themes.Switch("WOOD")
-check("wood: body keeps the theme font", S("objectiveFont"), "Cinzel")
+check("wood: body in Friz", S("objectiveFont"), "Friz Quadrata")
 check("wood: level colour as it is", ns.Themes.Ink(lvl), lvl)
 check("tech: no corner pieces", Themes.SPECS.TECH.art, nil)
-check("revision", Themes.REVISION, 3)
+check("revision", Themes.REVISION, 4)
 Themes.Switch("CLASSIC")
 check("classic after the body fonts", snapshot(), classic)
 
