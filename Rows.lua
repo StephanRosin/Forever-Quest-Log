@@ -75,9 +75,10 @@ end
 local function layoutLine(row, line, o, x, y, w, style, cfg)
     local isDone = o.done
     local textStyle = cfg.text(style or "objective")
+    textStyle.color = ns.Themes.OnPaper(textStyle.color)
     local share = progressShare(o)
     if style == nil and isDone then
-        textStyle.color = cfg.get("objectiveDoneColor")
+        textStyle.color = ns.Themes.OnPaper(cfg.get("objectiveDoneColor"))
     elseif style == nil and share and cfg.get("objectiveProgressColors") then
         textStyle.color = Rows.ProgressColor(share)
     end

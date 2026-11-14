@@ -42,7 +42,7 @@ local function applyLook(win)
     ns.Border.Draw(win, win, look)
     ns.Themes.DrawArt(win, win, look, win.titleH or TITLE_H)
     -- Dark icons on a theme's light paper (Themes.SPECS icons).
-    local ink = ns.Themes.Spec(ns.Themes.Current()).icons
+    local ink = ns.Themes.Icons()
     local c = ink and ink.idle or { 1, 1, 1 }
     for _, b in ipairs({ win.close, win.gear, win.add }) do
         if b then b.icon:SetVertexColor(c[1], c[2], c[3]) end

@@ -137,24 +137,21 @@ function Themes.Current() return Settings.Get("theme") end
 
 function Themes.Spec(id) return Themes.SPECS[id] or Themes.SPECS.CLASSIC end
 
--- A colour for body text: darkened on a theme with dark ink (COMIC), so
--- the client's light level colours stay readable without an outline.
-function Themes.Ink(c)
-    local ink = Themes.Spec(Themes.Current()).ink
-    if not ink then return c end
-    return { r = c.r * ink, g = c.g * ink, b = c.b * ink }
-end
-
 -- Comic colours: the paper's tint and the accent (the yellow header) of
 -- COMIC, picked apart from the theme sets: kept next to them per profile
 -- (ns.ThemeSets().comicColor), so switching themes never loses it and the
 -- stored looks stay as they are (applied when drawn). GREY is Comic as it
 -- was. Same ids and values in every Forever addon.
-Themes.COMIC_COLORS = { "GREY", "YELLOW", "BLUE", "RED", "GREEN", "PURPLE" }
+-- On a dark paper (dark: true) what is dark ink elsewhere is drawn light.
+Themes.COMIC_COLORS = { "GREY", "DARKGREY", "BLACK", "WHITE", "YELLOW", "BLUE", "RED", "GREEN", "PURPLE" }
 local YELLOW_ACCENT = { 1.00, 0.90, 0.10 }
+local BLUE_ACCENT = { 0.15, 0.45, 0.95 }
 local COMIC_PALETTE = {
     GREY = { paper = { 0.70, 0.70, 0.70 } },
-    YELLOW = { paper = { 0.86, 0.76, 0.36 }, accent = { 0.15, 0.45, 0.95 } },
+    DARKGREY = { paper = { 0.38, 0.38, 0.38 }, accent = YELLOW_ACCENT, dark = true },
+    BLACK = { paper = { 0.16, 0.16, 0.16 }, accent = YELLOW_ACCENT, dark = true },
+    WHITE = { paper = { 1.00, 1.00, 1.00 }, accent = BLUE_ACCENT },
+    YELLOW = { paper = { 0.86, 0.76, 0.36 }, accent = BLUE_ACCENT },
     BLUE = { paper = { 0.45, 0.60, 0.86 }, accent = YELLOW_ACCENT },
     RED = { paper = { 0.86, 0.44, 0.40 }, accent = YELLOW_ACCENT },
     GREEN = { paper = { 0.50, 0.76, 0.46 }, accent = YELLOW_ACCENT },
@@ -182,6 +179,37 @@ end
 function Themes.Accent(color)
     local p = comicPalette()
     return p and p.accent or color
+end
+
+-- Light ink for a dark paper: body text and the header icons.
+local LIGHT_TEXT = { 0.9, 0.9, 0.9 }
+local LIGHT_ICONS = { idle = { 0.85, 0.85, 0.85 }, hover = { 1, 1, 1 }, off = { 0.55, 0.55, 0.55 },
+    on = YELLOW_ACCENT }
+
+local function darkPaper()
+    local p = comicPalette()
+    return p ~= nil and p.dark == true
+end
+
+-- A body text colour on the backdrop: light on a dark comic paper (where
+-- the theme's dark ink would vanish), else color.
+function Themes.OnPaper(color)
+    return darkPaper() and LIGHT_TEXT or color
+end
+
+-- The header icons' colours (idle, hover, on, off), nil = the addon's own.
+function Themes.Icons()
+    if darkPaper() then return LIGHT_ICONS end
+    return Themes.Spec(Themes.Current()).icons
+end
+
+-- A colour for body text: darkened on a theme with dark ink (COMIC), so
+-- the client's light level colours stay readable without an outline. On a
+-- dark comic paper they stay light, as they are.
+function Themes.Ink(c)
+    local ink = Themes.Spec(Themes.Current()).ink
+    if not ink or darkPaper() then return c end
+    return { r = c.r * ink, g = c.g * ink, b = c.b * ink }
 end
 
 -- The active profile's stored sets; stale ones (an older REVISION) dropped.
