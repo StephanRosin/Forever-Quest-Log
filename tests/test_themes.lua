@@ -308,7 +308,9 @@ end
 check("pitwall: wedge as high as the band, flush top left", wedge():GetHeight() .. "x" .. wedge():GetWidth() .. " "
     .. table.concat(wedge()._points.TOPLEFT, "/", 3), "32x32 0/0")
 check("pitwall: no corner ornaments", frame.themeArt.ornaments[1]:IsShown(), false)
-check("pitwall: title right of the wedge", select(4, headerTitle:GetPoint()), (S("locked") and 10 or 26) + 32)
+-- The family's rule: the wedge's right edge at mid-height (0.8 of 32 = 26), 8 past it.
+check("pitwall: title (locked) or grip 8 past the wedge's middle", select(4, headerTitle:GetPoint()), S("locked") and 26 + 8 or 26 + 8 + 18)
+check("pitwall: wedge the texture's slanted part", wedge()._texCoord and wedge()._texCoord[2], 0.53)
 check("pitwall: hairline under the band", frame.themeArt.rule:IsShown() and table.concat(frame.themeArt.rule._texColor, "/")
     .. " " .. frame.themeArt.rule._points.TOPLEFT[2], "0.137/0.149/0.173/1 BOTTOMLEFT")
 check("pitwall: content on the backdrop edge to edge, no inset shade", frame.themeArt.shade:IsShown(), false)
@@ -396,7 +398,7 @@ ns.Notes.LayoutWindow(windows[2])
 local note = windows[2]
 check("pitwall: note wedge as high as its title band", note.themeArt.wedge:GetHeight() .. " " .. note.themeArt.band:GetHeight()
     .. " " .. note.titleH, note.titleH .. " " .. note.titleH .. " " .. note.titleH)
-check("pitwall: note title past the wedge", note.name._points.LEFT[3], note.titleH + 10 - 8)
+check("pitwall: note title 8 past the wedge's middle", note.name._points.LEFT[3] + 8, math.floor(0.8 * note.titleH + 0.5) + 8)
 check("pitwall: note title in the text colour", table.concat(note.name._textColor or {}, "/", 1, 3), "0.949/0.953/0.961")
 check("pitwall: note icons white, a plain X", vertex3(note.close.icon) .. " " .. vertex3(note.gear.icon) .. " "
     .. vertex3(note.add.icon) .. " " .. note.close.icon._texture:match("[^\\]+$"),

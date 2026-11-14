@@ -695,10 +695,18 @@ local WEDGE_PART = 0.53
 
 local function bandHeight(art, top) return art.band and (art.band.height or top) or 0 end
 
--- How far a header title moves right to clear the wedge of a band top high.
-function Themes.TitleIndent(top)
+-- Drawn as wide as high, that part's right edge runs from 0.98 of the width
+-- at the top to 0.62 at the bottom; text starts TITLE_GAP past it, as in
+-- every Forever addon.
+local TITLE_GAP = 8
+
+-- How far a header title (its middle mid below the band's top, default the
+-- band's middle) moves right to clear the wedge of a band top high; 0 without one.
+function Themes.TitleIndent(top, mid)
     local art = Themes.Spec(Themes.Current()).art
-    return art and art.band and art.band.wedge and bandHeight(art, top) or 0
+    if not (art and art.band and art.band.wedge) then return 0 end
+    local h = bandHeight(art, top)
+    return math.floor(0.98 * h - 0.36 * (mid or h / 2) + 0.5) + TITLE_GAP
 end
 
 local function placeWedge(wedge, band, b, h)

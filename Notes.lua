@@ -156,9 +156,9 @@ function Notes.LayoutWindow(win)
     local themed = ns.Themes.Current() ~= "CLASSIC"
     local art = spec.art or {}
     local titleH = themed and math.max(TITLE_H, style.size + 12) or TITLE_H
-    -- Past the theme's title wedge (Pitwall), 10 beyond it as in the tracker.
+    -- Past the theme's title wedge (Pitwall), as in the tracker.
     local indent = ns.Themes.TitleIndent(titleH)
-    win.name:SetPoint("LEFT", indent > 0 and indent + 10 - PAD or 0, 0)
+    win.name:SetPoint("LEFT", indent > 0 and indent - PAD or 0, 0)
     local top = titleH + (art.shade and art.shadeInset or 0)
     if win.titleH ~= titleH or win.top ~= top then
         win.titleH, win.top = titleH, top
