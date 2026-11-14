@@ -137,19 +137,19 @@ Themes.SPECS = {
             titleColor = { 0.902, 0.91, 0.933 }, objectiveColor = { 0.902, 0.91, 0.933 },
             objectiveDoneColor = { 0.545, 0.565, 0.627 } },
     },
-    -- A motorsport timing screen: carbon, a dark title strip with a red
+    -- A motorsport timing screen: carbon with a carbon hairline, a dark title strip with a red
     -- wedge, the content on a dark card.
     PITWALL = {
         font = "Titillium Web Bold Italic", bodyFont = "Titillium Web SemiBold", bar = "FQL Pitwall",
-        look = { borderStyle = "NONE", cornerRadius = 0, shadowEnabled = false, bgMode = "TEXTURE",
-            bgTexture = "FQL Pitwall", bgAlpha = 100, headerShine = false, headerLine = false,
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.043, 0.047, 0.055, 1 }, cornerRadius = 0,
+            shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Pitwall", bgAlpha = 100, headerShine = false, headerLine = false,
             headerColor = { 0.949, 0.953, 0.961 }, zoneColor = { 0.604, 0.631, 0.671 },
             titleColor = { 0.949, 0.953, 0.961 }, objectiveColor = { 0.949, 0.953, 0.961 },
             objectiveDoneColor = { 0.604, 0.631, 0.671 }, doneColor = { 0.133, 0.773, 0.369 } },
         -- The header title moves right of the wedge.
         titleIndent = 14,
         art = { band = { color = { 0.137, 0.149, 0.173, 1 } }, ornament = "PitwallWedge", corners = { 1 },
-            ornamentSize = 32, ornamentColor = { 0.882, 0.024, 0, 1 },
+            ornamentSize = 32, ornamentInset = 1, ornamentColor = { 0.882, 0.024, 0, 1 },
             shade = { 0.086, 0.094, 0.11, 0.85 }, shadeInset = 4 },
     },
 }
@@ -186,7 +186,9 @@ function Themes.Spec(id) return Themes.SPECS[id] or Themes.SPECS.CLASSIC end
 -- theme): the mean colour the backdrop is drawn in, from a grey version of
 -- the theme's texture (<Name>BackGrey.tga). accent: the heading colour
 -- instead of the theme's; none = the theme's. rim: the border colour
--- instead of the stored one; ornament: the ornaments' colour.
+-- instead of the stored one (only Console's colours and Handheld: every
+-- Forever addon draws the same ring per theme and colour); ornament: the
+-- ornaments' colour.
 local YELLOW_ACCENT = { 1.00, 0.90, 0.10 }
 local BLUE_ACCENT = { 0.15, 0.45, 0.95 }
 local PICO_YELLOW = { 1, 0.93, 0.15 }

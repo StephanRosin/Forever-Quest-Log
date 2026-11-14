@@ -297,7 +297,7 @@ check("console mint: ring as stored", ringColor(), "0.306/0.929/0.69")
 Themes.Switch("PITWALL")
 M.RunTimers()
 check("pitwall: fonts", S("titleFont") .. "/" .. S("objectiveFont"), "Titillium Web Bold Italic/Titillium Web SemiBold")
-check("pitwall: no ring", ns.Border.Pieces(frame)[1]:IsShown(), false)
+check("pitwall: carbon hairline", ringColor(), "0.043/0.047/0.055")
 check("pitwall: title strip as high as the header", frame.themeArt.band:GetHeight(), 32)
 check("pitwall: red wedge", wedge():IsShown() and table.concat(wedge()._vertex, "/", 1, 3), "0.882/0.024/0")
 local headerTitle
@@ -326,8 +326,50 @@ check("handheld: green accent", table.concat(Themes.Accent(S("headerColor")), "/
 registry.SetColor("NAVY")
 M.RunTimers()
 check("navy: rim as stored", ringColor(), "1/0.95/0.91")
+-- Rings: the same per theme and colour in every Forever addon (this table
+-- in each of them); only Console's colours and Handheld tint the ring.
+local RINGS = {
+    WOOD = "GOLD", TECH = "0.25/0.88/0.94/0.9", PARCHMENT = "0.29/0.2/0.12/1", RUNESTONE = "0.1/0.1/0.12/1",
+    GLASS = "0.07/0.06/0.05/1", COMIC = "0.07/0.07/0.07/1", FROST = "0.86/0.96/1/0.8", PIXEL = "1/0.95/0.91/1",
+    SWISS = "0.165/0.165/0.165/1", CONSOLE = "0.306/0.929/0.69/1", PITWALL = "0.043/0.047/0.055/1",
+}
+local RING_OVERRIDES = { CONSOLE = { AMBER = "1/0.69/0/1", PHOSPHOR = "0.224/1/0.078/1", VIOLET = "0.627/0.471/1/1" },
+    PIXEL = { HANDHELD = "0.784/0.941/0.439/1" } }
+local function drawnRing(owner, style)
+    local piece = ns.Border.Pieces(owner)[1]
+    if style == "GOLD" then return "GOLD" end
+    return piece and piece:IsShown() and table.concat(piece._vertex, "/") or "none"
+end
+local windows, had = { frame }, {}
+for _, id in ipairs(Themes.IDS) do had[id] = sets()[id] ~= nil end
+for _, win in pairs(ns.Notes.windows) do windows[#windows + 1] = win end
+check("rings: a note window drawn too", #windows > 1, true)
+for _, id in ipairs(Themes.IDS) do
+    if id ~= "CLASSIC" then
+        Themes.Switch(id)
+        local before = registry.Color()
+        for _, colour in ipairs(registry.Colors()) do
+            registry.SetColor(colour)
+            M.RunTimers()
+            local want = (RING_OVERRIDES[id] or {})[colour] or RINGS[id]
+            for i, win in ipairs(windows) do
+                if i > 1 then ns.Notes.LayoutWindow(win) end
+                check(id .. " " .. colour .. ": ring of window " .. i, drawnRing(win, S("borderStyle")), want)
+            end
+            -- The focus frame draws only with a quest in focus: its ring from
+            -- the same expression as Focus.lua's.
+            local focusRing = S("focusBorderStyle") == "GOLD" and "GOLD"
+                or table.concat(Themes.Rim(S("focusBorderColor")), "/")
+            check(id .. " " .. colour .. ": ring of the focus frame", focusRing, want)
+        end
+        registry.SetColor(before)
+    end
+end
 Themes.Switch("CLASSIC")
 M.RunTimers()
+for _, id in ipairs(Themes.IDS) do
+    if id ~= "CLASSIC" and not had[id] then sets()[id] = nil end
+end
 for _, id in ipairs({ "SWISS", "CONSOLE", "PITWALL", "PIXEL" }) do sets()[id] = nil end
 check("classic after the new themes", snapshot(), classic)
 check("classic: no band left", frame.themeArt.band:IsShown(), false)
