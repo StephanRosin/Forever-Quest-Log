@@ -24,17 +24,25 @@ local LATIN_CLIENTS = { enUS = true, enGB = true, deDE = true, frFR = true, esES
     ptBR = true }
 
 -- look: tracker settings the theme sets; the focus frame gets the same
--- under its own keys (Settings.Prefixed) where it has them. font: every
--- text style's; fontSizeAdd: how much larger it must be to read like the
--- others; flag: the client's outline (default OUTLINE), so the light text
--- stays readable on every backdrop. Never a hand-made outline of black text
+-- under its own keys (Settings.Prefixed) where it has them. font: the
+-- display texts' (header, zones and list names, quest titles);
+-- fontSizeAdd: how much larger it must be to read like the others; flag:
+-- their outline (default OUTLINE), so the light text stays readable on
+-- every backdrop. bodyFont: the body texts' (objectives, task rows, done
+-- lines), nil = font; set where the theme font is unreadable at small
+-- sizes or over several lines. Body texts get bodyFlag (default OUTLINE),
+-- and fontSizeAdd only with the theme font. Body text is light with an
+-- outline, or dark ink on a light backdrop (comic): one or the other,
+-- never mixed, about 4.5:1 against the backdrop. Never a hand-made outline of black text
 -- copies: with these fonts it showed black text in Forever Unit Frames.
 -- bar: the objective bars' texture. The backdrop is the frame's background
 -- (bgTexture "FQL <name>", Media.lua), so it frames the whole list.
 -- art (Themes.DrawArt): ornament = corner piece in Media/Themes, corners =
 -- which ones (Corners.POINTS order: 1 top left, 2 top right, 3 bottom
 -- left, 4 bottom right), ornamentInset = how far in from the ring's outer
--- corner (negative: further out), hardShadow = offset of a solid shadow.
+-- corner (negative: further out), hardShadow = offset of a solid shadow,
+-- shade = a colour laid over the backdrop behind the content (below the
+-- header, inside a band of shadeInset), so a busy backdrop only frames it.
 Themes.SPECS = {
     CLASSIC = {},
     -- Oak boards, a gold rim, brass rivets.
@@ -55,7 +63,7 @@ Themes.SPECS = {
     },
     -- Parchment, a brown ink line, a wax seal.
     PARCHMENT = {
-        font = "IM Fell English SC", bar = "FQL Parchment", fontSizeAdd = 1,
+        font = "IM Fell English SC", bodyFont = "Friz Quadrata", bar = "FQL Parchment", fontSizeAdd = 1,
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = { 0.29, 0.2, 0.12, 1 }, cornerRadius = 2,
             shadowEnabled = true, shadowSize = 5, shadowAlpha = 45, bgMode = "TEXTURE", bgTexture = "FQL Parchment",
             bgAlpha = 100, headerShine = false, headerColor = { 1, 0.9, 0.7 } },
@@ -72,25 +80,29 @@ Themes.SPECS = {
     },
     -- A mosaic of coloured glass, dark lead, the gold shine behind the title.
     GLASS = {
-        font = "Morpheus", bar = "FQL Glass", fontSizeAdd = 1,
+        font = "Morpheus", bodyFont = "Friz Quadrata", bar = "FQL Glass", fontSizeAdd = 1,
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.07, 0.06, 0.05, 1 }, cornerRadius = 0,
             shadowEnabled = true, shadowSize = 6, shadowAlpha = 55, bgMode = "TEXTURE", bgTexture = "FQL Glass",
             bgAlpha = 100, headerShine = true },
+        art = { shade = { 0.03, 0.02, 0.04, 0.75 }, shadeInset = 6 },
     },
     -- Thick ink line, halftone paper, a solid shadow.
     COMIC = {
-        font = "Bangers", bar = "FQL Comic", fontSizeAdd = 2, flag = "THICKOUTLINE",
+        font = "Bangers", bodyFont = "Friz Quadrata", bar = "FQL Comic", fontSizeAdd = 2, flag = "THICKOUTLINE",
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.07, 0.07, 0.07, 1 }, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Comic", bgAlpha = 100, headerShine = false,
-            headerColor = { 1, 0.9, 0.1 }, titleColor = { 1, 1, 1 } },
+            headerColor = { 1, 0.9, 0.1 }, titleColor = { 1, 1, 1 }, objectiveColor = { 0.1, 0.1, 0.1 },
+            objectiveDoneColor = { 0.33, 0.33, 0.33 }, doneColor = { 0.05, 0.4, 0.1 } },
+        bodyFlag = "",
         art = { hardShadow = 5 },
     },
     -- Translucent ice, a pale rim, rounded.
     FROST = {
-        font = "Cormorant SC", bar = "FQL Frost", fontSizeAdd = 2,
+        font = "Cormorant SC", bodyFont = "Friz Quadrata", bar = "FQL Frost", fontSizeAdd = 2,
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.86, 0.96, 1, 0.8 }, cornerRadius = 6,
             shadowEnabled = true, shadowSize = 8, shadowAlpha = 55, bgMode = "TEXTURE", bgTexture = "FQL Frost",
             bgAlpha = 85, headerShine = false, headerColor = { 0.86, 0.96, 1 }, titleColor = { 0.72, 0.88, 1 } },
+        art = { shade = { 0.02, 0.07, 0.15, 0.45 }, shadeInset = 4 },
     },
     -- A light pixel frame, scan lines, a solid shadow.
     PIXEL = {
@@ -105,7 +117,7 @@ Themes.SPECS = {
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 1
+Themes.REVISION = 2
 
 -- What "Take positions from" takes over: where the frames sit, not how big
 -- they are.
@@ -150,6 +162,9 @@ local function valueIn(set, key)
     return v
 end
 
+-- The text styles for running text; the others are display texts.
+local BODY = { objective = true, done = true }
+
 -- The tracker's key, and the focus frame's for the same setting.
 local FRAMES = { function(k) return k end, Settings.Prefixed("focus").key }
 
@@ -164,9 +179,14 @@ local function seed(id, base)
         for _, style in ipairs(Settings.TEXT_STYLES) do
             local size = key(style .. "Size")
             if Settings.DEFAULTS[size] ~= nil then
-                if latin then put(set, key(style .. "Font"), spec.font) end
-                put(set, key(style .. "Flag"), spec.flag or "OUTLINE")
-                put(set, size, math.min(Settings.RANGES[size][2], valueIn(set, size) + (spec.fontSizeAdd or 0)))
+                local body = BODY[style]
+                local font = body and spec.bodyFont or spec.font
+                if latin then put(set, key(style .. "Font"), font) end
+                local flag = body and (spec.bodyFlag or "OUTLINE") or spec.flag or "OUTLINE"
+                put(set, key(style .. "Flag"), flag)
+                if font == spec.font then
+                    put(set, size, math.min(Settings.RANGES[size][2], valueIn(set, size) + (spec.fontSizeAdd or 0)))
+                end
             end
         end
     end
@@ -301,6 +321,8 @@ local function artOf(owner)
         a.shadow[i] = owner:CreateTexture(nil, "BACKGROUND", nil, -8)
         a.shadow[i]:SetColorTexture(0, 0, 0, 1)
     end
+    -- Over the background (BACKGROUND), under every text (child frames).
+    a.shade = owner:CreateTexture(nil, "BORDER")
     -- Above the ring (OVERLAY sublevels 0 and 1, Border.lua).
     for i = 1, 4 do a.ornaments[i] = owner:CreateTexture(nil, "OVERLAY", nil, 7) end
     owner.themeArt = a
@@ -339,14 +361,26 @@ local function placeOrnaments(pieces, box, art, extent)
     end
 end
 
+local function placeShade(shade, box, art, top)
+    shade:SetShown(art.shade ~= nil)
+    if not art.shade then return end
+    local inset, c = art.shadeInset or 0, art.shade
+    shade:ClearAllPoints()
+    shade:SetPoint("TOPLEFT", box, "TOPLEFT", inset, -math.max(top or 0, inset))
+    shade:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", -inset, inset)
+    shade:SetColorTexture(c[1], c[2], c[3], c[4])
+end
+
 -- owner's art around box for the current theme; look is the one just given
--- to Border.Draw (the ring's extent).
-function Themes.DrawArt(owner, box, look)
+-- to Border.Draw (the ring's extent), top the height of a header the shade
+-- leaves out.
+function Themes.DrawArt(owner, box, look, top)
     local art = Themes.Spec(Themes.Current()).art
     if not art and not owner.themeArt then return end
     art = art or {}
     local a, extent = artOf(owner), ns.Border.Extent(look)
     placeOrnaments(a.ornaments, box, art, extent)
+    placeShade(a.shade, box, art, top)
     for _, strip in ipairs(a.shadow) do strip:SetShown(art.hardShadow ~= nil) end
     if art.hardShadow then placeShadow(a.shadow, box, art.hardShadow, extent) end
 end

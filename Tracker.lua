@@ -313,8 +313,11 @@ local function layoutHeader(tracked)
     header.grip:SetShown(unlocked)
     local countStyle = Settings.TextStyle("objective")
     countStyle.size = math.max(8, S("headerSize") - 3)
-    countStyle.flag = ""
-    countStyle.color = { 0.56, 0.54, 0.5 }
+    -- A theme keeps the objectives' colour and outline, made for its backdrop.
+    if ns.Themes.Current() == ns.Themes.CLASSIC then
+        countStyle.flag = ""
+        countStyle.color = { 0.56, 0.54, 0.5 }
+    end
     Media.ApplyText(header.count, countStyle)
     local full = max > 0 and inLog >= max
     header.count:SetText((full and "|cffff4040" or "") .. inLog .. " / " .. max .. (full and "|r" or ""))
@@ -345,7 +348,7 @@ local function applyLook()
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
     ns.Border.Draw(frame, frame, look)
-    ns.Themes.DrawArt(frame, frame, look)
+    ns.Themes.DrawArt(frame, frame, look, topHeight())
 end
 
 -- Unlocked: a blue outline, an arrow in each corner and the size below the frame.

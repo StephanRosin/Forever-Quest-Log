@@ -44,7 +44,7 @@ Media.BLIZZARD = {
 -- Frames' tools/make_themes.py). tint darkens a light backdrop so the
 -- light text on it stays readable.
 local THEME_ART = {
-    { "Wood", "Wood", 0.5 }, { "Tech", "Tech", 1 }, { "Parchment", "Parchment", 0.6 }, { "Stone", "Stone", 0.55 },
+    { "Wood", "Wood", 0.5 }, { "Tech", "Tech", 1 }, { "Parchment", "Parchment", 0.45 }, { "Stone", "Stone", 0.55 },
     { "Glass", "Glass", 1 }, { "Comic", "Comic", 0.7 }, { "Frost", "Frost", 0.55 }, { "Pixel", "Pixel", 1 },
 }
 for _, a in ipairs(THEME_ART) do

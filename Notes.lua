@@ -40,7 +40,7 @@ local function applyLook(win)
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
     ns.Border.Draw(win, win, look)
-    ns.Themes.DrawArt(win, win, look)
+    ns.Themes.DrawArt(win, win, look, TITLE_H)
 end
 
 local function titleButton(win, texture, tooltip, onClick)

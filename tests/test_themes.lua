@@ -80,6 +80,30 @@ M.state.combat = false
 check("unknown", select(2, Themes.Switch("NOPE")), "UNKNOWN")
 check("copy from a theme never used", select(2, Themes.CopyPlacement("FROST")), "GONE")
 
+-- Display and body texts: a second, readable font where the theme font is not.
+local bodySize = S("objectiveSize")
+Themes.Switch("GLASS")
+M.RunTimers()
+check("glass: display font", S("titleFont"), "Morpheus")
+check("glass: display size grows", S("titleSize"), 15)
+check("glass: body in the standard font", S("objectiveFont"), "Friz Quadrata")
+check("glass: body keeps its size", S("objectiveSize"), bodySize)
+check("glass: done lines are body too", S("doneFont"), "Friz Quadrata")
+check("glass: focus body too", S("focusObjectiveFont"), "Friz Quadrata")
+check("glass: body outlined", S("objectiveFlag"), "OUTLINE")
+check("glass: content shaded", frame.themeArt.shade:IsShown(), true)
+Themes.Switch("COMIC")
+M.RunTimers()
+check("comic: display thick outline", S("titleFlag"), "THICKOUTLINE")
+check("comic: body dark ink, no outline", S("objectiveFlag"), "")
+check("comic: dark ink", S("objectiveColor")[1], 0.1)
+check("comic: no shade", frame.themeArt.shade:IsShown(), false)
+Themes.Switch("WOOD")
+check("wood: body keeps the theme font", S("objectiveFont"), "Cinzel")
+check("revision", Themes.REVISION, 2)
+Themes.Switch("CLASSIC")
+check("classic after the body fonts", snapshot(), classic)
+
 -- Latin fonts only on Latin clients.
 M.locale = "koKR"
 Themes.Switch("FROST")
