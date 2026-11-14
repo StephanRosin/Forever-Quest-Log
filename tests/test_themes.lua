@@ -100,6 +100,12 @@ check("comic: dark ink", S("objectiveColor")[1], 0.1)
 check("comic: no shade", frame.themeArt.shade:IsShown(), false)
 check("comic: header icons in ink", Themes.Spec("COMIC").icons.idle[1] < 0.2, true)
 check("wood: header icons as they are", Themes.Spec("WOOD").icons, nil)
+-- Nothing reaches beyond the ring: stacked windows keep Classic's edges.
+for id, spec in pairs(Themes.SPECS) do
+    local art = spec.art or {}
+    if art.ornament then check(id .. ": ornaments inside the ring", (art.ornamentInset or 0) >= 0, true) end
+    check(id .. ": ring at most 3 px", ((spec.look or {}).borderSize or 3) <= 3, true)
+end
 -- Level colours in the task list: darkened on the paper, as they are elsewhere.
 local lvl = GetQuestDifficultyColor(UnitLevel("player"))
 check("comic: level colour inked", ns.Themes.Ink(lvl).g, lvl.g * 0.55)

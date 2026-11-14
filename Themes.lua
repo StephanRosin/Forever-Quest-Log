@@ -65,7 +65,7 @@ Themes.SPECS = {
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = { 0.29, 0.2, 0.12, 1 }, cornerRadius = 2,
             shadowEnabled = true, shadowSize = 5, shadowAlpha = 45, bgMode = "TEXTURE", bgTexture = "FQL Parchment",
             bgAlpha = 100, headerShine = false, headerColor = { 1, 0.9, 0.7 } },
-        art = { ornament = "Seal", corners = { 3 }, ornamentSize = 22, ornamentInset = -6 },
+        art = { ornament = "Seal", corners = { 3 }, ornamentSize = 22, ornamentInset = 2 },
     },
     -- Grey granite, a dark chiselled edge, glowing runes.
     RUNESTONE = {
@@ -328,7 +328,7 @@ local function artOf(owner)
     -- The shadow's two strips, right and below: the frame's own background
     -- covers the rest, so nothing has to lie under it.
     for i = 1, 2 do
-        a.shadow[i] = owner:CreateTexture(nil, "BACKGROUND", nil, -8)
+        a.shadow[i] = owner:CreateTexture(nil, "BORDER", nil, -1)
         a.shadow[i]:SetColorTexture(0, 0, 0, 1)
     end
     -- Over the background (BACKGROUND), under every text (child frames).
@@ -339,14 +339,16 @@ local function artOf(owner)
     return a
 end
 
-local function placeShadow(strips, box, offset, e)
+-- Inside the ring along the right and bottom edge: windows stacked edge
+-- to edge must not overlap under a theme (the outer edge stays Classic's).
+local function placeShadow(strips, box, offset)
     local right, bottom = strips[1], strips[2]
     right:ClearAllPoints()
-    right:SetPoint("TOPLEFT", box, "TOPRIGHT", e, e - offset)
-    right:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", e + offset, -e - offset)
+    right:SetPoint("TOPLEFT", box, "TOPRIGHT", -offset, -offset)
+    right:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", 0, 0)
     bottom:ClearAllPoints()
-    bottom:SetPoint("TOPLEFT", box, "BOTTOMLEFT", offset - e, -e)
-    bottom:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", e + offset, -e - offset)
+    bottom:SetPoint("TOPLEFT", box, "BOTTOMLEFT", offset, offset)
+    bottom:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", 0, 0)
 end
 
 local function placeOrnaments(pieces, box, art, extent)
@@ -392,5 +394,5 @@ function Themes.DrawArt(owner, box, look, top)
     placeOrnaments(a.ornaments, box, art, extent)
     placeShade(a.shade, box, art, top)
     for _, strip in ipairs(a.shadow) do strip:SetShown(art.hardShadow ~= nil) end
-    if art.hardShadow then placeShadow(a.shadow, box, art.hardShadow, extent) end
+    if art.hardShadow then placeShadow(a.shadow, box, art.hardShadow) end
 end
