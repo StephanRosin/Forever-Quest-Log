@@ -96,7 +96,7 @@ Themes.SPECS = {
         ink = 0.55,
         -- Header icons in ink: the light ones vanish on the paper.
         icons = { idle = { 0.12, 0.12, 0.12 }, hover = { 0, 0, 0 }, on = { 0.75, 0.1, 0.05 }, off = { 0.38, 0.36, 0.33 } },
-        art = { hardShadow = 5 },
+        art = {},
     },
     -- Translucent ice, a pale rim, rounded.
     FROST = {
@@ -112,7 +112,7 @@ Themes.SPECS = {
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 1, 0.95, 0.91, 1 }, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Pixel", bgAlpha = 100, headerShine = false,
             headerColor = { 1, 0.95, 0.91 }, titleColor = { 0.55, 1, 0.55 } },
-        art = { hardShadow = 4 },
+        art = {},
     },
 }
 

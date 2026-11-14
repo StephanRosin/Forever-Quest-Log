@@ -45,7 +45,7 @@ check("switch to pixel", Themes.Switch("PIXEL"), true)
 M.RunTimers()
 check("pixel: from classic, not from wood", S("x"), -100)
 check("pixel: font larger", S("titleSize"), 18)
-check("pixel: solid shadow", frame.themeArt.shadow[1]:IsShown(), true)
+check("pixel: no solid shadow (stacked edges)", frame.themeArt.shadow[1]:IsShown(), false)
 check("pixel: no ornaments", frame.themeArt.ornaments[1]:IsShown(), false)
 check("pixel: two to copy from", #Themes.Stored(), 2)
 
