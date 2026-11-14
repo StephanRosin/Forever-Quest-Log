@@ -137,27 +137,27 @@ Themes.SPECS = {
             titleColor = { 0.902, 0.91, 0.933 }, objectiveColor = { 0.902, 0.91, 0.933 },
             objectiveDoneColor = { 0.545, 0.565, 0.627 } },
     },
-    -- A motorsport timing screen: carbon with a carbon hairline, a dark title strip with a red
-    -- wedge, the content on a dark card.
+    -- A motorsport timing screen: flat black with a carbon hairline, a black title strip with
+    -- a red wedge, the content on a black card.
     PITWALL = {
         font = "Titillium Web Bold Italic", bodyFont = "Titillium Web SemiBold", bar = "FQL Pitwall",
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.043, 0.047, 0.055, 1 }, cornerRadius = 0,
-            shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Pitwall", bgAlpha = 100, headerShine = false, headerLine = false,
+            shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Swiss", bgAlpha = 100, headerShine = false, headerLine = false,
             headerColor = { 0.949, 0.953, 0.961 }, zoneColor = { 0.604, 0.631, 0.671 },
             titleColor = { 0.949, 0.953, 0.961 }, objectiveColor = { 0.949, 0.953, 0.961 },
             objectiveDoneColor = { 0.604, 0.631, 0.671 }, doneColor = { 0.133, 0.773, 0.369 } },
         -- The header title moves right of the wedge.
         titleIndent = 14,
-        art = { band = { color = { 0.137, 0.149, 0.173, 1 } }, ornament = "PitwallWedge", corners = { 1 },
+        art = { band = { color = { 0, 0, 0, 1 } }, ornament = "PitwallWedge", corners = { 1 },
             ornamentSize = 32, ornamentInset = 1, ornamentColor = { 0.882, 0.024, 0, 1 },
-            shade = { 0.086, 0.094, 0.11, 0.85 }, shadeInset = 4 },
+            shade = { 0, 0, 0, 0.85 }, shadeInset = 4 },
     },
 }
 
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 4
+Themes.REVISION = 5
 
 -- What "Take positions from" takes over: where the frames sit, not how big
 -- they are.

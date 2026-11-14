@@ -244,7 +244,7 @@ Themes.Switch("WOOD")
 check("wood: body in Friz", S("objectiveFont"), "Friz Quadrata")
 check("wood: level colour as it is", ns.Themes.Ink(lvl), lvl)
 check("tech: no corner pieces", Themes.SPECS.TECH.art, nil)
-check("revision", Themes.REVISION, 4)
+check("revision", Themes.REVISION, 5)
 Themes.Switch("CLASSIC")
 check("classic after the body fonts", snapshot(), classic)
 
@@ -298,7 +298,7 @@ Themes.Switch("PITWALL")
 M.RunTimers()
 check("pitwall: fonts", S("titleFont") .. "/" .. S("objectiveFont"), "Titillium Web Bold Italic/Titillium Web SemiBold")
 check("pitwall: carbon hairline", ringColor(), "0.043/0.047/0.055")
-check("pitwall: title strip as high as the header", frame.themeArt.band:GetHeight(), 32)
+check("pitwall: black title strip as high as the header", table.concat(frame.themeArt.band._texColor, "/") .. " " .. frame.themeArt.band:GetHeight(), "0/0/0/1 32")
 check("pitwall: red wedge", wedge():IsShown() and table.concat(wedge()._vertex, "/", 1, 3), "0.882/0.024/0")
 local headerTitle
 for _, fs in ipairs(M.fontStrings) do
@@ -306,14 +306,22 @@ for _, fs in ipairs(M.fontStrings) do
     if fs:GetText() == ns.L.HEADER_QUESTS and point == "LEFT" and rel == nil then headerTitle = fs end
 end
 check("pitwall: title right of the wedge", select(4, headerTitle:GetPoint()), (S("locked") and 10 or 26) + 14)
-check("pitwall: content on a card", frame.themeArt.shade:IsShown(), true)
+check("pitwall: content on a black card", frame.themeArt.shade:IsShown() and table.concat(frame.themeArt.shade._texColor, "/"), "0/0/0/0.85")
 check("pitwall: colours", table.concat(registry.Colors(), " "), "RED ORANGE TEAL SILVER")
 registry.SetColor("TEAL")
 M.RunTimers()
 check("pitwall teal: wedge", table.concat(wedge()._vertex, "/", 1, 3), "0/0.631/0.612")
 check("pitwall teal: header as stored", Themes.Accent(S("headerColor")), S("headerColor"))
-check("pitwall teal: backdrop stays", texture() .. " " .. frame.bg._vertex[1], "PitwallBack.tga 1")
+check("pitwall teal: backdrop stays", texture() .. " " .. frame.bg._vertex[1], "SwissBack.tga 1")
 registry.SetColor("RED")
+-- Swiss and Pitwall share one black with every Forever addon: the flat
+-- backdrop untinted, opaque.
+for _, id in ipairs({ "SWISS", "PITWALL" }) do
+    Themes.Switch(id)
+    M.RunTimers()
+    check(id .. ": the shared black", texture() .. " " .. table.concat(frame.bg._vertex, "/") .. " " .. S("bgMode"),
+        "SwissBack.tga 1/1/1/1 TEXTURE")
+end
 -- Pixel's handheld: four greens, the rim too.
 Themes.Switch("PIXEL")
 check("pixel: handheld appended", registry.Colors()[9], "HANDHELD")
