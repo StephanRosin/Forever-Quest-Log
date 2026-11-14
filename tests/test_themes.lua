@@ -116,6 +116,44 @@ end
 -- Level colours in the task list: darkened on the paper, as they are elsewhere.
 local lvl = GetQuestDifficultyColor(UnitLevel("player"))
 check("comic: level colour inked", ns.Themes.Ink(lvl).g, lvl.g * 0.55)
+
+-- Comic colours: paper and accent, apart from the theme sets.
+local stored = snapshot()
+check("comic colour: grey by default", registry.ComicColor(), "GREY")
+check("comic colour: the six", table.concat(registry.ComicColors, " "), "GREY YELLOW BLUE RED GREEN PURPLE")
+check("comic colour: grey paper as before", frame.bg._vertex[1], 0.7)
+check("comic colour: grey accent as stored", Themes.Accent(S("headerColor"))[3], 0.1)
+check("comic colour: blue", registry.SetComicColor("BLUE"), true)
+M.RunTimers()
+check("comic colour: blue paper", frame.bg._vertex[3], 0.86)
+check("comic colour: yellow accent", Themes.Accent(S("headerColor"))[2], 0.9)
+check("comic colour: yellow", registry.SetComicColor("YELLOW"), true)
+M.RunTimers()
+check("comic colour: yellow paper", frame.bg._vertex[1], 0.86)
+check("comic colour: blue accent", Themes.Accent(S("headerColor"))[3], 0.95)
+check("comic colour: the look not stored", snapshot(), stored)
+check("comic colour: unknown", select(2, registry.SetComicColor("PINK")), "UNKNOWN")
+check("comic colour: unknown leaves it", registry.ComicColor(), "YELLOW")
+M.state.combat = true
+check("comic colour: combat", select(2, registry.SetComicColor("RED")), "COMBAT")
+M.state.combat = false
+Themes.Switch("WOOD")
+M.RunTimers()
+check("comic colour: kept away from comic", registry.ComicColor(), "YELLOW")
+check("comic colour: no accent elsewhere", Themes.Accent(S("headerColor")), S("headerColor"))
+check("comic colour: wood paper as it is", frame.bg._vertex[1], 0.5)
+check("comic colour: picked under wood", registry.SetComicColor("GREEN"), true)
+Themes.Switch("COMIC")
+M.RunTimers()
+check("comic colour: back to comic", frame.bg._vertex[2], 0.76)
+check("comic colour: grey again", registry.SetComicColor("GREY"), true)
+M.RunTimers()
+check("comic colour: grey paper restored", frame.bg._vertex[1], 0.7)
+check("comic colour: grey accent restored", Themes.Accent(S("headerColor"))[1], 1)
+sets().comicColor = "PINK"
+check("comic colour: unknown stored is grey", registry.ComicColor(), "GREY")
+sets().comicColor = nil
+
 Themes.Switch("WOOD")
 check("wood: body keeps the theme font", S("objectiveFont"), "Cinzel")
 check("wood: level colour as it is", ns.Themes.Ink(lvl), lvl)

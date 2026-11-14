@@ -187,13 +187,21 @@ end
 
 -- A background texture: SOLID (colour), GRADIENT (colour fading down) or
 -- TEXTURE (tiled, alpha only). alpha 0..1.
+-- Comic's paper takes the comic colour's tint (Themes.ComicPaper).
+local COMIC_PAPER = "FQL Comic"
+
 function Media.ApplyBackground(tex, mode, color, alpha, textureName)
     if mode == "TEXTURE" then
         tex:SetTexture(Media.Path("background", textureName), "REPEAT", "REPEAT")
         tex:SetHorizTile(true)
         tex:SetVertTile(true)
         local tint = Media.Tint(textureName)
-        tex:SetVertexColor(tint, tint, tint, alpha)
+        local paper = textureName == COMIC_PAPER and ns.Themes.ComicPaper()
+        if paper then
+            tex:SetVertexColor(paper[1], paper[2], paper[3], alpha)
+        else
+            tex:SetVertexColor(tint, tint, tint, alpha)
+        end
         return
     end
     tex:SetHorizTile(false)
