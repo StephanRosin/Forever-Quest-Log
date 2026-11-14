@@ -373,12 +373,19 @@ for _, id in ipairs(Themes.IDS) do
         registry.SetColor(before)
     end
 end
+-- The to-do title starts past Pitwall's wedge, where the tracker's does.
+Themes.Switch("PITWALL")
+M.RunTimers()
+ns.Notes.LayoutWindow(windows[2])
+check("pitwall: note title past the wedge", windows[2].name._points.LEFT[3], 16)
 Themes.Switch("CLASSIC")
 M.RunTimers()
 for _, id in ipairs(Themes.IDS) do
     if id ~= "CLASSIC" and not had[id] then sets()[id] = nil end
 end
 for _, id in ipairs({ "SWISS", "CONSOLE", "PITWALL", "PIXEL" }) do sets()[id] = nil end
+ns.Notes.LayoutWindow(windows[2])
+check("classic: note title at the edge", windows[2].name._points.LEFT[3], 0)
 check("classic after the new themes", snapshot(), classic)
 check("classic: no band left", frame.themeArt.band:IsShown(), false)
 

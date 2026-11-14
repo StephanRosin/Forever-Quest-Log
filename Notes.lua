@@ -153,7 +153,10 @@ function Notes.LayoutWindow(win)
     -- A theme's larger title font gets a taller title row; a shaded theme
     -- (Glass, Frost) keeps its band of air between title and first entry.
     local themed = ns.Themes.Current() ~= "CLASSIC"
-    local art = ns.Themes.Spec(ns.Themes.Current()).art or {}
+    local spec = ns.Themes.Spec(ns.Themes.Current())
+    local art = spec.art or {}
+    -- Past the theme's title ornament (Pitwall's wedge), where the tracker's title starts.
+    win.name:SetPoint("LEFT", spec.titleIndent and spec.titleIndent + 10 - PAD or 0, 0)
     local titleH = themed and math.max(TITLE_H, style.size + 12) or TITLE_H
     local top = titleH + (art.shade and art.shadeInset or 0)
     if win.titleH ~= titleH or win.top ~= top then
