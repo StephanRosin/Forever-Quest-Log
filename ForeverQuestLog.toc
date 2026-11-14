@@ -34,6 +34,7 @@ Media.lua
 Position.lua
 Corners.lua
 Border.lua
+Themes.lua
 Blizzard.lua
 Data.lua
 Sort.lua

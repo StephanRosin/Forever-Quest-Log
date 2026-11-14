@@ -340,10 +340,12 @@ local function applyLook()
     local w, h = frame:GetWidth(), frame:GetHeight()
     local radius = ns.Corners.Clamp(S("cornerRadius"), w, h)
     ns.Corners.Fit(frame.clip, frame, radius, { frame.bg, header.shine })
-    ns.Border.Draw(frame, frame, {
+    local look = {
         style = S("borderStyle"), size = S("borderSize"), color = S("borderColor"), radius = radius,
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
-    })
+    }
+    ns.Border.Draw(frame, frame, look)
+    ns.Themes.DrawArt(frame, frame, look)
 end
 
 -- Unlocked: a blue outline, an arrow in each corner and the size below the frame.
@@ -989,6 +991,7 @@ for _, event in ipairs(REFRESH_EVENTS) do ns.On(event, function() Tracker.Refres
 
 ns.On("PLAYER_LOGIN", function()
     ns.RebuildPresets()
+    ns.Themes.Upgrade()
     Tracker.Build()
 end)
 

@@ -83,9 +83,68 @@ local function append(rows, more)
     return rows
 end
 
+-- The theme (beta), first on General: it swaps every other setting
+-- (Themes.lua). "Take positions from" keeps what it replaced for an undo
+-- while the theme stays.
+local themeUndo     -- { theme = id, saved = what Themes.CopyPlacement replaced }
+local PICK, UNDO = "__pick", "__undo"
+
+local function themeRefused(why) ns.Print(L["MSG_THEME_" .. why]) end
+
+local function themeRows()
+    local Themes = ns.Themes
+    return {
+        { type = "header", label = "OPT_THEME" },
+        {
+            type = "select", label = "OPT_THEME_CHOICE",
+            choices = function()
+                local list = {}
+                for _, id in ipairs(Settings.THEMES) do list[#list + 1] = { label = L["THEME_" .. id], value = id } end
+                return list
+            end,
+            get = function() return Themes.Current() end,
+            set = function(v)
+                local ok, why = Themes.Switch(v)
+                if not ok then themeRefused(why) end
+            end,
+        },
+        { type = "text", label = "OPT_THEME_HINT", height = 40 },
+        {
+            type = "select", label = "OPT_THEME_COPY",
+            choices = function()
+                local list = { { value = PICK } }
+                if themeUndo and themeUndo.theme == Themes.Current() then
+                    list[#list + 1] = { label = L.OPT_THEME_COPY_UNDO, value = UNDO }
+                end
+                for _, id in ipairs(Themes.Stored()) do list[#list + 1] = { label = L["THEME_" .. id], value = id } end
+                list[1].label = #list == 1 and L.OPT_THEME_COPY_NONE or L.OPT_THEME_COPY_PICK
+                return list
+            end,
+            get = function() return PICK end,
+            set = function(v)
+                if v == PICK then return end
+                if v == UNDO then
+                    local ok, why = Themes.Restore(themeUndo.saved)
+                    if ok then themeUndo = nil else themeRefused(why) end
+                    return
+                end
+                local saved, why = Themes.CopyPlacement(v)
+                if not saved then return themeRefused(why) end
+                themeUndo = { theme = Themes.Current(), saved = saved }
+            end,
+        },
+        { type = "buttons", buttons = {
+            { label = "OPT_THEME_RESET", width = 170, onClick = function()
+                local ok, why = Themes.Reset()
+                if not ok then themeRefused(why) end
+            end },
+        } },
+    }
+end
+
 -- General: what the list shows and how it is ordered.
 local function generalRows()
-    return {
+    return append(themeRows(), {
         { type = "header", label = "OPT_LIST" },
         check("groupByZone", "OPT_GROUP_BY_ZONE"),
         visibleIf(check("currentZoneFirst", "OPT_CURRENT_ZONE_FIRST"), function() return S("groupByZone") end),
@@ -112,7 +171,7 @@ local function generalRows()
         { type = "header", label = "OPT_BLIZZARD" },
         { type = "text", label = "OPT_BLIZZARD_HINT", height = 40 },
         check("useBlizzard", "OPT_USE_BLIZZARD"),
-    }
+    })
 end
 
 -- Layout: where it sits, how big, how it grows.

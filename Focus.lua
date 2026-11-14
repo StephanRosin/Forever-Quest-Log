@@ -64,10 +64,12 @@ local function applyLook()
     Media.ApplyBackground(frame.bg, G("bgMode"), G("bgColor"), G("bgAlpha") / 100, G("bgTexture"))
     local radius = ns.Corners.Clamp(G("cornerRadius"), frame:GetWidth(), frame:GetHeight())
     ns.Corners.Fit(frame.clip, frame, radius, { frame.bg })
-    ns.Border.Draw(frame, frame, {
+    local look = {
         style = G("borderStyle"), size = G("borderSize"), color = G("borderColor"), radius = radius,
         shadow = G("shadowEnabled"), shadowSize = G("shadowSize"), shadowAlpha = G("shadowAlpha") / 100,
-    })
+    }
+    ns.Border.Draw(frame, frame, look)
+    ns.Themes.DrawArt(frame, frame, look)
 end
 
 -- The grip sits at the bottom corner away from the anchor's side: that

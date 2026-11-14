@@ -142,6 +142,9 @@ function Share.Import(text)
     -- Written in one go, clamped as Settings.Set does, then one change for
     -- everything (as a profile switch), instead of a relayout per key.
     local db = ns.DB()
+    -- Without a theme of its own the import lands in the theme in use, so
+    -- the stored CLASSIC set is never replaced behind its back (Themes.lua).
+    if clean.theme == nil then clean.theme = db.theme end
     for k in pairs(db) do db[k] = nil end
     for key, v in pairs(clean) do
         local range = Settings.RANGES[key]

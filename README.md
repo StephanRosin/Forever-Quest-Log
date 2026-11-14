@@ -12,6 +12,12 @@ quests of the dungeon you are in.
 Options window (gear in the header, minimap button or `/fql`), profiles,
 export/import, and English, German, Spanish and French.
 
+Themes (beta, first on the General page): Classic (your own setup) or one of
+eight looks (wood, tech, parchment, runestone, stained glass, comic, frost,
+pixel) for the tracker, the focus frame and notes. Every theme keeps all its
+settings for itself and starts from your Classic setup the first time.
+The theme fonts are under the SIL Open Font License ([Media/Fonts](Media/Fonts/)).
+
 Design notes: [docs/specs/](docs/specs/).
 
 ## Development

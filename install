@@ -18,6 +18,9 @@ done
 # The client loads Bindings.xml by itself, without a TOC entry.
 cp "$HERE/Bindings.xml" "$TARGET/"
 # Textures the Lua code loads by path.
-mkdir -p "$TARGET/Media"
+mkdir -p "$TARGET/Media/Themes" "$TARGET/Media/Fonts"
 cp "$HERE"/Media/*.tga "$TARGET/Media/"
+# The themes' art and fonts (Themes.lua), the fonts with their licence.
+cp "$HERE"/Media/Themes/*.tga "$TARGET/Media/Themes/"
+cp "$HERE"/Media/Fonts/*.ttf "$HERE"/Media/Fonts/*.txt "$TARGET/Media/Fonts/"
 echo "Installed to $TARGET"

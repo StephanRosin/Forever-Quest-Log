@@ -1942,6 +1942,8 @@ do
     check("level data in every language", ns.ZoneLevelData["Dun Morogh"][2], 10)
 end
 
+assert(loadfile("test_themes.lua"))(M, ns, check, section)
+
 section("Languages")
 local base = ns.Locales.enUS
 for code, strings in pairs(ns.Locales) do

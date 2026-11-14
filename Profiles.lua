@@ -56,6 +56,27 @@ function ns.DB()
     return ForeverQuestLogProfiles.profiles[ForeverQuestLogChar.active]
 end
 
+-- The settings of the active profile's themes not in use (Themes.lua):
+-- theme id -> settings, plus the revision they were made under.
+function ns.ThemeSets()
+    Init()
+    local all = ForeverQuestLogProfiles.themeSets
+    if type(all) ~= "table" then
+        all = {}
+        ForeverQuestLogProfiles.themeSets = all
+    end
+    local name = ForeverQuestLogChar.active
+    if type(all[name]) ~= "table" then all[name] = {} end
+    return all[name]
+end
+
+-- A profile's theme sets go where its settings go (nil: dropped).
+local function moveThemeSets(from, to)
+    local all = ForeverQuestLogProfiles.themeSets
+    if type(all) ~= "table" then return end
+    if to then all[to] = Copy(all[from]) else all[from] = nil end
+end
+
 -- Account wide values outside the profiles (the language).
 function ns.AccountDB()
     Init()
@@ -165,6 +186,7 @@ function ns.SwitchProfile(name)
         if not ForeverQuestLogProfiles.profiles[name] then return false end
     elseif not ForeverQuestLogProfiles.profiles[name] then
         ForeverQuestLogProfiles.profiles[name] = Copy(ns.DB())
+        moveThemeSets(ForeverQuestLogChar.active, name)
     end
     ForeverQuestLogChar.active = name
     applyLook()
@@ -177,6 +199,7 @@ function ns.CopyProfileFrom(name)
     local source = ForeverQuestLogProfiles.profiles[name]
     if not source or name == ForeverQuestLogChar.active then return false end
     ForeverQuestLogProfiles.profiles[ForeverQuestLogChar.active] = Copy(source)
+    moveThemeSets(name, ForeverQuestLogChar.active)
     applyLook()
     return true
 end
@@ -190,6 +213,7 @@ function ns.DeleteProfile(name)
     if not profiles[name] then return false end
     local wasActive = (ForeverQuestLogChar.active == name)
     profiles[name] = nil
+    moveThemeSets(name, nil)
     if wasActive then
         profiles[DEFAULT] = profiles[DEFAULT] or {}
         ForeverQuestLogChar.active = DEFAULT

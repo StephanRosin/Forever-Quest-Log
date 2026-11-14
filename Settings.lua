@@ -14,6 +14,10 @@ Settings.TEXT_STYLES = { "header", "zone", "title", "objective", "done" }
 -- texture background faded out, sorted by level, one list. The gold frame of
 -- the other Forever addons is the "Forever" preset below.
 Settings.DEFAULTS = {
+    -- The theme in use (Themes.lua). Changed only through Themes.Switch: it
+    -- swaps every other setting for the theme's own set.
+    theme = "CLASSIC",
+
     -- Off: Blizzard's own tracker stays, ours is not built (after /reload).
     useBlizzard = false,
 
@@ -216,6 +220,10 @@ Settings.DEFAULTS = {
     minimapAngle = 357,
 }
 
+-- The themes (Themes.lua); CLASSIC is the player's own setup. Same ids as
+-- Forever Unit Frames' themes.
+Settings.THEMES = { "CLASSIC", "WOOD", "TECH", "PARCHMENT", "RUNESTONE", "GLASS", "COMIC", "FROST", "PIXEL" }
+
 -- Slider ranges, used by the options window and to clamp typed values.
 Settings.RANGES = {
     width = { 180, 800 },
@@ -385,9 +393,12 @@ Settings.PRESETS = {
     } },
 }
 
--- Back to the defaults (the language is not in the profile).
+-- Back to the defaults (the language is not in the profile). The theme
+-- stays: the reset set is that theme's, CLASSIC's stored set stays as it is.
 function Settings.ResetProfile()
     local db = ns.DB()
+    local theme = db.theme
     for k in pairs(db) do db[k] = nil end
+    db.theme = theme
     Settings.Changed(nil)
 end

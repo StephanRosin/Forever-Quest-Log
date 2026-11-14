@@ -6,8 +6,8 @@ local ADDON, ns = ...
 local Media = {}
 ns.Media = Media
 
-local ICONS = "Interface\\AddOns\\ForeverQuestLog\\Media\\"
-function Media.Icon(name) return ICONS .. "Icon" .. name .. ".tga" end
+local MEDIA = "Interface\\AddOns\\ForeverQuestLog\\Media\\"
+function Media.Icon(name) return MEDIA .. "Icon" .. name .. ".tga" end
 
 Media.BLIZZARD = {
     font = {
@@ -15,6 +15,15 @@ Media.BLIZZARD = {
         { name = "Arial Narrow",  path = "Fonts\\ARIALN.TTF" },
         { name = "Skurri",        path = "Fonts\\SKURRI.TTF" },
         { name = "Morpheus",      path = "Fonts\\MORPHEUS.TTF" },
+        -- The themes' fonts (Themes.lua), Latin letters only; licences in
+        -- Media/Fonts.
+        { name = "Bangers", path = MEDIA .. "Fonts\\Bangers-Regular.ttf" },
+        { name = "Cinzel", path = MEDIA .. "Fonts\\Cinzel-Bold.ttf" },
+        { name = "Cormorant SC", path = MEDIA .. "Fonts\\CormorantSC-Bold.ttf" },
+        { name = "IM Fell English SC", path = MEDIA .. "Fonts\\IMFeENsc28P.ttf" },
+        { name = "Marcellus", path = MEDIA .. "Fonts\\Marcellus-Regular.ttf" },
+        { name = "Space Grotesk", path = MEDIA .. "Fonts\\SpaceGrotesk-Bold.ttf" },
+        { name = "VT323", path = MEDIA .. "Fonts\\VT323-Regular.ttf" },
     },
     background = {
         { name = "Blizzard Dialog Background Dark", path = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark" },
@@ -31,11 +40,35 @@ Media.BLIZZARD = {
         { name = "Blizzard Raid Bar", path = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill" },
     },
 }
+-- The themes' backdrops and bar textures (Media/Themes, made by Forever Unit
+-- Frames' tools/make_themes.py). tint darkens a light backdrop so the
+-- light text on it stays readable.
+local THEME_ART = {
+    { "Wood", "Wood", 0.5 }, { "Tech", "Tech", 1 }, { "Parchment", "Parchment", 0.6 }, { "Stone", "Stone", 0.55 },
+    { "Glass", "Glass", 1 }, { "Comic", "Comic", 0.7 }, { "Frost", "Frost", 0.55 }, { "Pixel", "Pixel", 1 },
+}
+for _, a in ipairs(THEME_ART) do
+    local name, file, tint = "FQL " .. a[1], MEDIA .. "Themes\\" .. a[2], a[3]
+    table.insert(Media.BLIZZARD.background, { name = name, path = file .. "Back.tga", tint = tint })
+    table.insert(Media.BLIZZARD.statusbar, { name = name, path = file .. "Bar.tga" })
+end
+
 Media.DEFAULT = {
     font = "Fonts\\FRIZQT__.TTF",
     background = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
     statusbar = "Interface\\Buttons\\WHITE8X8",
 }
+
+-- Our own font files loaded with the addon: a file used for the first time
+-- can be refused (ApplyText tries again), so the first restyle should not
+-- be its first use.
+do
+    local holder = CreateFrame("Frame")
+    holder:Hide()
+    for _, f in ipairs(Media.BLIZZARD.font) do
+        if f.path:find(MEDIA, 1, true) then holder:CreateFontString():SetFont(f.path, 12, "") end
+    end
+end
 
 local function sharedMedia()
     return LibStub and LibStub("LibSharedMedia-3.0", true)
@@ -71,7 +104,47 @@ function Media.Path(kind, name)
     return path or Media.DEFAULT[kind]
 end
 
+-- How much a built-in background is darkened (1: not at all).
+function Media.Tint(name)
+    for _, f in ipairs(Media.BLIZZARD.background) do
+        if f.name == name then return f.tint or 1 end
+    end
+    return 1
+end
+
 function Media.FontNames() return Media.Names("font") end
+
+-- Whether a text took the font asked for.
+local function hasFont(fs, path)
+    local got = fs:GetFont()
+    if type(got) ~= "string" then return false end
+    local function plain(p) return (p:lower():gsub("/", "\\")) end
+    return plain(got) == plain(path)
+end
+-- How often, and how far apart, a refused font is tried again.
+local FONT_RETRIES, FONT_RETRY_DELAY = 8, 0.25
+
+-- A font file used for the first time (the themes' own) can be refused and
+-- leave the text without a font (seen in Forever Unit Frames): the client's
+-- font meanwhile, ours tried again a few times.
+local function setFont(fs, path, size, outline, retries)
+    local wanted = path .. "|" .. size .. "|" .. outline
+    fs.fontWanted = wanted
+    -- Only our own files are checked by name: another addon's path may come
+    -- back from GetFont written differently.
+    local ok = fs:SetFont(path, size, outline)
+    if ok and (not path:find(MEDIA, 1, true) or hasFont(fs, path)) then return end
+    fs:SetFont(Media.DEFAULT.font, size, outline)
+    if path == Media.DEFAULT.font then return end
+    if retries == 0 then
+        ns.Print(ns.L.MSG_FONT_FAILED:format(path))
+        return
+    end
+    C_Timer.After(FONT_RETRY_DELAY, function()
+        -- Restyled since: that call has its own tries.
+        if fs.fontWanted == wanted then setFont(fs, path, size, outline, (retries or FONT_RETRIES) - 1) end
+    end)
+end
 function Media.FontPath(name) return Media.Path("font", name) end
 
 -- A text style (Settings.TextStyle) on a font string. SHADOW is a drop
@@ -79,9 +152,7 @@ function Media.FontPath(name) return Media.Path("font", name) end
 function Media.ApplyText(fs, style)
     local flag = style.flag
     local outline = (flag == "OUTLINE" or flag == "THICKOUTLINE") and flag or ""
-    if not fs:SetFont(Media.FontPath(style.font), style.size, outline) then
-        fs:SetFont(Media.DEFAULT.font, style.size, outline)
-    end
+    setFont(fs, Media.FontPath(style.font), style.size, outline)
     if flag == "SHADOW" then
         fs:SetShadowColor(0, 0, 0, 1)
         fs:SetShadowOffset(1, -1)
@@ -99,7 +170,8 @@ function Media.ApplyBackground(tex, mode, color, alpha, textureName)
         tex:SetTexture(Media.Path("background", textureName), "REPEAT", "REPEAT")
         tex:SetHorizTile(true)
         tex:SetVertTile(true)
-        tex:SetVertexColor(1, 1, 1, alpha)
+        local tint = Media.Tint(textureName)
+        tex:SetVertexColor(tint, tint, tint, alpha)
         return
     end
     tex:SetHorizTile(false)

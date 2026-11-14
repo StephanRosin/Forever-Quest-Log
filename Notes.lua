@@ -35,10 +35,12 @@ local function applyLook(win)
     Media.ApplyBackground(win.bg, S("bgMode"), S("bgColor"), S("bgAlpha") / 100, S("bgTexture"))
     local radius = ns.Corners.Clamp(S("cornerRadius"), win:GetWidth(), win:GetHeight())
     ns.Corners.Fit(win.clip, win, radius, { win.bg })
-    ns.Border.Draw(win, win, {
+    local look = {
         style = S("borderStyle"), size = S("borderSize"), color = S("borderColor"), radius = radius,
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
-    })
+    }
+    ns.Border.Draw(win, win, look)
+    ns.Themes.DrawArt(win, win, look)
 end
 
 local function titleButton(win, texture, tooltip, onClick)
