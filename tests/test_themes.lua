@@ -117,25 +117,31 @@ end
 local lvl = GetQuestDifficultyColor(UnitLevel("player"))
 check("comic: level colour inked", ns.Themes.Ink(lvl).g, lvl.g * 0.55)
 
--- Comic colours: paper and accent, apart from the theme sets.
+-- Theme colours: backdrop and accent, apart from the theme sets.
 local stored = snapshot()
-check("comic colour: grey by default", registry.ComicColor(), "GREY")
-check("comic colour: the nine", table.concat(registry.ComicColors, " "),
+local function vertex() return table.concat(frame.bg._vertex, "/", 1, 3) end
+local function texture() return frame.bg._texture:match("[^\\]+$") end
+check("colour: comic grey by default", registry.Color(), "GREY")
+check("colour: the comic nine", table.concat(registry.Colors(), " "),
     "GREY DARKGREY BLACK WHITE YELLOW BLUE RED GREEN PURPLE")
+check("colour: by theme", table.concat(registry.Colors("PIXEL"), " "), "NAVY PLUM FOREST BROWN GREY BLACK TEAL PURPLE")
+check("colour: none for classic", #registry.Colors("CLASSIC"), 0)
+check("colour: classic has none", registry.Color("CLASSIC"), nil)
 check("comic colour: grey keeps dark ink", Themes.OnPaper(S("objectiveColor"))[1], 0.1)
 check("comic colour: grey keeps ink icons", Themes.Icons().idle[1], 0.12)
 check("comic colour: grey paper as before", frame.bg._vertex[1], 0.7)
 check("comic colour: grey accent as stored", Themes.Accent(S("headerColor"))[3], 0.1)
-check("comic colour: blue", registry.SetComicColor("BLUE"), true)
+check("comic colour: blue", registry.SetColor("BLUE"), true)
 M.RunTimers()
 check("comic colour: blue paper", frame.bg._vertex[3], 0.86)
+check("comic colour: own paper", texture(), "ComicBack.tga")
 check("comic colour: yellow accent", Themes.Accent(S("headerColor"))[2], 0.9)
-check("comic colour: yellow", registry.SetComicColor("YELLOW"), true)
+check("comic colour: yellow", registry.SetColor("YELLOW"), true)
 M.RunTimers()
 check("comic colour: yellow paper", frame.bg._vertex[1], 0.86)
 check("comic colour: blue accent", Themes.Accent(S("headerColor"))[3], 0.95)
 check("comic colour: the look not stored", snapshot(), stored)
-check("comic colour: black", registry.SetComicColor("BLACK"), true)
+check("comic colour: black", registry.SetColor("BLACK"), true)
 M.RunTimers()
 check("comic colour: black paper", frame.bg._vertex[1], 0.16)
 check("comic colour: black, yellow accent", Themes.Accent(S("headerColor"))[2], 0.9)
@@ -143,36 +149,95 @@ check("comic colour: black, objectives light", table.concat(Themes.OnPaper(S("ob
 check("comic colour: black, light icons", Themes.Icons().idle[1] .. "/" .. Themes.Icons().hover[1] .. "/"
     .. Themes.Icons().off[1] .. "/" .. Themes.Icons().on[2], "0.85/1/0.55/0.9")
 check("comic colour: black, level colours stay light", ns.Themes.Ink(lvl), lvl)
-check("comic colour: white", registry.SetComicColor("WHITE"), true)
+check("comic colour: white", registry.SetColor("WHITE"), true)
 M.RunTimers()
 check("comic colour: white paper", frame.bg._vertex[1] .. "/" .. frame.bg._vertex[3], "1/1")
 check("comic colour: white, blue accent", Themes.Accent(S("headerColor"))[3], 0.95)
 check("comic colour: white keeps dark ink", Themes.OnPaper(S("objectiveColor"))[1], 0.1)
 check("comic colour: white keeps ink icons", Themes.Icons().idle[1], 0.12)
 check("comic colour: white inks level colours", ns.Themes.Ink(lvl).g, lvl.g * 0.55)
-registry.SetComicColor("YELLOW")
-check("comic colour: unknown", select(2, registry.SetComicColor("PINK")), "UNKNOWN")
-check("comic colour: unknown leaves it", registry.ComicColor(), "YELLOW")
+registry.SetColor("YELLOW")
+check("colour: unknown", select(2, registry.SetColor("PINK")), "UNKNOWN")
+check("colour: another theme's id is unknown", select(2, registry.SetColor("NAVY")), "UNKNOWN")
+check("colour: unknown leaves it", registry.Color(), "YELLOW")
 M.state.combat = true
-check("comic colour: combat", select(2, registry.SetComicColor("RED")), "COMBAT")
+check("colour: combat", select(2, registry.SetColor("RED")), "COMBAT")
+check("colour: another theme in combat", registry.SetColor("WALNUT", "WOOD"), true)
 M.state.combat = false
+
+-- Every other theme: the first colour is the theme as it is; another one
+-- draws the grey texture at back / mean, with its accent.
 Themes.Switch("WOOD")
 M.RunTimers()
-check("comic colour: kept away from comic", registry.ComicColor(), "YELLOW")
-check("comic colour: no accent elsewhere", Themes.Accent(S("headerColor")), S("headerColor"))
-check("comic colour: wood paper as it is", frame.bg._vertex[1], 0.5)
-check("comic colour: wood text as it is", Themes.OnPaper(S("objectiveColor")), S("objectiveColor"))
-check("comic colour: picked under wood", registry.SetComicColor("GREEN"), true)
+check("colour: comic kept away from comic", registry.Color("COMIC"), "YELLOW")
+check("colour: wood's own kept", registry.Color(), "WALNUT")
+check("colour: walnut on the grey wood", texture(), "WoodBackGrey.tga")
+check("colour: walnut back / mean", vertex(), (0.15 / 0.8) .. "/" .. (0.09 / 0.8) .. "/" .. (0.06 / 0.8))
+check("colour: walnut keeps the accent", Themes.Accent(S("headerColor")), S("headerColor"))
+check("colour: wood text as it is", Themes.OnPaper(S("objectiveColor")), S("objectiveColor"))
+check("colour: oak", registry.SetColor("OAK"), true)
+M.RunTimers()
+check("colour: oak as wood was", texture() .. " " .. vertex(), "WoodBack.tga 0.5/0.5/0.5")
+check("colour: wood's look not stored", sets().WOOD, nil)
+Themes.Switch("TECH")
+M.RunTimers()
+check("colour: tech cyan as it was", texture() .. " " .. frame.bg._vertex[1], "TechBack.tga 1")
+check("colour: tech accent as stored", Themes.Accent(S("headerColor")), S("headerColor"))
+check("colour: tech amber", registry.SetColor("AMBER"), true)
+M.RunTimers()
+check("colour: amber back / mean", vertex(), math.min(1, 0.10 / 0.705) .. "/" .. (0.07 / 0.705) .. "/" .. (0.02 / 0.705))
+check("colour: amber accent", table.concat(Themes.Accent(S("headerColor")), "/"), "1/0.75/0.2")
+check("colour: alpha as the theme's", frame.bg._vertex[4], S("bgAlpha") / 100)
+Settings.Set("bgTexture", "FQL Wood")
+M.RunTimers()
+check("colour: only on the theme's own backdrop", texture() .. " " .. frame.bg._vertex[1], "WoodBack.tga 0.5")
+Settings.Set("bgTexture", "FQL Tech")
+registry.SetColor("CYAN")
+-- Every theme's first colour draws as before. The sets made here are
+-- dropped again (later tests start themes afresh).
+local made, picked = {}, registry.Color("COMIC")
+for _, id in ipairs(Themes.IDS) do
+    if id ~= "CLASSIC" then
+        made[id] = sets()[id] == nil and id ~= Themes.Current()
+        Themes.Switch(id)
+        registry.SetColor(registry.Colors()[1])
+        M.RunTimers()
+        local back = Themes.Spec(id).look.bgTexture
+        check(id .. ": first colour as before", ns.Media.Path("background", back):match("[^\\]+$") == texture()
+            and frame.bg._vertex[1] == ns.Media.Tint(back), true)
+    end
+end
+registry.SetColor(picked, "COMIC")
+Themes.Switch("TECH")
+for id in pairs(made) do if made[id] then sets()[id] = nil end end
+
+-- The options' colour row: the current theme's colours, none under Classic.
+local colorRow
+for _, row in ipairs(ns.Window.PAGES[1].rows()) do
+    if row.label == "OPT_THEME_COLOR" then colorRow = row end
+end
+Themes.Switch("PIXEL")
+check("menu: pixel's colours", colorRow.visible() and #colorRow.choices(), 8)
+check("menu: their names", colorRow.choices()[2].label, "Plum")
+check("menu: current checked", colorRow.get(), "NAVY")
+colorRow.set("TEAL")
+check("menu: sets", registry.Color("PIXEL"), "TEAL")
+registry.SetColor("NAVY")
+Themes.Switch("CLASSIC")
+check("menu: none under classic", colorRow.visible(), false)
 Themes.Switch("COMIC")
 M.RunTimers()
 check("comic colour: back to comic", frame.bg._vertex[2], 0.76)
-check("comic colour: grey again", registry.SetComicColor("GREY"), true)
+check("comic colour: grey again", registry.SetColor("GREY"), true)
 M.RunTimers()
 check("comic colour: grey paper restored", frame.bg._vertex[1], 0.7)
 check("comic colour: grey accent restored", Themes.Accent(S("headerColor"))[1], 1)
-sets().comicColor = "PINK"
-check("comic colour: unknown stored is grey", registry.ComicColor(), "GREY")
-sets().comicColor = nil
+sets().themeColors.COMIC = "PINK"
+check("colour: unknown stored is the first", registry.Color(), "GREY")
+sets().themeColors = nil
+sets().comicColor = "RED"
+check("colour: comicColor moves in", registry.Color() .. " " .. tostring(sets().comicColor), "RED nil")
+sets().themeColors = nil
 
 Themes.Switch("WOOD")
 check("wood: body keeps the theme font", S("objectiveFont"), "Cinzel")

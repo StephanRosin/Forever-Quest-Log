@@ -109,19 +109,21 @@ local function themeRows()
             end,
         },
         visibleIf({
-            type = "select", label = "OPT_COMIC_COLOR",
+            type = "select", label = "OPT_THEME_COLOR",
             choices = function()
-                local list = {}
-                for _, id in ipairs(Themes.COMIC_COLORS) do list[#list + 1] = { label = L["COMIC_COLOR_" .. id], value = id } end
+                local list, theme = {}, Themes.Current()
+                for _, id in ipairs(Themes.Colors()) do
+                    list[#list + 1] = { label = L["THEME_COLOR_" .. theme .. "_" .. id], value = id }
+                end
                 return list
             end,
-            get = function() return Themes.ComicColor() end,
+            get = function() return Themes.Color() end,
             set = function(v)
-                local ok, why = Themes.SetComicColor(v)
+                local ok, why = Themes.SetColor(v)
                 if not ok then themeRefused(why) end
             end,
-        }, function() return Themes.Current() == "COMIC" end),
-        { type = "text", label = "OPT_THEME_HINT", height = 40 },
+        }, function() return #Themes.Colors() > 0 end),
+        { type = "text", label = "OPT_THEME_HINT", height = 88 },
         {
             type = "select", label = "OPT_THEME_COPY",
             choices = function()

@@ -49,7 +49,8 @@ local THEME_ART = {
 }
 for _, a in ipairs(THEME_ART) do
     local name, file, tint = "FQL " .. a[1], MEDIA .. "Themes\\" .. a[2], a[3]
-    table.insert(Media.BLIZZARD.background, { name = name, path = file .. "Back.tga", tint = tint })
+    table.insert(Media.BLIZZARD.background, { name = name, path = file .. "Back.tga", tint = tint,
+        grey = file .. "BackGrey.tga", art = a[2] })
     table.insert(Media.BLIZZARD.statusbar, { name = name, path = file .. "Bar.tga" })
 end
 
@@ -187,19 +188,30 @@ end
 
 -- A background texture: SOLID (colour), GRADIENT (colour fading down) or
 -- TEXTURE (tiled, alpha only). alpha 0..1.
--- Comic's paper takes the comic colour's tint (Themes.ComicPaper).
-local COMIC_PAPER = "FQL Comic"
+-- A theme colour (Themes.BackColor) on the theme's own backdrop: a comic
+-- paper tints the paper; any other colour draws the grey version tinted
+-- to its mean colour (vertex colour back / the grey's mean, at most 1).
+local function themeArt(name)
+    for _, f in ipairs(Media.BLIZZARD.background) do
+        if f.name == name then return f end
+    end
+end
 
 function Media.ApplyBackground(tex, mode, color, alpha, textureName)
     if mode == "TEXTURE" then
-        tex:SetTexture(Media.Path("background", textureName), "REPEAT", "REPEAT")
+        local c = ns.Themes.BackColor(textureName)
+        local art = c and c.back and themeArt(textureName)
+        local mean = art and ns.Themes.GREY_MEAN[art.art]
+        tex:SetTexture(mean and art.grey or Media.Path("background", textureName), "REPEAT", "REPEAT")
         tex:SetHorizTile(true)
         tex:SetVertTile(true)
-        local tint = Media.Tint(textureName)
-        local paper = textureName == COMIC_PAPER and ns.Themes.ComicPaper()
-        if paper then
-            tex:SetVertexColor(paper[1], paper[2], paper[3], alpha)
+        if mean then
+            local b = c.back
+            tex:SetVertexColor(math.min(1, b[1] / mean), math.min(1, b[2] / mean), math.min(1, b[3] / mean), alpha)
+        elseif c and c.paper then
+            tex:SetVertexColor(c.paper[1], c.paper[2], c.paper[3], alpha)
         else
+            local tint = Media.Tint(textureName)
             tex:SetVertexColor(tint, tint, tint, alpha)
         end
         return
