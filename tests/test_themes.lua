@@ -259,7 +259,7 @@ end
 local listed = {}
 for _, c in ipairs(themeRow.choices()) do listed[#listed + 1] = c.value end
 check("new: in the options' list, appended", table.concat(listed, " ", 10), "SWISS CONSOLE PITWALL")
-check("new: their names", themeRow.choices()[10].label, "Swiss")
+check("new: their names", themeRow.choices()[10].label, "Swiss Clean")
 local titleSize = S("titleSize")
 Themes.Switch("SWISS")
 M.RunTimers()
