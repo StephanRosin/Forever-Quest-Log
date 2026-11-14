@@ -94,6 +94,8 @@ Themes.SPECS = {
         bodyFlag = "",
         -- Level colours in body text (light on the paper) darkened this much.
         ink = 0.55,
+        -- Header icons in ink: the light ones vanish on the paper.
+        icons = { idle = { 0.12, 0.12, 0.12 }, hover = { 0, 0, 0 }, on = { 0.75, 0.1, 0.05 }, off = { 0.38, 0.36, 0.33 } },
         art = { hardShadow = 5 },
     },
     -- Translucent ice, a pale rim, rounded.

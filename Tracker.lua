@@ -16,6 +16,10 @@ local IDLE = { 0.73, 0.64, 0.48 }
 local HOVER = { 1, 0.88, 0.54 }
 local ON = { 1, 0.82, 0.29 }
 local OFF = { 0.45, 0.42, 0.36 }
+-- The header icons' colours: the theme's own (light paper needs dark
+-- icons), else the ones above.
+local function icons() return ns.Themes.Spec(ns.Themes.Current()).icons or {} end
+local function idle() return icons().idle or IDLE end
 local WHEEL_STEP = 40
 local GRIP = 12
 local GRIP_IN = 5                          -- how far an arrow reaches into the frame: the header's empty margin
@@ -120,9 +124,9 @@ local function paint(button, color)
 end
 
 local function buttonColor(b)
-    if b.isActive and b.isActive() then return b.activeColor or ON end
-    if b.isActive then return OFF end
-    return IDLE
+    if b.isActive and b.isActive() then return b.activeColor or icons().on or ON end
+    if b.isActive then return icons().off or OFF end
+    return idle()
 end
 
 local function headerButton(icon, tooltip, onClick, isActive)
@@ -136,7 +140,7 @@ local function headerButton(icon, tooltip, onClick, isActive)
     b:RegisterForClicks("LeftButtonUp")
     b:SetScript("OnClick", function(self, mouse) onClick(self, mouse) end)
     b:SetScript("OnEnter", function(self)
-        paint(self, HOVER)
+        paint(self, icons().hover or HOVER)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         local text = type(self.tooltip) == "function" and self.tooltip() or self.tooltip
         GameTooltip:SetText(text, 1, 1, 1, 1, true)
@@ -330,7 +334,7 @@ local function layoutHeader(tracked)
     header.lock.isActive = function() return not S("locked") end
     header.sort.icon:SetTexture(Media.Icon(S("sortBy") == "LEVEL" and "SortLevel" or "SortWatch"))
     for _, b in ipairs({ header.collapse, header.options, header.lock, header.sort, header.zones, header.add }) do
-        paint(b, b.isActive and buttonColor(b) or IDLE)
+        paint(b, b.isActive and buttonColor(b) or idle())
     end
     if not S("locked") then paint(header.lock, ACCENT) end
     layoutChip()

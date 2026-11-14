@@ -98,6 +98,8 @@ check("comic: display thick outline", S("titleFlag"), "THICKOUTLINE")
 check("comic: body dark ink, no outline", S("objectiveFlag"), "")
 check("comic: dark ink", S("objectiveColor")[1], 0.1)
 check("comic: no shade", frame.themeArt.shade:IsShown(), false)
+check("comic: header icons in ink", Themes.Spec("COMIC").icons.idle[1] < 0.2, true)
+check("wood: header icons as they are", Themes.Spec("WOOD").icons, nil)
 -- Level colours in the task list: darkened on the paper, as they are elsewhere.
 local lvl = GetQuestDifficultyColor(UnitLevel("player"))
 check("comic: level colour inked", ns.Themes.Ink(lvl).g, lvl.g * 0.55)
