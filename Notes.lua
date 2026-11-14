@@ -40,7 +40,7 @@ local function applyLook(win)
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
     ns.Border.Draw(win, win, look)
-    ns.Themes.DrawArt(win, win, look, TITLE_H)
+    ns.Themes.DrawArt(win, win, look, win.titleH or TITLE_H)
 end
 
 local function titleButton(win, texture, tooltip, onClick)
@@ -144,6 +144,18 @@ function Notes.LayoutWindow(win)
     local list = win.list
     local style = Settings.TextStyle("zone")
     Media.ApplyText(win.name, style)
+    -- A theme's larger title font gets a taller title row; a shaded theme
+    -- (Glass, Frost) keeps its band of air between title and first entry.
+    local themed = ns.Themes.Current() ~= "CLASSIC"
+    local art = ns.Themes.Spec(ns.Themes.Current()).art or {}
+    local titleH = themed and math.max(TITLE_H, style.size + 12) or TITLE_H
+    local top = titleH + (art.shade and art.shadeInset or 0)
+    if win.titleH ~= titleH or win.top ~= top then
+        win.titleH, win.top = titleH, top
+        win.title:SetHeight(titleH)
+        win.scroll:SetPoint("TOPLEFT", PAD, -top)
+        applyLook(win)
+    end
     local done = 0
     for _, entry in ipairs(list.entries) do
         if ns.Tasks.Line(entry).done then done = done + 1 end

@@ -1550,6 +1550,15 @@ do
     end)(), false)
     local win = ns.Notes.windows[list]
     check("undocked: a window", win ~= nil and win:IsShown(), true)
+    check("undocked: classic title row as before", win.top, 24)
+    -- Only the theme's art read here, not its settings.
+    local current = ns.Themes.Current
+    ns.Themes.Current = function() return "FROST" end
+    ns.Notes.LayoutWindow(win)
+    check("undocked frost: air between title and entries", win.top > win.titleH, true)
+    ns.Themes.Current = current
+    ns.Notes.LayoutWindow(win)
+    check("undocked: classic again", win.top, 24)
     check("undocked: a row per entry", (function()
         local n = 0
         for _, r in ipairs(win.rows) do if r:IsShown() then n = n + 1 end end
