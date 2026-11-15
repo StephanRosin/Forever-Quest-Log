@@ -1976,6 +1976,23 @@ for _, f in ipairs(tocFiles()) do
     for key in src:gmatch('"((OPT|PAGE|STYLE|TIP|MSG)_[A-Z0-9_]+)"') do check(f .. " uses known " .. key, base[key] ~= nil, true) end
 end
 
+section("Embedded LibForeverThemes")
+-- The copy in Libs/ is the library's own (ForeverThemes, tools/sync there):
+-- checked when that repository sits next to this one (not in CI).
+do
+local LIBREPO = ROOT .. "/../ForeverThemes"
+if io.open(LIBREPO .. "/LibForeverThemes.lua") then
+    local diff = io.popen("diff -rq '" .. LIBREPO .. "/LibForeverThemes.lua' '" .. ROOT
+        .. "/Libs/LibForeverThemes/LibForeverThemes.lua' && diff -rq '" .. LIBREPO .. "/Media' '" .. ROOT
+        .. "/Libs/LibForeverThemes/Media' 2>&1"):read("*a")
+    check("copy equals ForeverThemes (run its tools/sync)", diff, "")
+else
+    print("  (skipped: ForeverThemes not next to this addon)")
+end
+end
+check("library loaded from our copy", LibForeverThemes.FOLDER, ADDON)
+check("theme ids are the library's", table.concat(ns.Settings.THEMES, ","), table.concat(LibForeverThemes.IDS, ","))
+
 section("No accidental globals")
 local allowed = { SLASH_FOREVERQUESTLOG1 = true, SLASH_FOREVERQUESTLOG2 = true, ForeverQuestLogProfiles = true,
     ForeverQuestLogChar = true, ForeverQuestLog_OnAddonCompartmentClick = true,

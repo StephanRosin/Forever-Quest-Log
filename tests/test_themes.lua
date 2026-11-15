@@ -291,7 +291,7 @@ sets().themeColors = nil
 Themes.Switch("WOOD")
 check("wood: body in Friz", S("objectiveFont"), "Friz Quadrata")
 check("wood: level colour as it is", ns.Themes.Ink(lvl), lvl)
-check("tech: no corner pieces", Themes.SPECS.TECH.art, nil)
+check("tech: no corner pieces", Themes.SPECS.TECH.art.ornament, nil)
 check("revision", Themes.REVISION, 11)
 Themes.Switch("CLASSIC")
 check("classic after the body fonts", snapshot(), classic)
@@ -536,7 +536,7 @@ ns.Media.ApplyText(fs, { font = "Cinzel", size = 12, flag = "OUTLINE", color = {
 check("refused: the client's font meanwhile", (fs:GetFont()), ns.Media.DEFAULT.font)
 M.RunTimers()
 check("tried again: taken", (fs:GetFont()), cinzel)
-check("shipped fonts are listed", cinzel:find("Media\\Fonts\\Cinzel", 1, true) ~= nil, true)
+check("shipped fonts are listed", cinzel:find("Libs\\LibForeverThemes\\Media\\Fonts\\Cinzel", 1, true) ~= nil, true)
 
 -- "Apply to all Forever addons": only with another addon listed; puts it on
 -- this theme and colour, skips it when it lacks the theme.

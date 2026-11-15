@@ -220,10 +220,9 @@ Settings.DEFAULTS = {
     minimapAngle = 357,
 }
 
--- The themes (Themes.lua); CLASSIC is the player's own setup. Same ids as
--- Forever Unit Frames' themes.
-Settings.THEMES = { "CLASSIC", "WOOD", "TECH", "PARCHMENT", "RUNESTONE", "GLASS", "COMIC", "FROST", "PIXEL", "SWISS", "CONSOLE",
-    "PITWALL" }
+-- The themes (Themes.lua); CLASSIC is the player's own setup. The family's
+-- ids, in the options' order (LibForeverThemes).
+Settings.THEMES = LibForeverThemes.IDS
 
 -- Slider ranges, used by the options window and to clamp typed values.
 Settings.RANGES = {

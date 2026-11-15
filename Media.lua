@@ -15,22 +15,6 @@ Media.BLIZZARD = {
         { name = "Arial Narrow",  path = "Fonts\\ARIALN.TTF" },
         { name = "Skurri",        path = "Fonts\\SKURRI.TTF" },
         { name = "Morpheus",      path = "Fonts\\MORPHEUS.TTF" },
-        -- The themes' fonts (Themes.lua), Latin letters only; licences in
-        -- Media/Fonts.
-        { name = "Bangers", path = MEDIA .. "Fonts\\Bangers-Regular.ttf" },
-        { name = "Cinzel", path = MEDIA .. "Fonts\\Cinzel-Bold.ttf" },
-        { name = "IM Fell English SC", path = MEDIA .. "Fonts\\IMFeENsc28P.ttf" },
-        { name = "Julius Sans One", path = MEDIA .. "Fonts\\JuliusSansOne-Regular.ttf" },
-        { name = "Marcellus", path = MEDIA .. "Fonts\\Marcellus-Regular.ttf" },
-        { name = "Space Grotesk", path = MEDIA .. "Fonts\\SpaceGrotesk-Bold.ttf" },
-        { name = "VT323", path = MEDIA .. "Fonts\\VT323-Regular.ttf" },
-        { name = "Inter Tight Bold", path = MEDIA .. "Fonts\\InterTight-Bold.ttf" },
-        { name = "Inter Tight", path = MEDIA .. "Fonts\\InterTight-Regular.ttf" },
-        { name = "Inter Tight Light", path = MEDIA .. "Fonts\\InterTight-Light.ttf" },
-        { name = "IBM Plex Sans Condensed Bold", path = MEDIA .. "Fonts\\IBMPlexSansCondensed-Bold.ttf" },
-        { name = "IBM Plex Mono", path = MEDIA .. "Fonts\\IBMPlexMono-Regular.ttf" },
-        { name = "Titillium Web Bold Italic", path = MEDIA .. "Fonts\\TitilliumWeb-BoldItalic.ttf" },
-        { name = "Titillium Web SemiBold", path = MEDIA .. "Fonts\\TitilliumWeb-SemiBold.ttf" },
     },
     background = {
         { name = "Blizzard Dialog Background Dark", path = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark" },
@@ -47,19 +31,42 @@ Media.BLIZZARD = {
         { name = "Blizzard Raid Bar", path = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill" },
     },
 }
--- The themes' backdrops and bar textures (Media/Themes, made by Forever Unit
--- Frames' tools/make_themes.py). tint darkens a light backdrop so the
--- light text on it stays readable.
+-- The themes' fonts, backdrops and bar textures come with the embedded
+-- LibForeverThemes (its fonts under the SIL Open Font License, see its
+-- Media/Fonts), which also loads the fonts early. Built at use: a newer
+-- copy of the library loading after us brings the paths. The backdrops are
+-- settings here (bgTexture "FQL <name>"); tint darkens a light backdrop so
+-- the light text on it stays readable.
+local Lib = LibForeverThemes
 local THEME_ART = {
-    { "Wood", "Wood", 0.5 }, { "Tech", "Tech", 1 }, { "Parchment", "Parchment", 0.45 }, { "Stone", "Stone", 0.55 },
-    { "Glass", "Glass", 1 }, { "Comic", "Comic", 0.7 }, { "Frost", "Frost", 0.55 }, { "Pixel", "Pixel", 1 },
-    { "Swiss", "Swiss", 1 }, { "Console", "Console", 1 }, { "Pitwall", "Pitwall", 1 },
+    { "Wood", 0.5 }, { "Tech", 1 }, { "Parchment", 0.45 }, { "Stone", 0.55 }, { "Glass", 1 }, { "Comic", 0.7 },
+    { "Frost", 0.55 }, { "Pixel", 1 }, { "Swiss", 1 }, { "Console", 1 }, { "Pitwall", 1 },
 }
-for _, a in ipairs(THEME_ART) do
-    local name, file, tint = "FQL " .. a[1], MEDIA .. "Themes\\" .. a[2], a[3]
-    table.insert(Media.BLIZZARD.background, { name = name, path = file .. "Back.tga", tint = tint,
-        grey = file .. "BackGrey.tga", art = a[2] })
-    table.insert(Media.BLIZZARD.statusbar, { name = name, path = file .. "Bar.tga" })
+local OWN = {
+    font = function() return Lib.FONTS end,
+    background = function()
+        local list = {}
+        for i, a in ipairs(THEME_ART) do
+            list[i] = { name = "FQL " .. a[1], path = Lib.Texture(a[1] .. "Back.tga"), tint = a[2],
+                grey = Lib.Texture(a[1] .. "BackGrey.tga"), back = a[1] .. "Back" }
+        end
+        return list
+    end,
+    statusbar = function()
+        local list = {}
+        for i, a in ipairs(THEME_ART) do list[i] = { name = "FQL " .. a[1], path = Lib.Texture(a[1] .. "Bar.tga") } end
+        return list
+    end,
+}
+Media.OWN = setmetatable({}, { __index = function(_, kind) return OWN[kind] and OWN[kind]() end })
+
+-- Every built-in file of a kind: the game's, then the themes'.
+local function builtIn(kind)
+    local list = {}
+    for _, source in ipairs({ Media.BLIZZARD, Media.OWN }) do
+        for _, f in ipairs(source[kind]) do list[#list + 1] = f end
+    end
+    return list
 end
 
 Media.DEFAULT = {
@@ -67,17 +74,6 @@ Media.DEFAULT = {
     background = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
     statusbar = "Interface\\Buttons\\WHITE8X8",
 }
-
--- Our own font files loaded with the addon: a file used for the first time
--- can be refused (ApplyText tries again), so the first restyle should not
--- be its first use.
-do
-    local holder = CreateFrame("Frame")
-    holder:Hide()
-    for _, f in ipairs(Media.BLIZZARD.font) do
-        if f.path:find(MEDIA, 1, true) then holder:CreateFontString():SetFont(f.path, 12, "") end
-    end
-end
 
 local function sharedMedia()
     return LibStub and LibStub("LibSharedMedia-3.0", true)
@@ -87,7 +83,7 @@ end
 -- first, then LibSharedMedia's sorted.
 function Media.Names(kind)
     local names, seen = {}, {}
-    for _, f in ipairs(Media.BLIZZARD[kind]) do
+    for _, f in ipairs(builtIn(kind)) do
         names[#names + 1] = f.name
         seen[f.name] = true
     end
@@ -103,9 +99,11 @@ function Media.Names(kind)
     return names
 end
 
--- The file for a name; unknown names get the kind's default.
+-- The file for a name; unknown names get the kind's default. A font stored
+-- under an older name (LibForeverThemes' aliases) finds its file.
 function Media.Path(kind, name)
-    for _, f in ipairs(Media.BLIZZARD[kind]) do
+    if kind == "font" then name = Lib.FontName(name) end
+    for _, f in ipairs(builtIn(kind)) do
         if f.name == name then return f.path end
     end
     local lsm = sharedMedia()
@@ -115,7 +113,7 @@ end
 
 -- How much a built-in background is darkened (1: not at all).
 function Media.Tint(name)
-    for _, f in ipairs(Media.BLIZZARD.background) do
+    for _, f in ipairs(builtIn("background")) do
         if f.name == name then return f.tint or 1 end
     end
     return 1
@@ -130,6 +128,9 @@ local function hasFont(fs, path)
     local function plain(p) return (p:lower():gsub("/", "\\")) end
     return plain(got) == plain(path)
 end
+-- Where the themes' font files lie, in whichever addon's copy of the
+-- library won.
+local THEME_FONTS = "\\Libs\\LibForeverThemes\\Media\\Fonts\\"
 -- How often, and how far apart, a refused font is tried again.
 local FONT_RETRIES, FONT_RETRY_DELAY = 40, 0.25
 -- First use of a file can take seconds when many fonts load at once
@@ -161,10 +162,10 @@ end
 local function setFont(fs, path, size, outline, retries)
     local wanted = path .. "|" .. size .. "|" .. outline
     fs.fontWanted = wanted
-    -- Only our own files are checked by name: another addon's path may come
-    -- back from GetFont written differently.
+    -- Only the themes' files are checked by name: another addon's path may
+    -- come back from GetFont written differently.
     local ok = fs:SetFont(path, size, outline)
-    if ok and (not path:find(MEDIA, 1, true) or hasFont(fs, path)) then
+    if ok and (not path:find(THEME_FONTS, 1, true) or hasFont(fs, path)) then
         redrawLater(fs, path, size, outline, wanted)
         return
     end
@@ -204,7 +205,7 @@ end
 -- paper tints the paper; any other colour draws the grey version tinted
 -- to its mean colour (vertex colour back / the grey's mean, at most 1).
 local function themeArt(name)
-    for _, f in ipairs(Media.BLIZZARD.background) do
+    for _, f in ipairs(Media.OWN.background) do
         if f.name == name then return f end
     end
 end
@@ -213,7 +214,7 @@ function Media.ApplyBackground(tex, mode, color, alpha, textureName)
     if mode == "TEXTURE" then
         local c = ns.Themes.BackColor(textureName)
         local art = c and c.back and themeArt(textureName)
-        local mean = art and ns.Themes.GREY_MEAN[art.art]
+        local mean = art and Lib.GREY_MEAN[art.back]
         tex:SetTexture(mean and art.grey or Media.Path("background", textureName), "REPEAT", "REPEAT")
         tex:SetHorizTile(true)
         tex:SetVertTile(true)
