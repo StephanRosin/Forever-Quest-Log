@@ -749,6 +749,23 @@ Settings.SetMany({ point = "TOPRIGHT", x = -8, y = -330 })
 
 section("Look")
 relayout()
+-- The media lists are built once, not per row on every refresh (combat too).
+do
+    local Media = ns.Media
+    Media.Path("font", "Bangers"); Media.Tint("FQL Wood")
+    collectgarbage("stop")
+    local before = collectgarbage("count")
+    for _ = 1, 100 do
+        Media.Path("font", "Bangers"); Media.Path("statusbar", "FQL Wood"); Media.Tint("FQL Parchment")
+    end
+    local kb = collectgarbage("count") - before
+    collectgarbage("restart")
+    print(("  (media lookups: %.1f KB for 100 rows)"):format(kb))
+    check("media lookups allocate nothing", kb < 1, true)
+    check("backdrop tints from the library", Media.Tint("FQL Wood") .. " " .. Media.Tint("FQL Frost") .. " "
+        .. Media.Tint("FQL Pitwall"), "0.5 0.55 1")
+    check("old font name still finds its file", Media.Path("font", "Titillium Web"), LibForeverThemes.FontPath("Titillium Web SemiBold"))
+end
 local ring = ns.Border.Pieces(frame)
 check("gold ring drawn", ring[1] and ring[1]._shown, true)
 check("gold shading", ring[1] and ring[1]._gradient ~= nil, true)
@@ -1991,7 +2008,8 @@ else
 end
 end
 check("library loaded from our copy", LibForeverThemes.FOLDER, ADDON)
-check("theme ids are the library's", table.concat(ns.Settings.THEMES, ","), table.concat(LibForeverThemes.IDS, ","))
+check("theme menu: every library theme", table.concat(LibForeverThemes.SpecIds(ns.Themes.SPECS), ","),
+    table.concat(LibForeverThemes.IDS, ","))
 
 section("No accidental globals")
 local allowed = { SLASH_FOREVERQUESTLOG1 = true, SLASH_FOREVERQUESTLOG2 = true, ForeverQuestLogProfiles = true,

@@ -35,39 +35,62 @@ Media.BLIZZARD = {
 -- LibForeverThemes (its fonts under the SIL Open Font License, see its
 -- Media/Fonts), which also loads the fonts early. Built at use: a newer
 -- copy of the library loading after us brings the paths. The backdrops are
--- settings here (bgTexture "FQL <name>"); tint darkens a light backdrop so
--- the light text on it stays readable.
+-- settings here (bgTexture "FQL <name>"), tinted as the library's theme
+-- of that backdrop (a light paper darkened so the light text on it stays
+-- readable).
 local Lib = LibForeverThemes
-local THEME_ART = {
-    { "Wood", 0.5 }, { "Tech", 1 }, { "Parchment", 0.45 }, { "Stone", 0.55 }, { "Glass", 1 }, { "Comic", 0.7 },
-    { "Frost", 0.55 }, { "Pixel", 1 }, { "Swiss", 1 }, { "Console", 1 }, { "Pitwall", 1 },
-}
+local THEME_ART = { "Wood", "Tech", "Parchment", "Stone", "Glass", "Comic", "Frost", "Pixel", "Swiss", "Console",
+    "Pitwall" }
+
+-- The library's tint of the backdrop file back (1: none).
+local function libTint(back)
+    for _, t in pairs(Lib.THEMES) do
+        if t.back == back and t.tint then return t.tint[1] end
+    end
+    return 1
+end
+
+-- The built lists, made once per winning copy of the library (a newer one
+-- loading after us brings other paths): asked per row on every tracker
+-- refresh, also in combat, so they must not be made anew each time.
+local cache, cacheMinor = {}, nil
+local function memo(key, make)
+    if cacheMinor ~= Lib.MINOR then cache, cacheMinor = {}, Lib.MINOR end
+    local v = cache[key]
+    if not v then v = make(); cache[key] = v end
+    return v
+end
+
 local OWN = {
     font = function() return Lib.FONTS end,
     background = function()
         local list = {}
         for i, a in ipairs(THEME_ART) do
-            list[i] = { name = "FQL " .. a[1], path = Lib.Texture(a[1] .. "Back.tga"), tint = a[2],
-                grey = Lib.Texture(a[1] .. "BackGrey.tga"), back = a[1] .. "Back" }
+            list[i] = { name = "FQL " .. a, path = Lib.Texture(a .. "Back.tga"), tint = libTint(a .. "Back"),
+                grey = Lib.Texture(a .. "BackGrey.tga"), back = a .. "Back" }
         end
         return list
     end,
     statusbar = function()
         local list = {}
-        for i, a in ipairs(THEME_ART) do list[i] = { name = "FQL " .. a[1], path = Lib.Texture(a[1] .. "Bar.tga") } end
+        for i, a in ipairs(THEME_ART) do list[i] = { name = "FQL " .. a, path = Lib.Texture(a .. "Bar.tga") } end
         return list
     end,
 }
-Media.OWN = setmetatable({}, { __index = function(_, kind) return OWN[kind] and OWN[kind]() end })
+Media.OWN = setmetatable({}, { __index = function(_, kind) return OWN[kind] and memo(kind, OWN[kind]) end })
 
 -- Every built-in file of a kind: the game's, then the themes'.
-local function builtIn(kind)
-    local list = {}
-    for _, source in ipairs({ Media.BLIZZARD, Media.OWN }) do
-        for _, f in ipairs(source[kind]) do list[#list + 1] = f end
+local ALL = {}
+for _, kind in ipairs({ "font", "background", "statusbar" }) do
+    ALL[kind] = function()
+        local list = {}
+        for _, source in ipairs({ Media.BLIZZARD, Media.OWN }) do
+            for _, f in ipairs(source[kind]) do list[#list + 1] = f end
+        end
+        return list
     end
-    return list
 end
+local function builtIn(kind) return memo(ALL[kind], ALL[kind]) end
 
 Media.DEFAULT = {
     font = "Fonts\\FRIZQT__.TTF",
@@ -99,15 +122,16 @@ function Media.Names(kind)
     return names
 end
 
--- The file for a name; unknown names get the kind's default. A font stored
--- under an older name (LibForeverThemes' aliases) finds its file.
+-- The file for a name; unknown names get the kind's default. Our own and
+-- LibSharedMedia's names first; a font stored under an older name
+-- (LibForeverThemes' aliases) then still finds its file.
 function Media.Path(kind, name)
-    if kind == "font" then name = Lib.FontName(name) end
     for _, f in ipairs(builtIn(kind)) do
         if f.name == name then return f.path end
     end
     local lsm = sharedMedia()
     local path = lsm and lsm:Fetch(kind, name, true)
+    if not path and kind == "font" then path = Lib.FontPath(name) end
     return path or Media.DEFAULT[kind]
 end
 
@@ -203,7 +227,7 @@ end
 -- TEXTURE (tiled, alpha only). alpha 0..1.
 -- A theme colour (Themes.BackColor) on the theme's own backdrop: a comic
 -- paper tints the paper; any other colour draws the grey version tinted
--- to its mean colour (vertex colour back / the grey's mean, at most 1).
+-- to that colour (Lib.GreyTint).
 local function themeArt(name)
     for _, f in ipairs(Media.OWN.background) do
         if f.name == name then return f end
@@ -214,13 +238,12 @@ function Media.ApplyBackground(tex, mode, color, alpha, textureName)
     if mode == "TEXTURE" then
         local c = ns.Themes.BackColor(textureName)
         local art = c and c.back and themeArt(textureName)
-        local mean = art and Lib.GREY_MEAN[art.back]
-        tex:SetTexture(mean and art.grey or Media.Path("background", textureName), "REPEAT", "REPEAT")
+        local t = art and Lib.GreyTint(art.back, c.back)
+        tex:SetTexture(t and art.grey or Media.Path("background", textureName), "REPEAT", "REPEAT")
         tex:SetHorizTile(true)
         tex:SetVertTile(true)
-        if mean then
-            local b = c.back
-            tex:SetVertexColor(math.min(1, b[1] / mean), math.min(1, b[2] / mean), math.min(1, b[3] / mean), alpha)
+        if t then
+            tex:SetVertexColor(t[1], t[2], t[3], alpha)
         elseif c and c.paper then
             tex:SetVertexColor(c.paper[1], c.paper[2], c.paper[3], alpha)
         else

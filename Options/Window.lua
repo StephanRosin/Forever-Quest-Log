@@ -96,26 +96,8 @@ end
 local themeUndo     -- { theme = id, saved = what Themes.CopyPlacement replaced }
 local PICK, UNDO = "__pick", "__undo"
 
--- WoW opens no browser: the hub's download link in Blizzard's text popup,
--- selected for copying.
-local HUB_URL = "https://www.curseforge.com/wow/addons/forever-themes"
-if StaticPopupDialogs then
-    StaticPopupDialogs.FOREVERQUESTLOG_HUB_LINK = {
-        text = "", button1 = OKAY or "OK", hasEditBox = 1, editBoxWidth = 350,
-        maxLetters = 0,   -- the edit box is shared; another dialog may leave its limit behind
-        OnShow = function(dialog)
-            local box = dialog.GetEditBox and dialog:GetEditBox()
-            if box then box:SetText(HUB_URL); box:HighlightText(); box:SetFocus() end
-        end,
-        EditBoxOnEnterPressed = function(box) box:GetParent():Hide() end,
-        EditBoxOnEscapePressed = function(box) box:GetParent():Hide() end,
-        timeout = 0, whileDead = true, hideOnEscape = true,
-    }
-end
-function ns.ShowHubLink()
-    StaticPopupDialogs.FOREVERQUESTLOG_HUB_LINK.text = L.OPT_THEME_HUB_HINT
-    StaticPopup_Show("FOREVERQUESTLOG_HUB_LINK")
-end
+-- The hub's texts are the library's, the same in every Forever addon.
+local function hubText(key) return function() return LibForeverThemes.Text(key) end end
 
 local function themeRefused(why) ns.Print(L["MSG_THEME_" .. why]) end
 
@@ -128,7 +110,7 @@ local function themeRows()
             type = "select", label = "OPT_THEME_CHOICE",
             choices = function()
                 local list = {}
-                for _, id in ipairs(Settings.THEMES) do list[#list + 1] = { label = L["THEME_" .. id], value = id } end
+                for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do list[#list + 1] = { label = L["THEME_" .. id], value = id } end
                 return list
             end,
             get = function() return Themes.Current() end,
@@ -152,13 +134,13 @@ local function themeRows()
                 if not ok then themeRefused(why) end
             end,
         }, own), function() return #Themes.Colors() > 0 end),
-        visibleIf({ type = "text", label = "OPT_THEME_FOLLOWS" }, Themes.FollowsHub),
+        visibleIf({ type = "text", label = hubText("HUB_FOLLOWS") }, Themes.FollowsHub),
         visibleIf({ type = "buttons", buttons = {
-            { label = "OPT_THEME_OPEN_HUB", width = 240, onClick = Themes.OpenHub },
+            { label = hubText("HUB_OPEN"), width = 240, onClick = Themes.OpenHub },
         } }, Themes.FollowsHub),
-        visibleIf({ type = "text", label = "OPT_THEME_HUB_HINT" }, Themes.HubMissing),
+        visibleIf({ type = "text", label = hubText("HUB_MISSING") }, Themes.HubMissing),
         visibleIf({ type = "buttons", buttons = {
-            { label = "OPT_THEME_HUB_LINK", width = 240, onClick = ns.ShowHubLink },
+            { label = hubText("HUB_LINK"), width = 240, onClick = function() LibForeverThemes.ShowHubLink() end },
         } }, Themes.HubMissing),
         { type = "text", label = "OPT_THEME_HINT", height = 88 },
         visibleIf({ type = "buttons", buttons = {

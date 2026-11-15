@@ -230,8 +230,8 @@ local function luminance(c)
     local function lin(v) return v <= 0.03928 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
     return 0.2126 * lin(c[1]) + 0.7152 * lin(c[2]) + 0.0722 * lin(c[3])
 end
-for _, id in ipairs(Themes.IDS) do
-    for _, c in ipairs(id ~= "CLASSIC" and id ~= "COMIC" and Themes.COLORS[id] or {}) do
+for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
+    for _, c in ipairs(id ~= "CLASSIC" and id ~= "COMIC" and LibForeverThemes.COLORS[id] or {}) do
         local a = c.accent or c.ornament
         if a then
             local ratio = (luminance(a) + 0.05) / (luminance(c.back or { 0, 0, 0 }) + 0.05)
@@ -248,7 +248,7 @@ registry.SetColor("CYAN")
 -- Every theme's first colour draws as before. The sets made here are
 -- dropped again (later tests start themes afresh).
 local made, picked = {}, registry.Color("COMIC")
-for _, id in ipairs(Themes.IDS) do
+for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
     if id ~= "CLASSIC" then
         made[id] = sets()[id] == nil and id ~= Themes.Current()
         Themes.Switch(id)
@@ -295,7 +295,6 @@ Themes.Switch("WOOD")
 check("wood: body in Friz", S("objectiveFont"), "Friz Quadrata")
 check("wood: level colour as it is", ns.Themes.Ink(lvl), lvl)
 check("tech: no corner pieces", Themes.SPECS.TECH.art.ornament, nil)
-check("revision", Themes.REVISION, 11)
 Themes.Switch("CLASSIC")
 check("classic after the body fonts", snapshot(), classic)
 
@@ -420,10 +419,10 @@ local function drawnRing(owner, style)
     return piece and piece:IsShown() and table.concat(piece._vertex, "/") or "none"
 end
 local windows, had = { frame }, {}
-for _, id in ipairs(Themes.IDS) do had[id] = sets()[id] ~= nil end
+for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do had[id] = sets()[id] ~= nil end
 for _, win in pairs(ns.Notes.windows) do windows[#windows + 1] = win end
 check("rings: a note window drawn too", #windows > 1, true)
-for _, id in ipairs(Themes.IDS) do
+for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
     if id ~= "CLASSIC" then
         Themes.Switch(id)
         local before = registry.Color()
@@ -467,7 +466,7 @@ check("pitwall: note shade none, so no uneven margin", note.themeArt.shade:IsSho
 check("pitwall: air between the title band and the first entry", -note.scroll._points.TOPLEFT[4] - note.titleH, 6)
 Themes.Switch("CLASSIC")
 M.RunTimers()
-for _, id in ipairs(Themes.IDS) do
+for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
     if id ~= "CLASSIC" and not had[id] then sets()[id] = nil end
 end
 for _, id in ipairs({ "SWISS", "CONSOLE", "PITWALL", "PIXEL" }) do sets()[id] = nil end
@@ -512,7 +511,17 @@ check("upgrade: the theme in use made anew", S("bgAlpha"), 100)
 check("upgrade: from classic", S("x"), -100)
 check("upgrade: stale set dropped", sets().TECH, nil)
 check("upgrade: classic kept", sets().CLASSIC.x, -100)
-check("upgrade: revision noted", sets().revision, Themes.REVISION)
+check("upgrade: revision noted", sets().revision .. " " .. sets().seedRevision, "11 " .. LibForeverThemes.SEED_REVISION)
+-- A set stored by the release before (revision 11, no seedRevision) counts as
+-- current: logging in keeps it as it is.
+Themes.Switch("TECH")
+Settings.Set("bgAlpha", 55)
+Themes.Switch("WOOD")
+sets().revision, sets().seedRevision = 11, nil
+Themes.Upgrade()
+Themes.Switch("TECH")
+check("upgrade: a stored set of the last release survives login", S("bgAlpha"), 55)
+Themes.Switch("WOOD")
 Settings.Set("bgAlpha", 40)
 Themes.Upgrade()
 check("upgrade: once only", S("bgAlpha"), 40)
@@ -577,7 +586,7 @@ Themes.Switch("CLASSIC")
 -- Own theme or no hub: as before. The flag is read again on every refresh.
 local Lib = LibForeverThemes
 local hubFollows, hubOpened = true, 0
-_G.ForeverThemes.FakeOther = { title = "Fake", Switch = function() return true end }
+_G.ForeverThemes.FakeOther = { title = "Fake", Current = function() return "CLASSIC" end, Switch = function() return true end }
 Lib.SetHub({
     Follows = function(folder) return folder == "ForeverQuestLog" and hubFollows end,
     OpenOptions = function() hubOpened = hubOpened + 1 end,
@@ -588,6 +597,7 @@ local page = M.byName["ForeverQuestLogPagegeneral"]
 local function built(label)
     for i, opt in ipairs(ns.Window.PAGES[1].rows()) do
         local name = opt.label or (opt.buttons and opt.buttons[1].label)
+        if type(name) == "function" then name = name() end   -- the library's hub texts
         if name == label then return page.allRows[i] end
     end
 end
@@ -595,35 +605,45 @@ local function usable(label) return built(label).button:IsEnabled() end
 check("hub follow: theme greyed", usable("OPT_THEME_CHOICE"), false)
 check("hub follow: still shows the theme", built("OPT_THEME_CHOICE").button.text:GetText(), "Pixel")
 check("hub follow: colour greyed", usable("OPT_THEME_COLOR"), false)
-check("hub follow: the line", built("OPT_THEME_FOLLOWS"):IsShown(), true)
-check("hub follow: the line's text", built("OPT_THEME_FOLLOWS").text:GetText(), "Follows Forever Themes")
-check("hub follow: the button", built("OPT_THEME_OPEN_HUB"):IsShown(), true)
+check("hub follow: the line", built(Lib.Text("HUB_FOLLOWS")):IsShown(), true)
+check("hub follow: the line's text", built(Lib.Text("HUB_FOLLOWS")).text:GetText(), "Follows Forever Themes")
+check("hub follow: the button", built(Lib.Text("HUB_OPEN")):IsShown(), true)
 check("hub follow: no apply to all", built("OPT_THEME_ALL"):IsShown(), false)
-built("OPT_THEME_OPEN_HUB").buttons[1]:GetScript("OnClick")(built("OPT_THEME_OPEN_HUB").buttons[1])
+built(Lib.Text("HUB_OPEN")).buttons[1]:GetScript("OnClick")(built(Lib.Text("HUB_OPEN")).buttons[1])
 check("hub follow: button opens the hub", hubOpened, 1)
+-- A profile switch, reset or import replaced the theme: the hub puts its own
+-- back.
+local synced = 0
+Lib.Hub().Sync = function() synced = synced + 1 end
+local text = ns.Share.Export()
+ns.Share.Import(text)
+Settings.ResetProfile()
+ns.SwitchProfile(ns.ActiveProfile())
+check("hub: synced after import, reset and profile switch", synced, 3)
+Lib.Hub().Sync = nil
 
 hubFollows = false
 ns.Window.Refresh()
 check("hub own: theme usable", usable("OPT_THEME_CHOICE"), true)
 check("hub own: colour usable", usable("OPT_THEME_COLOR"), true)
-check("hub own: no line", built("OPT_THEME_FOLLOWS"):IsShown(), false)
-check("hub own: no button", built("OPT_THEME_OPEN_HUB"):IsShown(), false)
+check("hub own: no line", built(Lib.Text("HUB_FOLLOWS")):IsShown(), false)
+check("hub own: no button", built(Lib.Text("HUB_OPEN")):IsShown(), false)
 check("hub own: apply to all", built("OPT_THEME_ALL"):IsShown(), true)
-check("hub: no download hint", built("OPT_THEME_HUB_HINT"):IsShown(), false)
-check("hub: no link button", built("OPT_THEME_HUB_LINK"):IsShown(), false)
+check("hub: no download hint", built(Lib.Text("HUB_MISSING")):IsShown(), false)
+check("hub: no link button", built(Lib.Text("HUB_LINK")):IsShown(), false)
 
 Lib.SetHub(nil)
 hubFollows = true
 ns.Window.Refresh()
 check("no hub: theme usable", usable("OPT_THEME_CHOICE"), true)
-check("no hub: no line", built("OPT_THEME_FOLLOWS"):IsShown(), false)
+check("no hub: no line", built(Lib.Text("HUB_FOLLOWS")):IsShown(), false)
 check("no hub: apply to all", built("OPT_THEME_ALL"):IsShown(), true)
-check("no hub: points to Forever Themes", built("OPT_THEME_HUB_HINT").text:GetText(), ns.L.OPT_THEME_HUB_HINT)
+check("no hub: points to Forever Themes", built(Lib.Text("HUB_MISSING")).text:GetText(), "Theme all Forever addons at once: Forever Themes")
 M.popups = {}
-built("OPT_THEME_HUB_LINK").buttons[1]:GetScript("OnClick")(built("OPT_THEME_HUB_LINK").buttons[1])
-check("no hub: link button opens the copy box", M.popups[1] and M.popups[1].which, "FOREVERQUESTLOG_HUB_LINK")
+built(Lib.Text("HUB_LINK")).buttons[1]:GetScript("OnClick")(built(Lib.Text("HUB_LINK")).buttons[1])
+check("no hub: link button opens the copy box", M.popups[1] and M.popups[1].which, "LIBFOREVERTHEMES_HUB_LINK")
 local linkBox = { SetText = function(self, t) self.text = t end, HighlightText = function() end, SetFocus = function() end }
-StaticPopupDialogs.FOREVERQUESTLOG_HUB_LINK.OnShow({ GetEditBox = function() return linkBox end })
+StaticPopupDialogs.LIBFOREVERTHEMES_HUB_LINK.OnShow({ GetEditBox = function() return linkBox end })
 check("no hub: the hub's CurseForge page", linkBox.text, "https://www.curseforge.com/wow/addons/forever-themes")
 ns.Window.Toggle()
 _G.ForeverThemes.FakeOther = nil

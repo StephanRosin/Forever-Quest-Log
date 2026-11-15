@@ -163,8 +163,11 @@ function ns.OwnProfileCount()
     return n
 end
 
+-- Another profile's theme replaced ours: the hub "Forever Themes" puts its
+-- theme back on a following addon.
 local function applyLook()
     if ns.Settings then ns.Settings.Changed(nil) end
+    LibForeverThemes.HubSync()
 end
 
 -- Switches to a profile. A name that does not exist yet is created from the

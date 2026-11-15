@@ -220,10 +220,6 @@ Settings.DEFAULTS = {
     minimapAngle = 357,
 }
 
--- The themes (Themes.lua); CLASSIC is the player's own setup. The family's
--- ids, in the options' order (LibForeverThemes).
-Settings.THEMES = LibForeverThemes.IDS
-
 -- Slider ranges, used by the options window and to clamp typed values.
 Settings.RANGES = {
     width = { 180, 800 },
@@ -401,4 +397,5 @@ function Settings.ResetProfile()
     for k in pairs(db) do db[k] = nil end
     db.theme = theme
     Settings.Changed(nil)
+    LibForeverThemes.HubSync()
 end

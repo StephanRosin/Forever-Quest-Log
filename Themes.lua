@@ -17,7 +17,6 @@ ns.Themes = Themes
 local Lib = LibForeverThemes
 local CLASSIC = Lib.CLASSIC
 Themes.CLASSIC = CLASSIC
-Themes.IDS = Settings.THEMES
 
 -- Each theme's identity (backdrop, ornaments, ring colour, fonts) is
 -- LibForeverThemes'; here only the Quest Log's part on top.
@@ -49,7 +48,6 @@ Themes.IDS = Settings.THEMES
 -- the header icons' colours (idle, hover, on, off), grip = the resize
 -- grips', close = the close button's icon (Media.Icon) instead of the
 -- game's gold X.
-local T = Lib.THEMES
 Themes.SPECS = Lib.Specs({
     -- Oak boards, a gold rim, brass rivets.
     WOOD = {
@@ -61,14 +59,14 @@ Themes.SPECS = Lib.Specs({
     -- Dark navy with a faint grid, a thin cyan line, corner brackets.
     TECH = {
         bar = "FQL Tech",
-        look = { borderStyle = "FLAT", borderSize = 1, borderColor = T.TECH.rim, cornerRadius = 0,
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.TECH.rim, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Tech", bgAlpha = 100, headerShine = false,
             headerColor = { 0.25, 0.88, 0.94 }, titleColor = { 0.62, 0.93, 1 } },
     },
     -- Parchment, a brown ink line, a wax seal.
     PARCHMENT = {
         bar = "FQL Parchment",
-        look = { borderStyle = "FLAT", borderSize = 2, borderColor = T.PARCHMENT.rim, cornerRadius = 2,
+        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.PARCHMENT.rim, cornerRadius = 2,
             shadowEnabled = true, shadowSize = 5, shadowAlpha = 45, bgMode = "TEXTURE", bgTexture = "FQL Parchment",
             bgAlpha = 100, headerShine = false, headerColor = { 1, 0.9, 0.7 } },
         art = { ornamentSize = 22, ornamentInset = 2 },
@@ -76,7 +74,7 @@ Themes.SPECS = Lib.Specs({
     -- Grey granite, a dark chiselled edge, glowing runes.
     RUNESTONE = {
         bar = "FQL Stone",
-        look = { borderStyle = "FLAT", borderSize = 2, borderColor = T.RUNESTONE.rim, cornerRadius = 0,
+        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.RUNESTONE.rim, cornerRadius = 0,
             shadowEnabled = true, shadowSize = 6, shadowAlpha = 70, bgMode = "TEXTURE", bgTexture = "FQL Stone",
             bgAlpha = 100, headerShine = false, headerColor = { 0.35, 0.95, 0.85 }, titleColor = { 0.85, 0.95, 0.92 } },
         art = { ornamentSize = 14, ornamentInset = 2 },
@@ -84,7 +82,7 @@ Themes.SPECS = Lib.Specs({
     -- A mosaic of coloured glass, dark lead, the gold shine behind the title.
     GLASS = {
         bar = "FQL Glass",
-        look = { borderStyle = "FLAT", borderSize = 3, borderColor = T.GLASS.rim, cornerRadius = 0,
+        look = { borderStyle = "FLAT", borderSize = 3, borderColor = Lib.THEMES.GLASS.rim, cornerRadius = 0,
             shadowEnabled = true, shadowSize = 6, shadowAlpha = 55, bgMode = "TEXTURE", bgTexture = "FQL Glass",
             bgAlpha = 100, headerShine = true },
         art = { shade = { 0.05, 0.04, 0.06, 0.9 }, shadeInset = 6 },
@@ -92,7 +90,7 @@ Themes.SPECS = Lib.Specs({
     -- Thick ink line, halftone paper, a solid shadow.
     COMIC = {
         bar = "FQL Comic", flag = "OUTLINE",
-        look = { borderStyle = "FLAT", borderSize = 3, borderColor = T.COMIC.rim, cornerRadius = 0,
+        look = { borderStyle = "FLAT", borderSize = 3, borderColor = Lib.THEMES.COMIC.rim, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Comic", bgAlpha = 100, headerShine = false,
             headerColor = { 1, 0.9, 0.1 }, titleColor = { 1, 1, 1 }, objectiveColor = { 0.1, 0.1, 0.1 },
             objectiveDoneColor = { 0.33, 0.33, 0.33 }, doneColor = { 0.05, 0.4, 0.1 } },
@@ -109,7 +107,7 @@ Themes.SPECS = Lib.Specs({
     FROST = {
         bar = "FQL Frost", flag = "SHADOW",
         bodyFlag = "SHADOW",
-        look = { borderStyle = "FLAT", borderSize = 1, borderColor = T.FROST.rim, cornerRadius = 6,
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.FROST.rim, cornerRadius = 6,
             shadowEnabled = true, shadowSize = 8, shadowAlpha = 55, bgMode = "TEXTURE", bgTexture = "FQL Frost",
             bgAlpha = 85, headerShine = false, headerColor = { 0.86, 0.96, 1 }, titleColor = { 0.72, 0.88, 1 } },
         art = { shade = { 0.02, 0.07, 0.15, 0.45 }, shadeInset = 4 },
@@ -117,7 +115,7 @@ Themes.SPECS = Lib.Specs({
     -- A light pixel frame, scan lines, a solid shadow.
     PIXEL = {
         bar = "FQL Pixel",
-        look = { borderStyle = "FLAT", borderSize = 3, borderColor = T.PIXEL.rim, cornerRadius = 0,
+        look = { borderStyle = "FLAT", borderSize = 3, borderColor = Lib.THEMES.PIXEL.rim, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Pixel", bgAlpha = 100, headerShine = false,
             headerColor = { 1, 0.95, 0.91 }, titleColor = { 0.55, 1, 0.55 } },
     },
@@ -125,17 +123,17 @@ Themes.SPECS = Lib.Specs({
     -- one red accent.
     SWISS = {
         bar = "FQL Swiss",
-        look = { borderStyle = "FLAT", borderSize = 1, borderColor = T.SWISS.rim, cornerRadius = 0,
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.SWISS.rim, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Swiss", bgAlpha = 100, headerShine = false,
             headerLine = false, headerColor = { 1, 0.176, 0.125 }, zoneColor = { 0.549, 0.549, 0.549 },
             titleColor = { 0.949, 0.949, 0.949 }, objectiveColor = { 0.949, 0.949, 0.949 },
             objectiveDoneColor = { 0.549, 0.549, 0.549 } },
-        art = { band = { color = T.SWISS.rule, height = T.SWISS.ruleSize } },
+        art = { band = { color = Lib.THEMES.SWISS.rule, height = Lib.THEMES.SWISS.ruleSize } },
     },
     -- A terminal: near black, a mint line, monospaced text.
     CONSOLE = {
         bar = "FQL Console",
-        look = { borderStyle = "FLAT", borderSize = 1, borderColor = T.CONSOLE.rim, cornerRadius = 0,
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.CONSOLE.rim, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Console", bgAlpha = 100, headerShine = false,
             headerLine = false, headerColor = { 0.306, 0.929, 0.69 }, zoneColor = { 0.627, 0.471, 1 },
             titleColor = { 0.902, 0.91, 0.933 }, objectiveColor = { 0.902, 0.91, 0.933 },
@@ -145,14 +143,15 @@ Themes.SPECS = Lib.Specs({
     -- a red wedge, the content on a black card.
     PITWALL = {
         bar = "FQL Pitwall",
-        look = { borderStyle = "FLAT", borderSize = 1, borderColor = T.PITWALL.rim, cornerRadius = 0,
+        look = { borderStyle = "FLAT", borderSize = 1, borderColor = Lib.THEMES.PITWALL.rim, cornerRadius = 0,
             shadowEnabled = false, bgMode = "TEXTURE", bgTexture = "FQL Swiss", bgAlpha = 100, headerShine = false, headerLine = false,
             headerColor = { 0.949, 0.953, 0.961 }, zoneColor = { 0.949, 0.953, 0.961 },
             titleColor = { 0.949, 0.953, 0.961 }, objectiveColor = { 0.949, 0.953, 0.961 },
             objectiveDoneColor = { 0.604, 0.631, 0.671 }, doneColor = { 0.133, 0.773, 0.369 } },
         -- The icons in the wedge's colour (Themes.Icons), a plain X.
         icons = { close = "Close" },
-        art = { band = { color = T.PITWALL.strip, wedge = T.PITWALL.wedge, wedgeColor = T.PITWALL.wedgeColor,
+        art = { band = { color = Lib.THEMES.PITWALL.strip, wedge = Lib.THEMES.PITWALL.wedge,
+            wedgeColor = Lib.THEMES.PITWALL.wedgeColor,
             rule = { 0.137, 0.149, 0.173, 1 } } },
     },
 })
@@ -162,7 +161,6 @@ Themes.SPECS = Lib.Specs({
 -- CLASSIC is never touched. The library's part counts too: a change there
 -- to what seeding copies (fonts, sizes, ring colour) raises it.
 local OWN_REVISION = 11
-Themes.REVISION = OWN_REVISION + Lib.SEED_REVISION * Lib.SEED_STEP
 
 -- What "Take positions from" takes over: where the frames sit, not how big
 -- they are.
@@ -186,7 +184,6 @@ function Themes.Spec(id) return Themes.SPECS[id] or Themes.SPECS.CLASSIC end
 -- colour id }), so switching themes never loses them and the stored looks
 -- stay as they are (applied when drawn). The first colour of each theme is
 -- the theme as it was (nothing applied).
-Themes.COLORS = Lib.COLORS
 
 -- The colour ids of themeId (default the current theme) in menu order;
 -- none for CLASSIC.
@@ -272,14 +269,14 @@ function Themes.Ink(c)
     return { r = c.r * ink, g = c.g * ink, b = c.b * ink }
 end
 
--- The active profile's stored sets; stale ones (an older REVISION) dropped.
+-- The active profile's stored sets; stale ones (an older revision) dropped.
 local function storedSets()
     local sets = ns.ThemeSets()
-    if sets.revision ~= Themes.REVISION then
-        for _, id in ipairs(Themes.IDS) do
+    if Lib.NeedsReseed(sets, OWN_REVISION) then
+        for _, id in ipairs(Lib.SpecIds(Themes.SPECS)) do
             if id ~= CLASSIC then sets[id] = nil end
         end
-        sets.revision = Themes.REVISION
+        Lib.MarkSeeded(sets, OWN_REVISION)
     end
     return sets
 end
@@ -407,7 +404,7 @@ end
 -- The themes with stored settings to copy from, in IDS order.
 function Themes.Stored()
     local sets, list = storedSets(), {}
-    for _, id in ipairs(Themes.IDS) do
+    for _, id in ipairs(Lib.SpecIds(Themes.SPECS)) do
         if sets[id] and id ~= Themes.Current() then list[#list + 1] = id end
     end
     return list
@@ -439,10 +436,10 @@ function Themes.Restore(undo)
 end
 
 -- At login, before the frames are built: a theme in use made under an
--- older REVISION is made anew from CLASSIC, quietly.
+-- older revision is made anew from CLASSIC, quietly.
 function Themes.Upgrade()
     local sets = ns.ThemeSets()
-    if sets.revision == Themes.REVISION then return end
+    if not Lib.NeedsReseed(sets, OWN_REVISION) then return end
     local current, base = Themes.Current(), sets[CLASSIC]
     storedSets()
     if current == CLASSIC or not base then return end
@@ -470,10 +467,7 @@ function Themes.HasOthers() return #Lib.Others(ADDON) > 0 end
 
 -- True while the hub addon "Forever Themes" sets this addon's theme: the
 -- options then only show it and point to the hub.
-function Themes.FollowsHub()
-    local hub = Lib.Hub()
-    return hub ~= nil and hub.Follows(ADDON) == true
-end
+function Themes.FollowsHub() return Lib.Follows(ADDON) end
 
 function Themes.OpenHub() Lib.Hub().OpenOptions() end
 
