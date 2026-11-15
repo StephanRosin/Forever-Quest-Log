@@ -96,6 +96,27 @@ end
 local themeUndo     -- { theme = id, saved = what Themes.CopyPlacement replaced }
 local PICK, UNDO = "__pick", "__undo"
 
+-- WoW opens no browser: the hub's download link in Blizzard's text popup,
+-- selected for copying.
+local HUB_URL = "https://www.curseforge.com/wow/addons/forever-themes"
+if StaticPopupDialogs then
+    StaticPopupDialogs.FOREVERQUESTLOG_HUB_LINK = {
+        text = "", button1 = OKAY or "OK", hasEditBox = 1, editBoxWidth = 350,
+        maxLetters = 0,   -- the edit box is shared; another dialog may leave its limit behind
+        OnShow = function(dialog)
+            local box = dialog.GetEditBox and dialog:GetEditBox()
+            if box then box:SetText(HUB_URL); box:HighlightText(); box:SetFocus() end
+        end,
+        EditBoxOnEnterPressed = function(box) box:GetParent():Hide() end,
+        EditBoxOnEscapePressed = function(box) box:GetParent():Hide() end,
+        timeout = 0, whileDead = true, hideOnEscape = true,
+    }
+end
+function ns.ShowHubLink()
+    StaticPopupDialogs.FOREVERQUESTLOG_HUB_LINK.text = L.OPT_THEME_HUB_HINT
+    StaticPopup_Show("FOREVERQUESTLOG_HUB_LINK")
+end
+
 local function themeRefused(why) ns.Print(L["MSG_THEME_" .. why]) end
 
 local function themeRows()
@@ -135,6 +156,10 @@ local function themeRows()
         visibleIf({ type = "buttons", buttons = {
             { label = "OPT_THEME_OPEN_HUB", width = 240, onClick = Themes.OpenHub },
         } }, Themes.FollowsHub),
+        visibleIf({ type = "text", label = "OPT_THEME_HUB_HINT" }, Themes.HubMissing),
+        visibleIf({ type = "buttons", buttons = {
+            { label = "OPT_THEME_HUB_LINK", width = 240, onClick = ns.ShowHubLink },
+        } }, Themes.HubMissing),
         { type = "text", label = "OPT_THEME_HINT", height = 88 },
         visibleIf({ type = "buttons", buttons = {
             { label = "OPT_THEME_ALL", width = 240, onClick = function()

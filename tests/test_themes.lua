@@ -102,6 +102,9 @@ check("glass: body outlined", S("objectiveFlag"), "OUTLINE")
 check("glass: content shaded", frame.themeArt.shade:IsShown(), true)
 Themes.Switch("COMIC")
 M.RunTimers()
+check("comic first time: black paper (the shipped look)", registry.Color(), "BLACK")
+registry.SetColor("GREY")
+M.RunTimers()
 check("comic: display outline, not thick (pixelated)", S("titleFlag"), "OUTLINE")
 check("comic: body dark ink, no outline", S("objectiveFlag"), "")
 check("comic: dark ink", S("objectiveColor")[1], 0.1)
@@ -148,7 +151,7 @@ check("comic: level colour inked", ns.Themes.Ink(lvl).g, lvl.g * 0.55)
 local stored = snapshot()
 local function vertex() return table.concat(frame.bg._vertex, "/", 1, 3) end
 local function texture() return frame.bg._texture:match("[^\\]+$") end
-check("colour: comic grey by default", registry.Color(), "GREY")
+check("colour: comic grey as picked", registry.Color(), "GREY")
 check("colour: the comic nine", table.concat(registry.Colors(), " "),
     "GREY DARKGREY BLACK WHITE YELLOW BLUE RED GREEN PURPLE")
 check("colour: by theme", table.concat(registry.Colors("PIXEL"), " "),
@@ -606,6 +609,8 @@ check("hub own: colour usable", usable("OPT_THEME_COLOR"), true)
 check("hub own: no line", built("OPT_THEME_FOLLOWS"):IsShown(), false)
 check("hub own: no button", built("OPT_THEME_OPEN_HUB"):IsShown(), false)
 check("hub own: apply to all", built("OPT_THEME_ALL"):IsShown(), true)
+check("hub: no download hint", built("OPT_THEME_HUB_HINT"):IsShown(), false)
+check("hub: no link button", built("OPT_THEME_HUB_LINK"):IsShown(), false)
 
 Lib.SetHub(nil)
 hubFollows = true
@@ -613,6 +618,53 @@ ns.Window.Refresh()
 check("no hub: theme usable", usable("OPT_THEME_CHOICE"), true)
 check("no hub: no line", built("OPT_THEME_FOLLOWS"):IsShown(), false)
 check("no hub: apply to all", built("OPT_THEME_ALL"):IsShown(), true)
+check("no hub: points to Forever Themes", built("OPT_THEME_HUB_HINT").text:GetText(), ns.L.OPT_THEME_HUB_HINT)
+M.popups = {}
+built("OPT_THEME_HUB_LINK").buttons[1]:GetScript("OnClick")(built("OPT_THEME_HUB_LINK").buttons[1])
+check("no hub: link button opens the copy box", M.popups[1] and M.popups[1].which, "FOREVERQUESTLOG_HUB_LINK")
+local linkBox = { SetText = function(self, t) self.text = t end, HighlightText = function() end, SetFocus = function() end }
+StaticPopupDialogs.FOREVERQUESTLOG_HUB_LINK.OnShow({ GetEditBox = function() return linkBox end })
+check("no hub: the hub's CurseForge page", linkBox.text, "https://www.curseforge.com/wow/addons/forever-themes")
 ns.Window.Toggle()
 _G.ForeverThemes.FakeOther = nil
 Themes.Switch("CLASSIC")
+
+-- The shipped look: a theme picked the first time is the author's setup of
+-- it (his saved settings without positions, sizes and behaviour).
+local SHIPPED = {
+    SWISS = { barTexture = "FQL Swiss", bgTexture = "FQL Swiss", borderColor = { 0.165, 0.165, 0.165, 1 },
+        borderStyle = "FLAT", cornerRadius = 0, doneFont = "Inter Tight", doneSize = 11, focusBgMode = "TEXTURE",
+        focusBgTexture = "FQL Swiss", focusObjectiveFont = "Inter Tight", focusTitleFont = "Inter Tight Bold",
+        headerColor = { 1, 0.176, 0.125 }, headerFont = "Inter Tight Bold", headerLine = false, headerShine = false,
+        objectiveColor = { 0.949, 0.949, 0.949 }, objectiveDoneColor = { 0.549, 0.549, 0.549 },
+        objectiveFlag = "OUTLINE", objectiveFont = "Inter Tight", shadowEnabled = false,
+        titleFont = "Inter Tight Bold", zoneColor = { 0.549, 0.549, 0.549 }, zoneFont = "Inter Tight Bold" },
+    PITWALL = { barTexture = "FQL Pitwall", bgTexture = "FQL Swiss", borderColor = { 0.043, 0.047, 0.055, 1 },
+        doneColor = { 0.133, 0.773, 0.369 }, doneFont = "Titillium Web SemiBold", doneSize = 11,
+        focusDoneColor = { 0.133, 0.773, 0.369 }, focusTitleFont = "Titillium Web Bold Italic",
+        headerColor = { 0.949, 0.953, 0.961 }, headerFont = "Titillium Web Bold Italic", headerLine = false,
+        objectiveDoneColor = { 0.604, 0.631, 0.671 }, objectiveFont = "Titillium Web SemiBold",
+        shadowEnabled = false, titleFont = "Titillium Web Bold Italic", zoneFont = "Titillium Web Bold Italic" },
+}
+local SHIPPED_COLOR = { SWISS = "RED", PITWALL = "RED", COMIC = "BLACK" }
+for id, look in pairs(SHIPPED) do
+    sets()[id], sets().themeColors = nil, nil
+    Themes.Switch(id)
+    for k, v in pairs(look) do check(id .. " shipped: " .. k, Settings.SameValue(S(k), v), true) end
+    check(id .. " shipped: colour", registry.Color(), SHIPPED_COLOR[id])
+    Themes.Switch("CLASSIC")
+end
+check("shipped: classic untouched", snapshot(), classic)
+
+-- Someone already on a theme keeps it as stored: no new colour, no new look.
+sets().themeColors = nil
+Themes.Switch("COMIC")
+local mine = ns.Share.Export()
+Themes.Switch("CLASSIC")
+sets().themeColors = nil
+Themes.Upgrade()
+Themes.Switch("COMIC")
+check("stored comic: set unchanged", ns.Share.Export(), mine)
+check("stored comic: colour stays the first", registry.Color(), "GREY")
+Themes.Switch("CLASSIC")
+

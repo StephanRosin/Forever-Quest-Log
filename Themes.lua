@@ -97,6 +97,9 @@ Themes.SPECS = Lib.Specs({
             headerColor = { 1, 0.9, 0.1 }, titleColor = { 1, 1, 1 }, objectiveColor = { 0.1, 0.1, 0.1 },
             objectiveDoneColor = { 0.33, 0.33, 0.33 }, doneColor = { 0.05, 0.4, 0.1 } },
         bodyFlag = "",
+        -- The colour a first pick of the theme starts with (the shipped look); the
+        -- library's first stays the default for everyone already on it.
+        firstColor = "BLACK",
         -- Level colours in body text (light on the paper) darkened this much.
         ink = 0.55,
         -- Header icons in ink: the light ones vanish on the paper.
@@ -366,6 +369,8 @@ function Themes.Switch(id)
         -- profile imported with a theme) the settings stay as they are.
         local base = sets[CLASSIC] or ns.DB()
         nextSet = id == CLASSIC and copy(base) or seed(id, base)
+        local first = Themes.Spec(id).firstColor
+        if first and chosen()[id] == nil then chosen()[id] = first end
     end
     put(nextSet, "theme", id)
     -- The live set is the profile: no stale copy stays behind.
@@ -471,6 +476,9 @@ function Themes.FollowsHub()
 end
 
 function Themes.OpenHub() Lib.Hub().OpenOptions() end
+
+-- Without the hub the options point to where it is downloaded.
+function Themes.HubMissing() return Lib.Hub() == nil end
 
 -- Every other addon onto this theme and, where that theme has it, this
 -- colour. Returns how many switched.
