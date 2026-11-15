@@ -76,6 +76,7 @@ check("wood again: its own change came back", S("x"), -50)
 check("reset", Themes.Reset(), true)
 check("reset: from classic", S("x"), -100)
 Themes.Switch("CLASSIC")
+check("classic: done lines at 13", S("doneSize"), 13)
 check("reset: not classic", select(2, Themes.Reset()), "CLASSIC")
 
 -- Refused.
@@ -115,9 +116,24 @@ local frostText = frame:CreateFontString()
 ns.Media.ApplyText(frostText, Settings.TextStyle("title"))
 check("frost: drawn with a 1 px shadow, no outline", select(3, frostText:GetFont()) .. " "
     .. table.concat(frostText._shadow, ","), " 1,-1")
+check("frost: done lines as large as objectives", S("doneSize") .. " " .. S("focusDoneSize"),
+    S("objectiveSize") .. " " .. S("focusObjectiveSize"))
+check("frost: done lines not Classic's 13", S("doneSize") ~= 13, true)
+check("frost: body in Julius too", S("objectiveFont") .. "|" .. S("doneFont") .. "|" .. S("focusObjectiveFont"),
+    "Julius Sans One|Julius Sans One|Julius Sans One")
 Themes.Switch("COMIC")
 M.RunTimers()
 sets().FROST = nil -- later tests start Frost afresh
+-- Body font = theme font with a size add: done lines still match the objectives.
+Themes.SPECS.FROST.fontSizeAdd = 2
+Themes.Switch("FROST")
+check("frost +2: done as large as objectives", S("doneSize") .. " " .. S("focusDoneSize"),
+    S("objectiveSize") .. " " .. S("focusObjectiveSize"))
+check("frost +2: objectives raised", S("objectiveSize"), Settings.DEFAULTS.objectiveSize + 2)
+Themes.SPECS.FROST.fontSizeAdd = nil
+Themes.Switch("COMIC")
+M.RunTimers()
+sets().FROST = nil
 -- Nothing reaches beyond the ring: stacked windows keep Classic's edges.
 for id, spec in pairs(Themes.SPECS) do
     local art = spec.art or {}
@@ -255,7 +271,7 @@ Themes.Switch("WOOD")
 check("wood: body in Friz", S("objectiveFont"), "Friz Quadrata")
 check("wood: level colour as it is", ns.Themes.Ink(lvl), lvl)
 check("tech: no corner pieces", Themes.SPECS.TECH.art, nil)
-check("revision", Themes.REVISION, 8)
+check("revision", Themes.REVISION, 11)
 Themes.Switch("CLASSIC")
 check("classic after the body fonts", snapshot(), classic)
 
@@ -468,6 +484,13 @@ check("upgrade: revision noted", sets().revision, Themes.REVISION)
 Settings.Set("bgAlpha", 40)
 Themes.Upgrade()
 check("upgrade: once only", S("bgAlpha"), 40)
+-- A Frost set stored before the done fix (done at Classic's 13) is rebuilt.
+Themes.Switch("FROST")
+Settings.Set("doneSize", 13)
+sets().revision = 0
+Themes.Upgrade()
+check("upgrade: frost done lines as large as objectives", S("doneSize") .. " " .. S("focusDoneSize"),
+    S("objectiveSize") .. " " .. S("focusObjectiveSize"))
 Themes.Switch("CLASSIC")
 check("classic after all of it", snapshot(), classic)
 

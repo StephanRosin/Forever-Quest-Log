@@ -20,6 +20,7 @@ Media.BLIZZARD = {
         { name = "Bangers", path = MEDIA .. "Fonts\\Bangers-Regular.ttf" },
         { name = "Cinzel", path = MEDIA .. "Fonts\\Cinzel-Bold.ttf" },
         { name = "IM Fell English SC", path = MEDIA .. "Fonts\\IMFeENsc28P.ttf" },
+        { name = "Julius Sans One", path = MEDIA .. "Fonts\\JuliusSansOne-Regular.ttf" },
         { name = "Marcellus", path = MEDIA .. "Fonts\\Marcellus-Regular.ttf" },
         { name = "Space Grotesk", path = MEDIA .. "Fonts\\SpaceGrotesk-Bold.ttf" },
         { name = "VT323", path = MEDIA .. "Fonts\\VT323-Regular.ttf" },

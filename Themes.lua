@@ -90,7 +90,7 @@ Themes.SPECS = {
         look = { borderStyle = "FLAT", borderSize = 3, borderColor = { 0.07, 0.06, 0.05, 1 }, cornerRadius = 0,
             shadowEnabled = true, shadowSize = 6, shadowAlpha = 55, bgMode = "TEXTURE", bgTexture = "FQL Glass",
             bgAlpha = 100, headerShine = true },
-        art = { shade = { 0.03, 0.02, 0.04, 0.75 }, shadeInset = 6 },
+        art = { shade = { 0.05, 0.04, 0.06, 0.9 }, shadeInset = 6 },
     },
     -- Thick ink line, halftone paper, a solid shadow.
     COMIC = {
@@ -108,7 +108,7 @@ Themes.SPECS = {
     },
     -- Translucent ice, a pale rim, rounded.
     FROST = {
-        font = "Cinzel", bodyFont = "Friz Quadrata", bar = "FQL Frost", flag = "SHADOW",
+        font = "Julius Sans One", bodyFont = "Julius Sans One", bar = "FQL Frost", flag = "SHADOW",
         bodyFlag = "SHADOW",
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.86, 0.96, 1, 0.8 }, cornerRadius = 6,
             shadowEnabled = true, shadowSize = 8, shadowAlpha = 55, bgMode = "TEXTURE", bgTexture = "FQL Frost",
@@ -163,7 +163,7 @@ Themes.SPECS = {
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 8
+Themes.REVISION = 11
 
 -- What "Take positions from" takes over: where the frames sit, not how big
 -- they are.
@@ -442,7 +442,11 @@ local function seed(id, base)
                 if latin then put(set, key(style .. "Font"), font) end
                 local flag = body and (spec.bodyFlag or "OUTLINE") or spec.flag or "OUTLINE"
                 put(set, key(style .. "Flag"), flag)
-                if font == spec.font then
+                if latin and style == "done" and spec.bodyFont then
+                    -- Classic's doneSize suits Arial Narrow; in the body font it would outgrow the
+                    -- objectives. Their size is final here (TEXT_STYLES lists objective first).
+                    put(set, size, valueIn(set, key("objectiveSize")))
+                elseif font == spec.font then
                     put(set, size, math.min(Settings.RANGES[size][2], valueIn(set, size) + (spec.fontSizeAdd or 0)))
                 end
             end
