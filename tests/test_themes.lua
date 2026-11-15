@@ -568,3 +568,51 @@ check("apply all: unknown theme skipped", Themes.ApplyToAll() .. " " .. other.th
 _G.ForeverThemes.FakeOther = nil
 registry.SetColor("NAVY", "PIXEL")
 Themes.Switch("CLASSIC")
+
+-- Following the hub "Forever Themes": the pickers greyed with the current
+-- theme still shown, a line and a button to the hub, no "Apply to all".
+-- Own theme or no hub: as before. The flag is read again on every refresh.
+local Lib = LibForeverThemes
+local hubFollows, hubOpened = true, 0
+_G.ForeverThemes.FakeOther = { title = "Fake", Switch = function() return true end }
+Lib.SetHub({
+    Follows = function(folder) return folder == "ForeverQuestLog" and hubFollows end,
+    OpenOptions = function() hubOpened = hubOpened + 1 end,
+})
+Themes.Switch("PIXEL")
+ns.Window.Open("general")
+local page = M.byName["ForeverQuestLogPagegeneral"]
+local function built(label)
+    for i, opt in ipairs(ns.Window.PAGES[1].rows()) do
+        local name = opt.label or (opt.buttons and opt.buttons[1].label)
+        if name == label then return page.allRows[i] end
+    end
+end
+local function usable(label) return built(label).button:IsEnabled() end
+check("hub follow: theme greyed", usable("OPT_THEME_CHOICE"), false)
+check("hub follow: still shows the theme", built("OPT_THEME_CHOICE").button.text:GetText(), "Pixel")
+check("hub follow: colour greyed", usable("OPT_THEME_COLOR"), false)
+check("hub follow: the line", built("OPT_THEME_FOLLOWS"):IsShown(), true)
+check("hub follow: the line's text", built("OPT_THEME_FOLLOWS").text:GetText(), "Follows Forever Themes")
+check("hub follow: the button", built("OPT_THEME_OPEN_HUB"):IsShown(), true)
+check("hub follow: no apply to all", built("OPT_THEME_ALL"):IsShown(), false)
+built("OPT_THEME_OPEN_HUB").buttons[1]:GetScript("OnClick")(built("OPT_THEME_OPEN_HUB").buttons[1])
+check("hub follow: button opens the hub", hubOpened, 1)
+
+hubFollows = false
+ns.Window.Refresh()
+check("hub own: theme usable", usable("OPT_THEME_CHOICE"), true)
+check("hub own: colour usable", usable("OPT_THEME_COLOR"), true)
+check("hub own: no line", built("OPT_THEME_FOLLOWS"):IsShown(), false)
+check("hub own: no button", built("OPT_THEME_OPEN_HUB"):IsShown(), false)
+check("hub own: apply to all", built("OPT_THEME_ALL"):IsShown(), true)
+
+Lib.SetHub(nil)
+hubFollows = true
+ns.Window.Refresh()
+check("no hub: theme usable", usable("OPT_THEME_CHOICE"), true)
+check("no hub: no line", built("OPT_THEME_FOLLOWS"):IsShown(), false)
+check("no hub: apply to all", built("OPT_THEME_ALL"):IsShown(), true)
+ns.Window.Toggle()
+_G.ForeverThemes.FakeOther = nil
+Themes.Switch("CLASSIC")

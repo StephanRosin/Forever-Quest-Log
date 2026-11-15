@@ -79,6 +79,12 @@ local function visibleIf(row, cond)
     return row
 end
 
+-- Greys the row out unless cond() holds (the value is still shown).
+local function enabledIf(row, cond)
+    row.enabled = cond
+    return row
+end
+
 local function append(rows, more)
     for _, r in ipairs(more) do rows[#rows + 1] = r end
     return rows
@@ -94,9 +100,10 @@ local function themeRefused(why) ns.Print(L["MSG_THEME_" .. why]) end
 
 local function themeRows()
     local Themes = ns.Themes
+    local function own() return not Themes.FollowsHub() end
     return {
         { type = "header", label = "OPT_THEME" },
-        {
+        enabledIf({
             type = "select", label = "OPT_THEME_CHOICE",
             choices = function()
                 local list = {}
@@ -108,8 +115,8 @@ local function themeRows()
                 local ok, why = Themes.Switch(v)
                 if not ok then themeRefused(why) end
             end,
-        },
-        visibleIf({
+        }, own),
+        visibleIf(enabledIf({
             type = "select", label = "OPT_THEME_COLOR",
             choices = function()
                 local list, theme = {}, Themes.Current()
@@ -123,13 +130,17 @@ local function themeRows()
                 local ok, why = Themes.SetColor(v)
                 if not ok then themeRefused(why) end
             end,
-        }, function() return #Themes.Colors() > 0 end),
+        }, own), function() return #Themes.Colors() > 0 end),
+        visibleIf({ type = "text", label = "OPT_THEME_FOLLOWS" }, Themes.FollowsHub),
+        visibleIf({ type = "buttons", buttons = {
+            { label = "OPT_THEME_OPEN_HUB", width = 240, onClick = Themes.OpenHub },
+        } }, Themes.FollowsHub),
         { type = "text", label = "OPT_THEME_HINT", height = 88 },
         visibleIf({ type = "buttons", buttons = {
             { label = "OPT_THEME_ALL", width = 240, onClick = function()
                 ns.Print(L.MSG_THEME_ALL, Themes.ApplyToAll())
             end },
-        } }, Themes.HasOthers),
+        } }, function() return Themes.HasOthers() and own() end),
         {
             type = "select", label = "OPT_THEME_COPY",
             choices = function()
@@ -673,7 +684,7 @@ local function buildRows(page, spec)
     for _, opt in ipairs(spec) do
         local row, height = widgetFor(page, opt)
         stack.add(row, height)
-        row.stackHeight, row.visibleIf = height or row:GetHeight(), opt.visible
+        row.stackHeight, row.visibleIf, row.enabledIf = height or row:GetHeight(), opt.visible, opt.enabled
         page.allRows[#page.allRows + 1] = row
     end
     page.rows, page.height = stack.rows, stack.y + PAGE_BOTTOM
@@ -687,6 +698,7 @@ local function stackVisible(page)
     for _, row in ipairs(page.allRows) do
         local shown = not row.visibleIf or row.visibleIf()
         row:SetShown(shown)
+        if row.enabledIf then row:SetEnabled(row.enabledIf()) end
         if shown then
             if row.isSection and #rows > 0 then y = y + SECTION_GAP end
             row:ClearAllPoints()

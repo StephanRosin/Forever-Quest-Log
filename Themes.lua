@@ -463,6 +463,15 @@ Lib.Register(ADDON, {
 -- registered above.
 function Themes.HasOthers() return #Lib.Others(ADDON) > 0 end
 
+-- True while the hub addon "Forever Themes" sets this addon's theme: the
+-- options then only show it and point to the hub.
+function Themes.FollowsHub()
+    local hub = Lib.Hub()
+    return hub ~= nil and hub.Follows(ADDON) == true
+end
+
+function Themes.OpenHub() Lib.Hub().OpenOptions() end
+
 -- Every other addon onto this theme and, where that theme has it, this
 -- colour. Returns how many switched.
 function Themes.ApplyToAll()
