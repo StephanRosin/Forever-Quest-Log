@@ -31,7 +31,9 @@ local LATIN_CLIENTS = { enUS = true, enGB = true, deDE = true, frFR = true, esES
 -- every backdrop. bodyFont: the body texts' (objectives, task rows, done
 -- lines), nil = font; set where the theme font is unreadable at small
 -- sizes or over several lines. Body texts get bodyFlag (default OUTLINE),
--- and fontSizeAdd only with the theme font. Body text is light with an
+-- and fontSizeAdd only with the theme font. Frost's texts have a drop
+-- shadow (SHADOW) instead: Cormorant's hairlines drowned in an outline.
+-- Body text is light with an
 -- outline, or dark ink on a light backdrop (comic): one or the other,
 -- never mixed, about 4.5:1 against the backdrop. Never a hand-made outline of black text
 -- copies: with these fonts it showed black text in Forever Unit Frames.
@@ -106,7 +108,8 @@ Themes.SPECS = {
     },
     -- Translucent ice, a pale rim, rounded.
     FROST = {
-        font = "Cormorant SC", bodyFont = "Friz Quadrata", bar = "FQL Frost", fontSizeAdd = 2,
+        font = "Cormorant SC", bodyFont = "Friz Quadrata", bar = "FQL Frost", fontSizeAdd = 2, flag = "SHADOW",
+        bodyFlag = "SHADOW",
         look = { borderStyle = "FLAT", borderSize = 1, borderColor = { 0.86, 0.96, 1, 0.8 }, cornerRadius = 6,
             shadowEnabled = true, shadowSize = 8, shadowAlpha = 55, bgMode = "TEXTURE", bgTexture = "FQL Frost",
             bgAlpha = 85, headerShine = false, headerColor = { 0.86, 0.96, 1 }, titleColor = { 0.72, 0.88, 1 } },
@@ -160,7 +163,7 @@ Themes.SPECS = {
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
 -- CLASSIC is never touched.
-Themes.REVISION = 6
+Themes.REVISION = 7
 
 -- What "Take positions from" takes over: where the frames sit, not how big
 -- they are.

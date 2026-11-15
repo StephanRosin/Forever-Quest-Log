@@ -107,6 +107,17 @@ check("comic: dark ink", S("objectiveColor")[1], 0.1)
 check("comic: no shade", frame.themeArt.shade:IsShown(), false)
 check("comic: header icons in ink", Themes.Spec("COMIC").icons.idle[1] < 0.2, true)
 check("wood: header icons as they are", Themes.Spec("WOOD").icons, nil)
+Themes.Switch("FROST")
+M.RunTimers()
+check("frost: display and body with a shadow, no outline", S("titleFlag") .. " " .. S("zoneFlag") .. " "
+    .. S("objectiveFlag") .. " " .. S("focusTitleFlag"), "SHADOW SHADOW SHADOW SHADOW")
+local frostText = frame:CreateFontString()
+ns.Media.ApplyText(frostText, Settings.TextStyle("title"))
+check("frost: drawn with a 1 px shadow, no outline", select(3, frostText:GetFont()) .. " "
+    .. table.concat(frostText._shadow, ","), " 1,-1")
+Themes.Switch("COMIC")
+M.RunTimers()
+sets().FROST = nil -- later tests start Frost afresh
 -- Nothing reaches beyond the ring: stacked windows keep Classic's edges.
 for id, spec in pairs(Themes.SPECS) do
     local art = spec.art or {}
@@ -244,7 +255,7 @@ Themes.Switch("WOOD")
 check("wood: body in Friz", S("objectiveFont"), "Friz Quadrata")
 check("wood: level colour as it is", ns.Themes.Ink(lvl), lvl)
 check("tech: no corner pieces", Themes.SPECS.TECH.art, nil)
-check("revision", Themes.REVISION, 6)
+check("revision", Themes.REVISION, 7)
 Themes.Switch("CLASSIC")
 check("classic after the body fonts", snapshot(), classic)
 
