@@ -43,7 +43,7 @@ local function applyLook(win)
     }
     ns.Border.Draw(win, win, look)
     ns.Themes.DrawArt(win, win, look, win.titleH or TITLE_H)
-    -- A theme's own icon colours (Themes.SPECS icons): dark on light paper.
+    -- A theme's icon colours (Themes.Icons): its colour's accent, ink on light paper.
     local ink = ns.Themes.Icons() or {}
     local c, g = ink.idle or { 1, 1, 1 }, ink.grip or ACCENT
     win.close.icon:SetTexture(ink.close and Media.Icon(ink.close) or CLOSE)

@@ -152,9 +152,8 @@ Themes.SPECS = {
             headerColor = { 0.949, 0.953, 0.961 }, zoneColor = { 0.949, 0.953, 0.961 },
             titleColor = { 0.949, 0.953, 0.961 }, objectiveColor = { 0.949, 0.953, 0.961 },
             objectiveDoneColor = { 0.604, 0.631, 0.671 }, doneColor = { 0.133, 0.773, 0.369 } },
-        -- White and grey icons, a plain X; red is the wedge's alone.
-        icons = { idle = { 0.949, 0.953, 0.961 }, hover = { 1, 1, 1 }, on = { 0.949, 0.953, 0.961 },
-            off = { 0.604, 0.631, 0.671 }, grip = { 0.604, 0.631, 0.671 }, close = "Close" },
+        -- The icons in the wedge's colour (Themes.Icons), a plain X.
+        icons = { close = "Close" },
         art = { band = { color = { 0, 0, 0, 1 }, wedge = "PitwallWedge", wedgeColor = { 0.882, 0.024, 0, 1 },
             rule = { 0.137, 0.149, 0.173, 1 } } },
     },
@@ -378,10 +377,35 @@ function Themes.OnPaper(color)
     return darkPaper() and LIGHT_TEXT or color
 end
 
--- The header icons' colours (idle, hover, on, off), nil = the addon's own.
+-- The colour the header icons take: the colour's accent (the title's), on
+-- Pitwall the wedge's, as the colour changes it there.
+local function iconAccent(spec)
+    local band, p = spec.art and spec.art.band, palette()
+    local c = band and band.wedge and (p and p.ornament or band.wedgeColor) or Themes.Accent(Settings.Get("headerColor"))
+    return { c[1], c[2], c[3] }
+end
+
+-- Toward `to` (0 black, 1 white) by share f.
+local function mix(c, to, f)
+    return { c[1] + (to - c[1]) * f, c[2] + (to - c[2]) * f, c[3] + (to - c[3]) * f }
+end
+
+-- The same in every Forever addon: under a hover the accent half way to
+-- white, a toggle that is off 40 % darker.
+local ICON_HOVER, ICON_OFF = 0.5, 0.4
+
+-- The header icons' colours (idle, hover, on, off, grip; close = the close
+-- button's icon), nil = the addon's own (CLASSIC). A theme with its own ink
+-- (COMIC: dark on the light paper, light on a dark one) keeps it; every
+-- other draws them in the colour's accent.
 function Themes.Icons()
     if darkPaper() then return LIGHT_ICONS end
-    return Themes.Spec(Themes.Current()).icons
+    local id = Themes.Current()
+    local spec = Themes.Spec(id)
+    if id == CLASSIC or (spec.icons and spec.icons.idle) then return spec.icons end
+    local a = iconAccent(spec)
+    return { idle = a, on = a, grip = a, hover = mix(a, 1, ICON_HOVER), off = mix(a, 0, ICON_OFF),
+        close = spec.icons and spec.icons.close }
 end
 
 -- A colour for body text: darkened on a theme with dark ink (COMIC), so

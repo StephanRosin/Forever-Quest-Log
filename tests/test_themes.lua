@@ -215,6 +215,27 @@ check("colour: tech amber", registry.SetColor("AMBER"), true)
 M.RunTimers()
 check("colour: amber back / mean", vertex(), math.min(1, 0.10 / 0.705) .. "/" .. (0.07 / 0.705) .. "/" .. (0.02 / 0.705))
 check("colour: amber accent", table.concat(Themes.Accent(S("headerColor")), "/"), "1/0.75/0.2")
+check("colour: amber header icons", table.concat(Themes.Icons().idle, "/"), "1/0.75/0.2")
+registry.SetColor("CYAN")
+M.RunTimers()
+check("colour: cyan header icons in the title's colour", table.concat(Themes.Icons().idle, "/"), "0.25/0.88/0.94")
+registry.SetColor("AMBER")
+M.RunTimers()
+-- Every icon accent readable on its backdrop (back, else the black header):
+-- at least 3:1, the contrast WCAG asks of icons.
+local function luminance(c)
+    local function lin(v) return v <= 0.03928 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
+    return 0.2126 * lin(c[1]) + 0.7152 * lin(c[2]) + 0.0722 * lin(c[3])
+end
+for _, id in ipairs(Themes.IDS) do
+    for _, c in ipairs(id ~= "CLASSIC" and id ~= "COMIC" and Themes.COLORS[id] or {}) do
+        local a = c.accent or c.ornament
+        if a then
+            local ratio = (luminance(a) + 0.05) / (luminance(c.back or { 0, 0, 0 }) + 0.05)
+            check(id .. " " .. c.id .. ": icon accent readable", ratio >= 3, true)
+        end
+    end
+end
 check("colour: alpha as the theme's", frame.bg._vertex[4], S("bgAlpha") / 100)
 Settings.Set("bgTexture", "FQL Wood")
 M.RunTimers()
@@ -349,14 +370,16 @@ local function headerIcon(icon)
         if f.icon and f.icon._texture == ns.Media.Icon(icon) and p and p._parent == frame then return f.icon end
     end
 end
-check("pitwall: header icons white", vertex3(headerIcon("Gear")) .. " " .. vertex3(headerIcon("Plus")), "0.949/0.953/0.961 0.949/0.953/0.961")
-check("pitwall: inactive icon grey", vertex3(headerIcon("Zones")), S("groupByZone") and "0.949/0.953/0.961" or "0.604/0.631/0.671")
+check("pitwall: header icons in the wedge's red", vertex3(headerIcon("Gear")) .. " " .. vertex3(headerIcon("Plus")), "0.882/0.024/0 0.882/0.024/0")
+check("pitwall: inactive icon the red darker", vertex3(headerIcon("Zones")), S("groupByZone") and "0.882/0.024/0" or "0.5292/0.0144/0")
+check("pitwall: hover the red lighter", table.concat(Themes.Icons().hover, "/"), "0.941/0.512/0.5")
 check("pitwall: zone headers white", table.concat(S("zoneColor"), "/"), "0.949/0.953/0.961")
 check("pitwall: colours", table.concat(registry.Colors(), " "), "RED ORANGE TEAL SILVER")
 registry.SetColor("TEAL")
 M.RunTimers()
 check("pitwall teal: wedge", table.concat(wedge()._vertex, "/", 1, 3), "0/0.631/0.612")
 check("pitwall teal: header as stored", Themes.Accent(S("headerColor")), S("headerColor"))
+check("pitwall teal: header icons follow the wedge", vertex3(headerIcon("Gear")), "0/0.631/0.612")
 check("pitwall teal: backdrop stays", texture() .. " " .. frame.bg._vertex[1], "SwissBack.tga 1")
 registry.SetColor("RED")
 -- Swiss and Pitwall share one black with every Forever addon: the flat
@@ -427,10 +450,16 @@ check("pitwall: note wedge as high as its title band", note.themeArt.wedge:GetHe
     .. " " .. note.titleH, note.titleH .. " " .. note.titleH .. " " .. note.titleH)
 check("pitwall: note title 8 past the wedge's middle", note.name._points.LEFT[3] + 8, math.floor(0.8 * note.titleH + 0.5) + 8)
 check("pitwall: note title in the text colour", table.concat(note.name._textColor or {}, "/", 1, 3), "0.949/0.953/0.961")
-check("pitwall: note icons white, a plain X", vertex3(note.close.icon) .. " " .. vertex3(note.gear.icon) .. " "
+check("pitwall: note icons in the wedge's colour, a plain X", vertex3(note.close.icon) .. " " .. vertex3(note.gear.icon) .. " "
     .. vertex3(note.add.icon) .. " " .. note.close.icon._texture:match("[^\\]+$"),
-    "0.949/0.953/0.961 0.949/0.953/0.961 0.949/0.953/0.961 IconClose.tga")
-check("pitwall: note grip grey", vertex3(note.grip.icon), "0.604/0.631/0.671")
+    "0.882/0.024/0 0.882/0.024/0 0.882/0.024/0 IconClose.tga")
+check("pitwall: note grip too", vertex3(note.grip.icon), "0.882/0.024/0")
+registry.SetColor("ORANGE")
+M.RunTimers()
+ns.Notes.LayoutWindow(note)  -- as the rings above: Notes.Layout redraws only undocked lists
+check("pitwall orange: note icons follow", vertex3(note.gear.icon) .. " " .. vertex3(note.grip.icon), "1/0.541/0 1/0.541/0")
+registry.SetColor("RED")
+M.RunTimers()
 check("pitwall: note shade none, so no uneven margin", note.themeArt.shade:IsShown(), false)
 check("pitwall: air between the title band and the first entry", -note.scroll._points.TOPLEFT[4] - note.titleH, 6)
 Themes.Switch("CLASSIC")

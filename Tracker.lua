@@ -16,8 +16,8 @@ local IDLE = { 0.73, 0.64, 0.48 }
 local HOVER = { 1, 0.88, 0.54 }
 local ON = { 1, 0.82, 0.29 }
 local OFF = { 0.45, 0.42, 0.36 }
--- The header icons' colours: the theme's own (light paper needs dark
--- icons), else the ones above.
+-- The header icons' colours: the theme's (Themes.Icons: its colour's accent, ink
+-- on light paper), else the ones above (Classic).
 local function icons() return ns.Themes.Icons() or {} end
 local function idle() return icons().idle or IDLE end
 local function accent() return icons().grip or ACCENT end
