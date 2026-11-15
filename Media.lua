@@ -19,7 +19,6 @@ Media.BLIZZARD = {
         -- Media/Fonts.
         { name = "Bangers", path = MEDIA .. "Fonts\\Bangers-Regular.ttf" },
         { name = "Cinzel", path = MEDIA .. "Fonts\\Cinzel-Bold.ttf" },
-        { name = "Cormorant SC", path = MEDIA .. "Fonts\\CormorantSC-Bold.ttf" },
         { name = "IM Fell English SC", path = MEDIA .. "Fonts\\IMFeENsc28P.ttf" },
         { name = "Marcellus", path = MEDIA .. "Fonts\\Marcellus-Regular.ttf" },
         { name = "Space Grotesk", path = MEDIA .. "Fonts\\SpaceGrotesk-Bold.ttf" },

@@ -255,7 +255,7 @@ Themes.Switch("WOOD")
 check("wood: body in Friz", S("objectiveFont"), "Friz Quadrata")
 check("wood: level colour as it is", ns.Themes.Ink(lvl), lvl)
 check("tech: no corner pieces", Themes.SPECS.TECH.art, nil)
-check("revision", Themes.REVISION, 7)
+check("revision", Themes.REVISION, 8)
 Themes.Switch("CLASSIC")
 check("classic after the body fonts", snapshot(), classic)
 
