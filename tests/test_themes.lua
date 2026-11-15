@@ -607,6 +607,11 @@ check("hub follow: still shows the theme", built("OPT_THEME_CHOICE").button.text
 check("hub follow: colour greyed", usable("OPT_THEME_COLOR"), false)
 check("hub follow: the line", built(Lib.Text("HUB_FOLLOWS")):IsShown(), true)
 check("hub follow: the line's text", built(Lib.Text("HUB_FOLLOWS")).text:GetText(), "Follows Forever Themes")
+ns.Locale.Set("deDE")   -- the addon's own language, not the (English) client's
+page = M.byName["ForeverQuestLogPagegeneral"]   -- a new language builds a new window
+check("german addon, english client: the line", built("Folgt Forever Themes").text:GetText(), "Folgt Forever Themes")
+ns.Locale.Set("AUTO")
+page = M.byName["ForeverQuestLogPagegeneral"]
 check("hub follow: the button", built(Lib.Text("HUB_OPEN")):IsShown(), true)
 check("hub follow: no apply to all", built("OPT_THEME_ALL"):IsShown(), false)
 built(Lib.Text("HUB_OPEN")).buttons[1]:GetScript("OnClick")(built(Lib.Text("HUB_OPEN")).buttons[1])

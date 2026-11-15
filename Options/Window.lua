@@ -97,7 +97,7 @@ local themeUndo     -- { theme = id, saved = what Themes.CopyPlacement replaced 
 local PICK, UNDO = "__pick", "__undo"
 
 -- The hub's texts are the library's, the same in every Forever addon.
-local function hubText(key) return function() return LibForeverThemes.Text(key) end end
+local function hubText(key) return function() return LibForeverThemes.Text(key, ns.Locale.Current()) end end
 
 local function themeRefused(why) ns.Print(L["MSG_THEME_" .. why]) end
 
@@ -140,7 +140,7 @@ local function themeRows()
         } }, Themes.FollowsHub),
         visibleIf({ type = "text", label = hubText("HUB_MISSING") }, Themes.HubMissing),
         visibleIf({ type = "buttons", buttons = {
-            { label = hubText("HUB_LINK"), width = 240, onClick = function() LibForeverThemes.ShowHubLink() end },
+            { label = hubText("HUB_LINK"), width = 240, onClick = function() LibForeverThemes.ShowHubLink(nil, ns.Locale.Current()) end },
         } }, Themes.HubMissing),
         { type = "text", label = "OPT_THEME_HINT", height = 88 },
         visibleIf({ type = "buttons", buttons = {
