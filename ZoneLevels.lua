@@ -9,9 +9,9 @@ function ZoneLevels.Color(lo, hi, level)
     local c = QuestDifficultyColors
     if level < lo then return c.impossible end
     if level > hi then return c.trivial end
-    -- The top beats the bottom, so a one-level zone (60-60) is green at 60.
-    if level >= hi - (hi - lo) * 0.1 then return c.standard end
+    if lo == hi then return c.difficult end   -- a one-level zone (60-60) is yellow at 60
     if level <= lo + 1 then return c.verydifficult end
+    if level >= hi - (hi - lo) * 0.1 then return c.standard end
     return c.difficult
 end
 
