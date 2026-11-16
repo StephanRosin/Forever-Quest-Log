@@ -278,6 +278,7 @@ L.MSG_KEY_REPLACED = "%s ne fait plus « %s »."
 L.MSG_MAP_YIELDED = "Un autre addon place la carte du monde (p. ex. OpenMap) : Forever Quest Log lui laisse la position et l'échelle."
 L.MSG_QUESTDIALOG_YIELDED = "Un autre addon place la fenêtre de quête : Forever Quest Log lui laisse la position."
 L.MSG_OPEN_AFTER_COMBAT = "La quête s'ouvrira après le combat (en combat, le jeu interdit aux addons d'ouvrir la carte)."
+L.MSG_FOCUS_LATER = "Le focus changera une fois la carte fermée et le combat terminé (sinon le jeu bloque la carte)."
 
 -- Themes (Themes.lua)
 L.OPT_THEME = "Thème (bêta)"

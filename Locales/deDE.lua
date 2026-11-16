@@ -278,6 +278,7 @@ L.MSG_KEY_REPLACED = "%s löst nicht mehr „%s“ aus."
 L.MSG_MAP_YIELDED = "Ein anderes Addon platziert die Weltkarte (z. B. OpenMap): Forever Quest Log überlässt ihm Position und Skalierung."
 L.MSG_QUESTDIALOG_YIELDED = "Ein anderes Addon platziert das Quest-Fenster: Forever Quest Log überlässt ihm die Position."
 L.MSG_OPEN_AFTER_COMBAT = "Die Quest öffnet sich nach dem Kampf (im Kampf darf ein Addon die Karte nicht öffnen)."
+L.MSG_FOCUS_LATER = "Der Fokus wechselt, sobald die Karte zu und der Kampf vorbei ist (sonst blockiert das Spiel die Karte)."
 
 -- Themes (Themes.lua)
 L.OPT_THEME = "Theme (Beta)"

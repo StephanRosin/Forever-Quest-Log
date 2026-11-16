@@ -199,6 +199,18 @@ check("map button click focuses the quest", M.superTracked, ears.quest.id)
 ears.poi:GetScript("OnClick")(ears.poi, "LeftButton")
 check("second click clears the focus", M.superTracked, 0)
 ears.poi:GetScript("OnClick")(ears.poi, "LeftButton")
+-- SUPER_TRACKING_CHANGED runs the map's pins in our taint: never in combat or with the map open.
+M.state.combat = true
+tiger.poi:GetScript("OnClick")(tiger.poi, "LeftButton")
+check("focus in combat waits", M.superTracked, ears.quest.id)
+M.state.combat = false
+WorldMapFrame:Show()
+M.RunTimers()
+check("focus with the map open waits", M.superTracked, ears.quest.id)
+WorldMapFrame:Hide()
+M.RunTimers()
+check("focus follows once the map is closed", M.superTracked, tiger.quest.id)
+ears.poi:GetScript("OnClick")(ears.poi, "LeftButton")
 local watch = questRows()[4]
 check("finished objective dimmed", watch.lines[1].text._textColor[1], S("objectiveDoneColor")[1])
 check("finished objective: no bar", watch.lines[1].barBg._shown, false)

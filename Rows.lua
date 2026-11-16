@@ -321,9 +321,9 @@ local function newPOI(row)
         if not self.questID then return end
         -- Like Blizzard's POIButton: a second click on the focused quest clears the focus.
         if C_SuperTrack.GetSuperTrackedQuestID() == self.questID then
-            C_SuperTrack.ClearAllSuperTracked()
+            ns.Actions.Focus(nil)
         else
-            C_SuperTrack.SetSuperTrackedQuestID(self.questID)
+            ns.Actions.Focus(self.questID)
         end
     end)
     return b

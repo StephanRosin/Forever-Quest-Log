@@ -32,15 +32,47 @@ local function openDetails(questID)
     showPanel(function() QuestMapFrame_OpenToQuestDetails(questID) end)
 end
 
+-- Focus (super-track) a quest; nil clears every focus. C_SuperTrack fires
+-- SUPER_TRACKING_CHANGED inside our call, so every listener runs tainted. With
+-- the world map open that includes its quest pins: they are acquired (new
+-- ones created) tainted and block SetPassThroughButtons in combat, then or
+-- later (ADDON_ACTION_BLOCKED, CurseForge 16.11.2026). So the focus changes
+-- only with the map closed and out of combat; until then the last click waits.
+local pendingFocus, waiting
+local function canFocus()
+    return not InCombatLockdown() and not (_G.WorldMapFrame and _G.WorldMapFrame:IsShown())
+end
+
+local function applyFocus(questID)
+    if questID then C_SuperTrack.SetSuperTrackedQuestID(questID) else C_SuperTrack.ClearAllSuperTracked() end
+end
+
+local function retryFocus()
+    if not canFocus() then return C_Timer.After(0.25, retryFocus) end
+    waiting = false
+    local id = pendingFocus
+    pendingFocus = nil
+    applyFocus(id or nil)
+end
+
+function Actions.Focus(questID)
+    if canFocus() and not waiting then return applyFocus(questID) end
+    pendingFocus = questID or false
+    if waiting then return end
+    waiting = true
+    ns.Print(L.MSG_FOCUS_LATER)
+    C_Timer.After(0.25, retryFocus)
+end
+
 -- The right-click menu, Blizzard's entries in Blizzard's order.
 local function questMenu(owner, questID)
     if not (MenuUtil and MenuUtil.CreateContextMenu) then return end
     MenuUtil.CreateContextMenu(owner, function(_, root)
         root:CreateTitle(C_QuestLog.GetTitleForQuestID(questID) or "")
         if C_SuperTrack.GetSuperTrackedQuestID() ~= questID then
-            root:CreateButton(SUPER_TRACK_QUEST, function() C_SuperTrack.SetSuperTrackedQuestID(questID) end)
+            root:CreateButton(SUPER_TRACK_QUEST, function() Actions.Focus(questID) end)
         else
-            root:CreateButton(STOP_SUPER_TRACK_QUEST, function() C_SuperTrack.SetSuperTrackedQuestID(0) end)
+            root:CreateButton(STOP_SUPER_TRACK_QUEST, function() Actions.Focus(0) end)
         end
         local showing = QuestUtil and QuestUtil.IsShowingQuestDetails and QuestUtil.IsShowingQuestDetails(questID)
         root:CreateButton(showing and OBJECTIVES_HIDE_VIEW_IN_QUESTLOG or OBJECTIVES_VIEW_IN_QUESTLOG, function()
