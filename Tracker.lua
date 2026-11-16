@@ -328,7 +328,7 @@ local function layoutHeader(tracked)
     countStyle.size = math.max(8, S("headerSize") - 3)
     -- A theme keeps the objectives' colour and outline, made for its backdrop.
     if ns.Themes.Current() == ns.Themes.CLASSIC then
-        countStyle.flag = ""
+        countStyle.flag = S("countFlag")
         countStyle.color = { 0.56, 0.54, 0.5 }
     end
     countStyle.color = ns.Themes.OnPaper(countStyle.color)

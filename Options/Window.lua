@@ -267,6 +267,22 @@ local function appearanceRows()
 end
 
 -- Text: the five styles, each font, size, outline, colour.
+local function flagRow(key, label)
+    return {
+        type = "select", label = label,
+        choices = function()
+            return {
+                { label = L.OUTLINE_NONE, value = "" },
+                { label = L.OUTLINE_SHADOW, value = "SHADOW" },
+                { label = L.OUTLINE_NORMAL, value = "OUTLINE" },
+                { label = L.OUTLINE_THICK, value = "THICKOUTLINE" },
+            }
+        end,
+        get = function() return S(key) end,
+        set = function(v) Settings.Set(key, v) end,
+    }
+end
+
 -- Font, size, outline and (unless noColor) colour of the text style
 -- `key` ("title", "focusTitle", "mapTitle", ...), under a header.
 local function textStyleRows(key, header, noColor)
@@ -274,19 +290,7 @@ local function textStyleRows(key, header, noColor)
         { type = "header", label = header },
         media(key .. "Font", "OPT_FONT", "font"),
         num(key .. "Size", "OPT_FONT_SIZE"),
-        {
-            type = "select", label = "OPT_OUTLINE",
-            choices = function()
-                return {
-                    { label = L.OUTLINE_NONE, value = "" },
-                    { label = L.OUTLINE_SHADOW, value = "SHADOW" },
-                    { label = L.OUTLINE_NORMAL, value = "OUTLINE" },
-                    { label = L.OUTLINE_THICK, value = "THICKOUTLINE" },
-                }
-            end,
-            get = function() return S(key .. "Flag") end,
-            set = function(v) Settings.Set(key .. "Flag", v) end,
-        },
+        flagRow(key .. "Flag", "OPT_OUTLINE"),
     }
     if not noColor then rows[#rows + 1] = colorRow(key .. "Color", "OPT_COLOR", true) end
     return rows
@@ -302,6 +306,11 @@ local function textRows()
     local rows = {}
     for _, name in ipairs(Settings.TEXT_STYLES) do
         append(rows, textStyleRows(name, "STYLE_" .. name:upper()))
+        if name == "header" then
+            -- Themes give the count the objectives' outline; only Classic has its own.
+            rows[#rows + 1] = visibleIf(flagRow("countFlag", "OPT_COUNT_OUTLINE"),
+                function() return ns.Themes.Current() == ns.Themes.CLASSIC end)
+        end
         if name == "objective" then
             rows[#rows + 1] = colorRow("objectiveDoneColor", "OPT_DONE_OBJECTIVE_COLOR", true)
             rows[#rows + 1] = check("objectiveProgressColors", "OPT_PROGRESS_COLORS")

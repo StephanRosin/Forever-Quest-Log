@@ -80,6 +80,7 @@ Settings.DEFAULTS = {
     headerSize = 18,
     headerFlag = "SHADOW",
     headerColor = { 1, 0.82, 0.29 },
+    countFlag = "",         -- the quest count next to the header title (Classic only)
     zoneFont = "Friz Quadrata",
     zoneSize = 14,
     zoneFlag = "",
