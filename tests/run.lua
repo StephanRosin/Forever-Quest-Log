@@ -1951,7 +1951,8 @@ do
     check("zone level: grey 1 above", at(41, 30, 40), grey)
     check("zone level: Zephras green from 11", at(11, 1, 12), green)
     check("zone level: Zephras yellow at 10", at(10, 1, 12), yellow)
-    check("zone level: one-level raid orange", at(60, 60, 60), QuestDifficultyColors.verydifficult)
+    check("zone level: one-level zone green at its level", at(60, 60, 60), green)
+    check("zone level: narrow range orange at the bottom", at(59, 59, 60), QuestDifficultyColors.verydifficult)
     M.state.level = 40
     head = CreateFrame("Button")
     head.name, head.count, head.chevron = head:CreateFontString(), head:CreateFontString(), head:CreateTexture()
