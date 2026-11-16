@@ -1,15 +1,19 @@
 -- Zone and instance names with their level range, the range coloured by Stephan's rule:
 -- red below, orange in the first two levels, yellow inside, green in the last tenth,
--- grey above (ZoneLevelData.lua has the ranges).
+-- grey above; a one-level zone is yellow within two levels (ZoneLevelData.lua has the ranges).
 local _, ns = ...
 local ZoneLevels = {}
 ns.ZoneLevels = ZoneLevels
 
 function ZoneLevels.Color(lo, hi, level)
     local c = QuestDifficultyColors
+    if lo == hi then   -- a one-level zone (60-60): yellow from 58 to 62
+        if level < lo - 2 then return c.impossible end
+        if level > hi + 2 then return c.trivial end
+        return c.difficult
+    end
     if level < lo then return c.impossible end
     if level > hi then return c.trivial end
-    if lo == hi then return c.difficult end   -- a one-level zone (60-60) is yellow at 60
     if level <= lo + 1 then return c.verydifficult end
     if level >= hi - (hi - lo) * 0.1 then return c.standard end
     return c.difficult
