@@ -806,11 +806,17 @@ Settings.SetMany({ borderTexture = "Blizzard Dialog Gold", borderColor = { 0.2, 
 relayout()
 check("lsm: chosen edge file", backdrop._backdrop.edgeFile, "Interface\\DialogFrame\\UI-DialogBox-Gold-Border")
 check("lsm: tint and opacity", table.concat(backdrop._borderColor, "/"), "0.2/0.4/0.6/0.5")
+check("lsm: background on the window by default", frame.bg._lastPoint[1] .. " " .. frame.bg._lastPoint[4], "BOTTOMRIGHT 0")
+Settings.Set("bgExtend", 6)
+relayout()
+check("lsm: background under the border", frame.bg._lastPoint[1] .. " " .. frame.bg._lastPoint[4], "BOTTOMRIGHT 6")
+Settings.Set("bgExtend", nil)
 check("lsm: own edges listed", table.concat(ns.Media.Names("border"), ","),
     "Blizzard Tooltip,Blizzard Dialog,Blizzard Dialog Gold")
 Settings.SetMany({ borderStyle = "GOLD", borderTexture = nil, borderColor = nil })
 relayout()
 check("gold again: backdrop hidden", backdrop._shown, false)
+check("gold again: background on the window", frame.bg._lastPoint[4], 0)
 
 -- Pixel snapping counts the frame's own scale: with UIParent at 1 and the
 -- tracker at 70 %, the ring is a whole number of pixels thick, so it stays

@@ -363,7 +363,7 @@ local function applyLook()
     ns.Corners.Fit(frame.clip, frame, radius, { frame.bg, header.shine })
     local look = {
         style = S("borderStyle"), size = S("borderSize"), color = ns.Themes.Rim(S("borderColor")), radius = radius,
-        edge = S("borderTexture"), edgeSize = S("borderEdgeSize"),
+        edge = S("borderTexture"), edgeSize = S("borderEdgeSize"), bgExtend = S("bgExtend"),
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
     ns.Border.Draw(frame, frame, look)

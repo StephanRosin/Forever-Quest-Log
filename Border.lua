@@ -286,6 +286,20 @@ local function drawBackdrop(p, owner, box, look)
     f:Show()
 end
 
+-- The owner's background (and its rounded mask) reaching out under an LSM border by
+-- look.bgExtend: edge files draw their line inside the file, the gap to the window shows otherwise.
+local function extendBackground(owner, box, look)
+    local bg = owner.bg
+    if not bg then return end
+    local e = look.style == "LSM" and Border.Snap(look.bgExtend or 0, 0, owner) or 0
+    local mask = owner.clip and owner.clip.mask
+    for _, r in ipairs({ bg, mask }) do
+        r:ClearAllPoints()
+        r:SetPoint("TOPLEFT", box, "TOPLEFT", -e, e)
+        r:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", e, -e)
+    end
+end
+
 -- Drawing ---------------------------------------------------------------------
 
 local parts = setmetatable({}, { __mode = "k" })
@@ -321,6 +335,7 @@ function Border.Draw(owner, box, look)
     end
     showRing(p.line, hasLine)
     drawBackdrop(p, owner, box, look)
+    extendBackground(owner, box, look)
     drawShadow(owner, p.shadow, box, look, Border.Extent(look, owner), radius)
 end
 
