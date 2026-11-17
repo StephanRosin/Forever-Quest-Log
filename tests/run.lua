@@ -370,7 +370,11 @@ section("Spoken's Play button")
 check("no Spoken: no button", questRows()[1].play, nil)
 do
     local bound = {}
-    _G.Spoken = { IsCompatible = function(_, v) return v == 1 end }
+    local callbacks = {}
+    _G.Spoken = { IsCompatible = function(_, v) return v == 1 end,
+        RegisterCallback = function(_, event, fn) callbacks[event] = fn end }
+    M.Fire("PLAYER_LOGIN")
+    check("Spoken: redraws once its voice packs have loaded", callbacks.VOICE_PACKS_LOADED, ns.Tracker.Refresh)
     _G.VoiceOver = { QuestOverlayUI = {
         ShowsTrackerButton = function(_, id) return id == 185 end,
         MakePlayButton = function(_, parent) return CreateFrame("Button", nil, parent) end,

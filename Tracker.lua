@@ -1022,6 +1022,12 @@ ns.On("PLAYER_LOGIN", function()
     ns.RebuildPresets()
     ns.Themes.Upgrade()
     Tracker.Build()
+    -- Spoken loads its voice packs after entering the world; until then no
+    -- quest is voiced and the rows drawn so far carry no Play button.
+    local spoken = rawget(_G, "Spoken")
+    if type(spoken) == "table" and spoken.RegisterCallback then
+        pcall(spoken.RegisterCallback, spoken, "VOICE_PACKS_LOADED", Tracker.Refresh)
+    end
 end)
 
 ns.On("PLAYER_ENTERING_WORLD", function()
