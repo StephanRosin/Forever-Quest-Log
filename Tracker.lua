@@ -306,6 +306,10 @@ local function createHeader()
     end)
 end
 
+function Tracker.HeaderButtons()
+    return { header.collapse, header.options, header.lock, header.sort, header.zones, header.add }
+end
+
 -- The count reads like the quest log's: quests in the log / its maximum,
 -- red when over it; the tracked number is in the tooltip.
 local function layoutHeader(tracked)
@@ -343,7 +347,7 @@ local function layoutHeader(tracked)
     header.lock.activeColor = accent()
     header.lock.isActive = function() return not S("locked") end
     header.sort.icon:SetTexture(Media.Icon(S("sortBy") == "LEVEL" and "SortLevel" or "SortWatch"))
-    for _, b in ipairs({ header.collapse, header.options, header.lock, header.sort, header.zones, header.add }) do
+    for _, b in ipairs(Tracker.HeaderButtons()) do
         paint(b, b.isActive and buttonColor(b) or idle())
     end
     if not S("locked") then paint(header.lock, accent()) end
@@ -359,6 +363,7 @@ local function applyLook()
     ns.Corners.Fit(frame.clip, frame, radius, { frame.bg, header.shine })
     local look = {
         style = S("borderStyle"), size = S("borderSize"), color = ns.Themes.Rim(S("borderColor")), radius = radius,
+        edge = S("borderTexture"), edgeSize = S("borderEdgeSize"),
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
     ns.Border.Draw(frame, frame, look)
@@ -902,6 +907,10 @@ function Tracker.UpdateAlpha()
     end
     frame:SetAlpha(alpha)
     Items.SetAlpha(state().collapsed and 0 or alpha)
+    -- Hidden buttons stay clickable: the mouse over one is over the tracker,
+    -- which shows them.
+    local icons = (S("headerIcons") ~= "HOVER" or frame:IsMouseOver() or frame.moving or resizing) and 1 or 0
+    for _, b in ipairs(Tracker.HeaderButtons()) do b:SetAlpha(icons) end
 end
 
 local elapsedSince, timerSince = 0, 0

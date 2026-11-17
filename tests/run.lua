@@ -268,6 +268,16 @@ ns.Tracker.ToggleCollapse()
 M.RunTimers()
 check("collapse hides: key brings it back", frame._shown, true)
 Settings.Set("collapseHides", nil)
+Settings.Set("headerIcons", "HOVER")
+ns.Tracker.UpdateAlpha()
+check("hover icons: hidden while the mouse is away", header.options._alpha, 0)
+frame._mouseOver = true
+ns.Tracker.UpdateAlpha()
+check("hover icons: shown on mouse-over", header.options._alpha, 1)
+frame._mouseOver = nil
+Settings.Set("headerIcons", nil)
+ns.Tracker.UpdateAlpha()
+check("icons always by default", header.add._alpha, 1)
 zoneRows()[1]:GetScript("OnClick")(zoneRows()[1])
 M.RunTimers()
 check("zone collapses", questTitles(), "The Night Watch,Mor'Ladim")
@@ -784,7 +794,39 @@ check("gold shading", ring[1] and ring[1]._gradient ~= nil, true)
 Settings.Set("borderStyle", "NONE")
 relayout()
 check("no border", ring[1]._shown, false)
-Settings.Set("borderStyle", "GOLD")
+Settings.Set("borderStyle", "LSM")
+relayout()
+local _, _, backdrop = ns.Border.Pieces(frame)
+check("lsm: ring hidden", ring[1]._shown, false)
+check("lsm: backdrop shown", backdrop and backdrop._shown, true)
+check("lsm: tooltip edge by default", backdrop._backdrop.edgeFile, "Interface\\Tooltips\\UI-Tooltip-Border")
+check("lsm: edge size", backdrop._backdrop.edgeSize, 16)
+check("lsm: half the edge reaches out", backdrop._lastPoint[1] .. " " .. backdrop._lastPoint[4], "BOTTOMRIGHT 8")
+Settings.SetMany({ borderTexture = "Blizzard Dialog Gold", borderColor = { 0.2, 0.4, 0.6, 0.5 } })
+relayout()
+check("lsm: chosen edge file", backdrop._backdrop.edgeFile, "Interface\\DialogFrame\\UI-DialogBox-Gold-Border")
+check("lsm: tint and opacity", table.concat(backdrop._borderColor, "/"), "0.2/0.4/0.6/0.5")
+check("lsm: own edges listed", table.concat(ns.Media.Names("border"), ","),
+    "Blizzard Tooltip,Blizzard Dialog,Blizzard Dialog Gold")
+Settings.SetMany({ borderStyle = "GOLD", borderTexture = nil, borderColor = nil })
+relayout()
+check("gold again: backdrop hidden", backdrop._shown, false)
+
+-- Pixel snapping counts the frame's own scale: with UIParent at 1 and the
+-- tracker at 70 %, the ring is a whole number of pixels thick, so it stays
+-- as thick wherever the frame stands.
+do
+    local saved = PixelUtil
+    PixelUtil = { GetNearestPixelSize = function(v, scale, min)
+        return math.max(min or 0, math.floor(v * scale + 0.5)) / scale
+    end }
+    Settings.Set("scale", 70)
+    relayout()
+    local px = ring[1]._h * 0.7
+    check("ring thickness in whole pixels", math.abs(px - math.floor(px + 0.5)) < 1e-9 and px >= 1, true)
+    Settings.Set("scale", nil)
+    PixelUtil = saved
+end
 Settings.Set("bgMode", "TEXTURE")
 relayout()
 check("texture background", frame.bg._texture, "Interface\\DialogFrame\\UI-DialogBox-Background-Dark")

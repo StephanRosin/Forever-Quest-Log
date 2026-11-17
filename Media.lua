@@ -1,6 +1,6 @@
 local ADDON, ns = ...
 
--- Fonts, background textures and bar textures: the game's own, plus every
+-- Fonts, background textures, bar textures and border edges: the game's own, plus every
 -- one another addon registers with LibSharedMedia (the library itself is
 -- not shipped).
 local Media = {}
@@ -29,6 +29,13 @@ Media.BLIZZARD = {
         { name = "Solid", path = "Interface\\Buttons\\WHITE8X8" },
         { name = "Blizzard", path = "Interface\\TargetingFrame\\UI-StatusBar" },
         { name = "Blizzard Raid Bar", path = "Interface\\RaidFrame\\Raid-Bar-Hp-Fill" },
+    },
+    -- Edge files for a backdrop (border style LSM), named as LibSharedMedia
+    -- names them.
+    border = {
+        { name = "Blizzard Tooltip", path = "Interface\\Tooltips\\UI-Tooltip-Border" },
+        { name = "Blizzard Dialog", path = "Interface\\DialogFrame\\UI-DialogBox-Border" },
+        { name = "Blizzard Dialog Gold", path = "Interface\\DialogFrame\\UI-DialogBox-Gold-Border" },
     },
 }
 -- The themes' fonts, backdrops and bar textures come with the embedded
@@ -81,11 +88,11 @@ Media.OWN = setmetatable({}, { __index = function(_, kind) return OWN[kind] and 
 
 -- Every built-in file of a kind: the game's, then the themes'.
 local ALL = {}
-for _, kind in ipairs({ "font", "background", "statusbar" }) do
+for _, kind in ipairs({ "font", "background", "statusbar", "border" }) do
     ALL[kind] = function()
         local list = {}
         for _, source in ipairs({ Media.BLIZZARD, Media.OWN }) do
-            for _, f in ipairs(source[kind]) do list[#list + 1] = f end
+            for _, f in ipairs(source[kind] or {}) do list[#list + 1] = f end
         end
         return list
     end
@@ -96,13 +103,14 @@ Media.DEFAULT = {
     font = "Fonts\\FRIZQT__.TTF",
     background = "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
     statusbar = "Interface\\Buttons\\WHITE8X8",
+    border = "Interface\\Tooltips\\UI-Tooltip-Border",
 }
 
 local function sharedMedia()
     return LibStub and LibStub("LibSharedMedia-3.0", true)
 end
 
--- Every name of a kind ("font", "background", "statusbar"), Blizzard's
+-- Every name of a kind ("font", "background", "statusbar", "border"), Blizzard's
 -- first, then LibSharedMedia's sorted.
 function Media.Names(kind)
     local names, seen = {}, {}

@@ -60,9 +60,11 @@ Settings.DEFAULTS = {
     fadeAlpha = 100,        -- percent, while the mouse is not over it
 
     -- Frame look
-    borderStyle = "NONE",   -- NONE, FLAT or GOLD
+    borderStyle = "NONE",   -- NONE, FLAT, GOLD or LSM (an edge file)
     borderSize = 1,
-    borderColor = { 0, 0, 0, 1 },
+    borderColor = { 0, 0, 0, 1 },   -- FLAT and LSM
+    borderTexture = "Blizzard Tooltip", -- LSM: Media.Names("border")
+    borderEdgeSize = 16,    -- LSM
     cornerRadius = 10,
     shadowEnabled = true,
     shadowSize = 9,
@@ -73,6 +75,7 @@ Settings.DEFAULTS = {
     bgTexture = "Blizzard Dialog Background Gold",
     headerLine = true,      -- the gold line under the header
     headerShine = true,     -- the soft gold gradient behind the header
+    headerIcons = "ALWAYS", -- the header's buttons: ALWAYS or HOVER (while the mouse is over the tracker)
     showScrollbar = true,   -- off: the wheel still scrolls
 
     -- Text styles. Flags: "" none, OUTLINE, THICKOUTLINE, SHADOW.
@@ -174,6 +177,8 @@ Settings.DEFAULTS = {
     focusBorderStyle = "GOLD",
     focusBorderSize = 1,
     focusBorderColor = { 0, 0, 0, 1 },
+    focusBorderTexture = "Blizzard Tooltip",
+    focusBorderEdgeSize = 16,
     focusCornerRadius = 10,
     focusShadowEnabled = true,
     focusShadowSize = 7,
@@ -230,6 +235,7 @@ Settings.RANGES = {
     y = { -3000, 3000 },
     fadeAlpha = { 0, 100 },
     borderSize = { 1, 8 },
+    borderEdgeSize = { 4, 32 },
     cornerRadius = { 0, 12 },
     shadowSize = { 1, 24 },
     shadowAlpha = { 0, 100 },
@@ -253,6 +259,7 @@ Settings.RANGES = {
     focusAlpha = { 10, 100 },
     focusPadding = { 0, 30 },
     focusBorderSize = { 1, 8 },
+    focusBorderEdgeSize = { 4, 32 },
     focusCornerRadius = { 0, 12 },
     focusShadowSize = { 1, 24 },
     focusShadowAlpha = { 0, 100 },

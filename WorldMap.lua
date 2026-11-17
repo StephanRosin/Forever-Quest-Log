@@ -137,6 +137,7 @@ function WorldMap.Look()
     end
     return {
         style = get("borderStyle"), size = get("borderSize"), color = get("borderColor"),
+        edge = get("borderTexture"), edgeSize = get("borderEdgeSize"),
         -- The map's content is square: a rounded ring would let its corners
         -- poke out, so the map's frame keeps square corners.
         radius = 0,

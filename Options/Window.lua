@@ -243,6 +243,9 @@ local function layoutRows()
     }
 end
 
+-- The drawn ring's styles (thickness applies); LSM has an edge size instead.
+local function isRing(style) return style == "GOLD" or style == "FLAT" end
+
 -- Appearance: background and border.
 local function appearanceRows()
     return {
@@ -253,11 +256,15 @@ local function appearanceRows()
         num("bgAlpha", "OPT_BG_ALPHA", "%"),
         check("headerLine", "OPT_HEADER_LINE"),
         check("headerShine", "OPT_HEADER_SHINE"),
+        choice("headerIcons", "OPT_HEADER_ICONS", { "ALWAYS", "HOVER" }, "ICONS_"),
         check("showScrollbar", "OPT_SCROLLBAR"),
         { type = "header", label = "OPT_BORDER" },
-        choice("borderStyle", "OPT_BORDER_STYLE", { "GOLD", "FLAT", "NONE" }, "BORDER_"),
-        visibleIf(num("borderSize", "OPT_BORDER_SIZE"), function() return S("borderStyle") ~= "NONE" end),
+        choice("borderStyle", "OPT_BORDER_STYLE", { "GOLD", "FLAT", "LSM", "NONE" }, "BORDER_"),
+        visibleIf(num("borderSize", "OPT_BORDER_SIZE"), function() return isRing(S("borderStyle")) end),
         visibleIf(colorRow("borderColor", "OPT_BORDER_COLOR"), function() return S("borderStyle") == "FLAT" end),
+        visibleIf(media("borderTexture", "OPT_BORDER_TEXTURE", "border"), function() return S("borderStyle") == "LSM" end),
+        visibleIf(num("borderEdgeSize", "OPT_BORDER_EDGE"), function() return S("borderStyle") == "LSM" end),
+        visibleIf(colorRow("borderColor", "OPT_BORDER_TINT"), function() return S("borderStyle") == "LSM" end),
         num("cornerRadius", "OPT_CORNER_RADIUS"),
         { type = "header", label = "OPT_SHADOW" },
         check("shadowEnabled", "OPT_SHADOW_SHOW"),
@@ -442,9 +449,12 @@ local function focusRows()
         visibleIf(media(k("bgTexture"), "OPT_BG_TEXTURE", "background"), function() return S(k("bgMode")) == "TEXTURE" end),
         num(k("bgAlpha"), "OPT_BG_ALPHA", "%"),
         { type = "header", label = "OPT_BORDER" },
-        choice(k("borderStyle"), "OPT_BORDER_STYLE", { "GOLD", "FLAT", "NONE" }, "BORDER_"),
-        visibleIf(num(k("borderSize"), "OPT_BORDER_SIZE"), function() return S(k("borderStyle")) ~= "NONE" end),
+        choice(k("borderStyle"), "OPT_BORDER_STYLE", { "GOLD", "FLAT", "LSM", "NONE" }, "BORDER_"),
+        visibleIf(num(k("borderSize"), "OPT_BORDER_SIZE"), function() return isRing(S(k("borderStyle"))) end),
         visibleIf(colorRow(k("borderColor"), "OPT_BORDER_COLOR"), function() return S(k("borderStyle")) == "FLAT" end),
+        visibleIf(media(k("borderTexture"), "OPT_BORDER_TEXTURE", "border"), function() return S(k("borderStyle")) == "LSM" end),
+        visibleIf(num(k("borderEdgeSize"), "OPT_BORDER_EDGE"), function() return S(k("borderStyle")) == "LSM" end),
+        visibleIf(colorRow(k("borderColor"), "OPT_BORDER_TINT"), function() return S(k("borderStyle")) == "LSM" end),
         num(k("cornerRadius"), "OPT_CORNER_RADIUS"),
         check(k("shadowEnabled"), "OPT_SHADOW_SHOW"),
         visibleIf(num(k("shadowSize"), "OPT_SHADOW_SIZE"), function() return S(k("shadowEnabled")) end),

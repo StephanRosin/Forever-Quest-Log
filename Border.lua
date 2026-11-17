@@ -11,7 +11,12 @@ local _, ns = ...
 -- Styles: FLAT is one colour. GOLD is shaded like a bevel, lighter at the
 -- top, darker at the bottom, with a dark one-pixel line along the inside.
 --
+-- LSM is a backdrop edge file (Blizzard's or LibSharedMedia's), tinted with
+-- color; its pieces come from Blizzard's BackdropTemplate, half of the edge
+-- reaching out of the box (the files draw their line near the middle).
+--
 -- Border.Draw(owner, box, look) with look = { style, size, color, radius,
+-- edge (LSM: the edge file's name), edgeSize (LSM),
 -- shadow = true/false, shadowSize, shadowAlpha (0..1) }.
 local Border = {}
 ns.Border = Border
@@ -35,18 +40,22 @@ Border.GOLD = {
 local OUT = { { -1, 1 }, { 1, 1 }, { -1, -1 }, { 1, -1 } }
 local INNER = { "BOTTOMRIGHT", "BOTTOMLEFT", "TOPRIGHT", "TOPLEFT" }
 
--- Whole physical pixels in UIParent's units (PixelUtil, Blizzard_SharedXML).
-function Border.Snap(v, minPixels)
+-- Whole physical pixels in region's units (PixelUtil, Blizzard_SharedXML).
+-- The region's own scale counts: the tracker has a scale of its own, and a
+-- size snapped in UIParent's units then fell between pixels, drawn one or
+-- two pixels thick depending on where the frame stood.
+function Border.Snap(v, minPixels, region)
     if PixelUtil and PixelUtil.GetNearestPixelSize then
-        return PixelUtil.GetNearestPixelSize(v, UIParent:GetEffectiveScale(), minPixels)
+        return PixelUtil.GetNearestPixelSize(v, (region or UIParent):GetEffectiveScale(), minPixels)
     end
     return v
 end
 
--- How far the border reaches out from its box.
-function Border.Extent(look)
+-- How far the border reaches out from its box (on owner).
+function Border.Extent(look, owner)
     if look.style == "NONE" then return 0 end
-    return Border.Snap(look.size, 1)
+    if look.style == "LSM" then return Border.Snap(look.edgeSize / 2, 1, owner) end
+    return Border.Snap(look.size, 1, owner)
 end
 
 -- Ring ------------------------------------------------------------------------
@@ -237,12 +246,12 @@ local function hideShadow(shadow)
     for i = 1, 4 do shadow.inner[i]:Hide() end
 end
 
-local function drawShadow(shadow, box, look, reach, radius)
+local function drawShadow(owner, shadow, box, look, reach, radius)
     if not look.shadow or look.shadowSize <= 0 then
         hideShadow(shadow)
         return
     end
-    local size = Border.Snap(look.shadowSize, 1)
+    local size = Border.Snap(look.shadowSize, 1, owner)
     for _, piece in ipairs(ringPieces(shadow)) do
         piece:Show()
         piece:SetVertexColor(0, 0, 0, look.shadowAlpha)
@@ -250,6 +259,31 @@ local function drawShadow(shadow, box, look, reach, radius)
     local outer = radius > 0 and radius + reach or 0
     placeShadowEdges(shadow, box, reach, outer, size)
     placeShadowCorners(shadow, box, reach, outer, size)
+end
+
+-- Backdrop (LSM) ---------------------------------------------------------------
+
+local function drawBackdrop(p, owner, box, look)
+    local shown = look.style == "LSM"
+    if not shown then
+        if p.backdrop then p.backdrop:Hide() end
+        return
+    end
+    local f = p.backdrop
+    if not f then
+        f = CreateFrame("Frame", nil, owner, "BackdropTemplate")
+        -- Above the owner's own art, below its children's text.
+        f:SetFrameLevel(owner:GetFrameLevel() + 1)
+        p.backdrop = f
+    end
+    local reach = Border.Extent(look, owner)
+    f:ClearAllPoints()
+    f:SetPoint("TOPLEFT", box, "TOPLEFT", -reach, reach)
+    f:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", reach, -reach)
+    f:SetBackdrop({ edgeFile = ns.Media.Path("border", look.edge), edgeSize = Border.Snap(look.edgeSize, 1, owner) })
+    local c = look.color
+    f:SetBackdropBorderColor(c[1], c[2], c[3], c[4] or 1)
+    f:Show()
 end
 
 -- Drawing ---------------------------------------------------------------------
@@ -267,8 +301,8 @@ end
 
 function Border.Draw(owner, box, look)
     local p = partsOf(owner)
-    local hasRing = look.style ~= "NONE"
-    local size = hasRing and Border.Snap(look.size, 1) or 0
+    local hasRing = look.style == "GOLD" or look.style == "FLAT"
+    local size = hasRing and Border.Snap(look.size, 1, owner) or 0
     local radius = look.radius or 0
     if hasRing then
         local corner = placeRing(p.ring, box, size, radius)
@@ -279,18 +313,19 @@ function Border.Draw(owner, box, look)
         end
     end
     showRing(p.ring, hasRing)
-    local pixel = Border.Snap(1, 1)
+    local pixel = Border.Snap(1, 1, owner)
     local hasLine = look.style == "GOLD" and size >= 2 * pixel
     if hasLine then
         placeLine(p.line, box, size, pixel, radius)
         paintFlat(p.line, Border.GOLD.LINE)
     end
     showRing(p.line, hasLine)
-    drawShadow(p.shadow, box, look, size, radius)
+    drawBackdrop(p, owner, box, look)
+    drawShadow(owner, p.shadow, box, look, Border.Extent(look, owner), radius)
 end
 
--- For the tests: the eight ring pieces and whether the line shows.
+-- For the tests: the eight ring pieces, the line's, and the backdrop frame.
 function Border.Pieces(owner)
     local p = parts[owner]
-    return p and ringPieces(p.ring) or {}, p and ringPieces(p.line) or {}
+    return p and ringPieces(p.ring) or {}, p and ringPieces(p.line) or {}, p and p.backdrop
 end

@@ -39,6 +39,7 @@ local function applyLook(win)
     ns.Corners.Fit(win.clip, win, radius, { win.bg })
     local look = {
         style = S("borderStyle"), size = S("borderSize"), color = ns.Themes.Rim(S("borderColor")), radius = radius,
+        edge = S("borderTexture"), edgeSize = S("borderEdgeSize"),
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
     ns.Border.Draw(win, win, look)

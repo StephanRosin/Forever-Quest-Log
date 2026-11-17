@@ -582,7 +582,7 @@ local function placeRule(rule, band, b)
     rule:ClearAllPoints()
     rule:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 0, 0)
     rule:SetPoint("TOPRIGHT", band, "BOTTOMRIGHT", 0, 0)
-    rule:SetHeight(ns.Border.Snap(1, 1))
+    rule:SetHeight(ns.Border.Snap(1, 1, rule))
     rule:SetColorTexture(c[1], c[2], c[3], c[4])
 end
 
@@ -607,7 +607,7 @@ function Themes.DrawArt(owner, box, look, top)
     local art = Themes.Spec(Themes.Current()).art
     if not art and not owner.themeArt then return end
     art = art or {}
-    local a, extent = artOf(owner), ns.Border.Extent(look)
+    local a, extent = artOf(owner), ns.Border.Extent(look, owner)
     placeOrnaments(a.ornaments, box, art, extent)
     placeShade(a.shade, box, art, top)
     placeBand(a, box, art, top)

@@ -157,6 +157,10 @@ function CreateFrame(kind, name, parent, template)
     M.frames[#M.frames + 1] = f
     if name then M.byName[name] = f; _G[name] = f end
     if template == "SecureActionButtonTemplate" then f._secure = true end
+    if template == "BackdropTemplate" then
+        function f:SetBackdrop(b) self._backdrop = b end
+        function f:SetBackdropBorderColor(r, g, b, a) self._borderColor = { r, g, b, a } end
+    end
     if template == "CooldownFrameTemplate" then
         function f:SetCooldown(s, d) self._cooldown = { s, d } end
         function f:Clear() self._cooldown = nil end
