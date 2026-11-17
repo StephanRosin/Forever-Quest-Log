@@ -12,6 +12,8 @@ A new quest tracker for the right side of your screen, made for **WoW: Forever**
 - **Grouped by zone**, with your current zone on top, or as one list. One click on the header switches.
 - **Sorted like Blizzard's tracker** (nearest first) **or by level**, also with one click, and both combine: by level inside each zone.
 - The **quest level** in front of every title, in its difficulty colour (grey, green, yellow, orange, red), and tags such as Elite, Dungeon or Raid.
+- An **infinity sign** behind quests that are **new in Forever** (not in original Classic), quests of future patches included; can be turned off.
+- With **Spoken** and a voice pack installed, **Spoken's Play button** on every voiced quest, to hear it again.
 - Every counted objective with its number on the right and a **thin progress bar** under it. Finished objectives are dimmed (or hidden, if you prefer). Open objectives can be coloured by progress, red through yellow to green.
 - Completed quests show how to turn them in, with a check mark; failed quests say so; missing gold for a quest is shown as well. One checkbox (or a key) **hides completed quests**.
 - A quest without objectives ("Speak to ...") shows its short quest text instead.
