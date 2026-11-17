@@ -158,6 +158,16 @@ def undock(draw):
     poly(draw, [(18, 6), (26, 6), (26, 14)], 2.4)
 
 
+def infinity(draw):
+    # A lemniscate across the width: the marker behind quests Forever added.
+    pts = []
+    for i in range(0, 361, 6):
+        t = math.radians(i)
+        d = 1 + math.sin(t) ** 2
+        pts.append((16 + 12.5 * math.cos(t) / d, 16 + 12.5 * math.sin(t) * math.cos(t) / d))
+    poly(draw, pts, 2.8)
+
+
 ICONS = {
     "IconChevronDown": chevron_down,
     "IconChevronUp": chevron_up,
@@ -177,6 +187,7 @@ ICONS = {
     "IconResize": resize,
     "IconArrowCorner": arrow_corner,
     "IconUndock": undock,
+    "IconInfinity": infinity,
 }
 
 

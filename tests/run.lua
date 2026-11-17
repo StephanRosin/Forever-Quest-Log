@@ -145,6 +145,19 @@ check("completion text", quests[3].completionText, "Return to Kin'weelay at Grom
 check("tag", quests[5].tag, "Elite")
 check("level colour: green at 32", quests[5].levelColor[2], 0.75)
 check("one-of objectives keep their text", quests[5].objectives[1].max, 1)
+check("new quest: Forever's own", ns.Rows.IsNewQuest(92000), true)
+check("new quest: a later patch's", ns.Rows.IsNewQuest(150000), true)
+check("new quest: Forever's below Classic's last", ns.Rows.IsNewQuest(8571), true)
+check("new quest: Classic event above", ns.Rows.IsNewQuest(60860), false)
+check("new quest: Classic's is not", ns.Rows.IsNewQuest(783), false)
+do
+    local q = { id = 92000, title = "Lost Lantern", level = 30 }
+    check("new quest: marker behind the title", ns.Rows.TitleText(q):find("Lost Lantern " .. ns.Rows.NEW_QUEST_MARK, 1, true) ~= nil, true)
+    check("new quest: Classic quest unmarked", ns.Rows.TitleText({ id = 783, title = "A Threat Within" }), "A Threat Within")
+    Settings.Set("markNewQuests", false)
+    check("new quest: marker can be turned off", ns.Rows.TitleText(q):find("|T", 1, true), nil)
+    Settings.Set("markNewQuests", nil)
+end
 
 section("Sorting and grouping")
 local e = Sort.Build(quests, { groupByZone = true })
@@ -352,6 +365,37 @@ check("focused: map button selected", questRows()[4].poi.selected, true)
 M.superTracked = 0
 M.quest(56).waypoint = nil
 relayout()
+
+section("Spoken's Play button")
+check("no Spoken: no button", questRows()[1].play, nil)
+do
+    local bound = {}
+    _G.Spoken = { IsCompatible = function(_, v) return v == 1 end }
+    _G.VoiceOver = { QuestOverlayUI = {
+        ShowsTrackerButton = function(_, id) return id == 185 end,
+        MakePlayButton = function(_, parent) return CreateFrame("Button", nil, parent) end,
+        BindPlayButton = function(_, button, id, title) bound[#bound + 1] = title; button.questID = id end,
+        SetPlayButtonState = function() end,
+        FollowQueue = function() end,
+    } }
+    relayout()
+    local tiger, shards = questRows()[1], questRows()[2]
+    check("Spoken: Play on a voiced quest", tiger.play and tiger.play._shown, true)
+    check("Spoken: bound to the quest", tiger.play.questID .. " " .. bound[1], "185 Tiger Mastery")
+    check("Spoken: stops and replays like its own tracker buttons", tiger.play.setPlayState, _G.VoiceOver.QuestOverlayUI.FollowQueue)
+    check("Spoken: no button on an unvoiced quest", shards.play == nil or not shards.play._shown, true)
+    relayout()
+    check("Spoken: bound once, not on every redraw", #bound, 1)
+    _G.VoiceOver.QuestOverlayUI.ShowsTrackerButton = function() error("changed Spoken") end
+    relayout()
+    check("Spoken: a changed Spoken only loses the button", tiger.play._shown, false)
+    _G.Spoken.IsCompatible = function() return false end
+    _G.VoiceOver.QuestOverlayUI.ShowsTrackerButton = function() return true end
+    relayout()
+    check("Spoken: incompatible API version, no button", tiger.play._shown, false)
+    _G.Spoken, _G.VoiceOver = nil, nil
+    relayout()
+end
 
 section("Quest item buttons")
 local scrollFrame = M.byName["ForeverQuestLogScroll"]

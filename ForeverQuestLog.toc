@@ -26,6 +26,7 @@ ItemNames\esES.lua
 ItemNames\frFR.lua
 PlaceNames.lua
 ZoneLevelData.lua
+NewQuests.lua
 Core.lua
 Profiles.lua
 Settings.lua

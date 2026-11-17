@@ -431,15 +431,80 @@ function Rows.QuestLines(q, cfg)
     return list
 end
 
--- The title text: "[34] Tiger Mastery", the level in its difficulty colour.
+-- Quests Forever added (NewQuests.lua): above Classic's last id unless one of
+-- its events, so later patches' quests count too; a few new ones sit below.
+local eventsAbove, newBelow
+function Rows.IsNewQuest(questID)
+    if not eventsAbove then
+        eventsAbove, newBelow = {}, {}
+        for _, id in ipairs(ns.CLASSIC_EVENTS_ABOVE) do eventsAbove[id] = true end
+        for _, id in ipairs(ns.NEW_QUESTS_BELOW) do newBelow[id] = true end
+    end
+    if questID > ns.CLASSIC_LAST_QUEST then return not eventsAbove[questID] end
+    return newBelow[questID] or false
+end
+
+-- Teal like Forever's logo; the glyph is white line art tinted by the markup.
+Rows.NEW_QUEST_MARK = "|T" .. Media.Icon("Infinity") .. ":0:0:0:0:32:32:0:32:0:32:77:217:204|t"
+
+-- The title text: "[34] Tiger Mastery", the level in its difficulty colour,
+-- and the infinity sign behind a quest Forever added.
 function Rows.TitleText(q, cfg)
     cfg = cfg or Rows.TRACKER
-    if not cfg.get("showLevel") or not q.level or q.level <= 0 then return q.title end
+    local title = q.title
+    if cfg.get("markNewQuests") and q.id and Rows.IsNewQuest(q.id) then
+        title = title .. " " .. Rows.NEW_QUEST_MARK
+    end
+    if not cfg.get("showLevel") or not q.level or q.level <= 0 then return title end
     local level = "[" .. q.level .. "]"
     if cfg.get("levelColors") and q.levelColor then
         level = "|cff" .. hex(q.levelColor) .. level .. "|r"
     end
-    return level .. " " .. q.title
+    return level .. " " .. title
+end
+
+-- Spoken's Play button (addon Spoken_Quests) on quests a voice pack voices.
+-- Spoken's public API (Spoken:IsCompatible) has no tracker part; this uses the
+-- functions its own tracker buttons call, so every call is guarded and a
+-- changed Spoken only loses the button. Spoken's setting "Play in the tracker"
+-- decides through ShowsTrackerButton.
+local function spokenUI()
+    local spoken, vo = rawget(_G, "Spoken"), rawget(_G, "VoiceOver")
+    local ui = type(vo) == "table" and rawget(vo, "QuestOverlayUI")
+    if type(ui) ~= "table" or not (ui.ShowsTrackerButton and ui.BindPlayButton and ui.MakePlayButton) then return nil end
+    local ok, compatible = pcall(spoken.IsCompatible, spoken, 1)
+    return ok and compatible and ui or nil
+end
+Rows.SpokenUI = spokenUI
+
+-- Lays out the row's Play button; returns the width it takes from the title.
+local function layoutPlay(row, q, size, right)
+    local ui = spokenUI()
+    local ok, shows = false, false
+    if ui then ok, shows = pcall(ui.ShowsTrackerButton, ui, q.id) end
+    if not (ok and shows) then
+        if row.play then row.play:Hide() end
+        return 0
+    end
+    if not row.play then
+        local made, button = pcall(ui.MakePlayButton, ui, row)
+        if not made then return 0 end
+        -- Stop and replay like Spoken's own tracker buttons.
+        button.setPlayState = ui.FollowQueue
+        row.play = button
+    end
+    local button = row.play
+    button:SetSize(size, size)
+    button:SetFrameLevel(row:GetFrameLevel() + 2)
+    button:ClearAllPoints()
+    button:SetPoint("RIGHT", row, "TOPRIGHT", -right, -size / 2)
+    if button.questID ~= q.id then
+        button.soundData = nil
+        pcall(ui.BindPlayButton, ui, button, q.id, q.title, "Forever Quest Log")
+    end
+    pcall(ui.SetPlayButtonState, ui, button)
+    button:Show()
+    return size + 4
 end
 
 -- quest or recipe row. Returns height and whether it wants an item button.
@@ -465,8 +530,9 @@ function Rows.LayoutQuest(row, q, width, index, cfg)
     Media.ApplyText(row.title, titleStyle)
     row.titleColor = titleStyle.color
     local tagW = layoutTag(row.tag, cfg.get("showTags") and q.tag or nil, titleStyle)
+    local playW = layoutPlay(row, q, titleStyle.size + 4, hasItem and Rows.ITEM_W or 0)
     row.title:SetText(Rows.TitleText(q, cfg))
-    local titleW = colW - (tagW > 0 and (tagW + 6) or 0)
+    local titleW = colW - playW - (tagW > 0 and (tagW + 6) or 0)
     row.title:SetWidth(0)
     local natural = row.title:GetStringWidth()
     row.title:SetWidth(math.max(30, math.min(natural + 1, titleW)))
@@ -495,6 +561,7 @@ function Rows.LayoutRecipe(row, r, width, cfg)
     row.quest, row.recipe = nil, r
     row.poi:Hide()
     row.tag:Hide()
+    if row.play then row.play:Hide() end
     local titleStyle = cfg.text("title")
     Media.ApplyText(row.title, titleStyle)
     row.titleColor = titleStyle.color
