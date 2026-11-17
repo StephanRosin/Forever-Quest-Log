@@ -59,7 +59,11 @@ local function section(name) print(name) end
 local S, Settings, Tracker, Data, Sort = ns.Settings.Get, ns.Settings, ns.Tracker, ns.Data, ns.Sort
 
 M.Fire("ADDON_LOADED", ADDON)
+-- Spoken as far as the login sees it: the callback for its voice packs.
+local spokenCallbacks = {}
+_G.Spoken = { RegisterCallback = function(_, event, fn) spokenCallbacks[event] = fn end }
 M.Fire("PLAYER_LOGIN")
+_G.Spoken = nil
 M.Fire("PLAYER_ENTERING_WORLD")
 M.RunTimers()
 
@@ -147,7 +151,9 @@ check("level colour: green at 32", quests[5].levelColor[2], 0.75)
 check("one-of objectives keep their text", quests[5].objectives[1].max, 1)
 check("new quest: Forever's own", ns.Rows.IsNewQuest(92000), true)
 check("new quest: a later patch's", ns.Rows.IsNewQuest(150000), true)
-check("new quest: Forever's below Classic's last", ns.Rows.IsNewQuest(8571), true)
+check("new quest: last Classic id is not", ns.Rows.IsNewQuest(9665), false)
+check("new quest: one above is", ns.Rows.IsNewQuest(9666), true)
+check("new quest: Classic quest Forever gave a completion flag is not (A Crew Under Fire)", ns.Rows.IsNewQuest(3382), false)
 check("new quest: Classic event above", ns.Rows.IsNewQuest(60860), false)
 check("new quest: Classic's is not", ns.Rows.IsNewQuest(783), false)
 do
@@ -370,26 +376,35 @@ section("Spoken's Play button")
 check("no Spoken: no button", questRows()[1].play, nil)
 do
     local bound = {}
-    local callbacks = {}
-    _G.Spoken = { IsCompatible = function(_, v) return v == 1 end,
-        RegisterCallback = function(_, event, fn) callbacks[event] = fn end }
-    M.Fire("PLAYER_LOGIN")
-    check("Spoken: redraws once its voice packs have loaded", callbacks.VOICE_PACKS_LOADED, ns.Tracker.Refresh)
+    check("Spoken: tracker and focus redraw once its voice packs have loaded", spokenCallbacks.VOICE_PACKS_LOADED, ns.Tracker.RefreshAll)
+    _G.Spoken = { IsCompatible = function(_, v) return v == 1 end }
     _G.VoiceOver = { QuestOverlayUI = {
         ShowsTrackerButton = function(_, id) return id == 185 end,
         MakePlayButton = function(_, parent) return CreateFrame("Button", nil, parent) end,
-        BindPlayButton = function(_, button, id, title) bound[#bound + 1] = title; button.questID = id end,
+        BindPlayButton = function(_, button, id, title) bound[#bound + 1] = title end,
         SetPlayButtonState = function() end,
         FollowQueue = function() end,
     } }
     relayout()
     local tiger, shards = questRows()[1], questRows()[2]
     check("Spoken: Play on a voiced quest", tiger.play and tiger.play._shown, true)
-    check("Spoken: bound to the quest", tiger.play.questID .. " " .. bound[1], "185 Tiger Mastery")
+    check("Spoken: bound to the quest", tiger.playQuest .. " " .. bound[1], "185 Tiger Mastery")
+    check("Spoken: centred on the title's first line", tiger.play._points.RIGHT[4], -S("titleSize") / 2)
     check("Spoken: stops and replays like its own tracker buttons", tiger.play.setPlayState, _G.VoiceOver.QuestOverlayUI.FollowQueue)
     check("Spoken: no button on an unvoiced quest", shards.play == nil or not shards.play._shown, true)
     relayout()
     check("Spoken: bound once, not on every redraw", #bound, 1)
+    tiger.playQuest = 605  -- the pooled row showed another quest before
+    _G.VoiceOver.QuestOverlayUI.BindPlayButton = function() error("changed Spoken") end
+    relayout()
+    check("Spoken: a failed rebind hides the button, no stale quest", tiger.play._shown, false)
+    _G.VoiceOver.QuestOverlayUI.BindPlayButton = function(_, _, _, title) bound[#bound + 1] = title end
+    relayout()
+    check("Spoken: rebound once the quest changed", tiger.play._shown and #bound, 2)
+    _G.Spoken = nil
+    relayout()
+    check("Spoken: VoiceOver without the Spoken global, no button and no error", tiger.play._shown, false)
+    _G.Spoken = { IsCompatible = function() return true end }
     _G.VoiceOver.QuestOverlayUI.ShowsTrackerButton = function() error("changed Spoken") end
     relayout()
     check("Spoken: a changed Spoken only loses the button", tiger.play._shown, false)
@@ -397,6 +412,12 @@ do
     _G.VoiceOver.QuestOverlayUI.ShowsTrackerButton = function() return true end
     relayout()
     check("Spoken: incompatible API version, no button", tiger.play._shown, false)
+    _G.Spoken.IsCompatible = function() return true end
+    local fresh = questRows()[2]
+    fresh.play, fresh.playQuest = nil, nil
+    _G.VoiceOver.QuestOverlayUI.MakePlayButton = function() return nil end
+    relayout()
+    check("Spoken: no button made, the row still lays out", fresh.title._shown and fresh.play, nil)
     _G.Spoken, _G.VoiceOver = nil, nil
     relayout()
 end

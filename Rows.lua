@@ -432,16 +432,14 @@ function Rows.QuestLines(q, cfg)
 end
 
 -- Quests Forever added (NewQuests.lua): above Classic's last id unless one of
--- its events, so later patches' quests count too; a few new ones sit below.
-local eventsAbove, newBelow
+-- its events, so later patches' quests count too.
+local eventsAbove
 function Rows.IsNewQuest(questID)
     if not eventsAbove then
-        eventsAbove, newBelow = {}, {}
+        eventsAbove = {}
         for _, id in ipairs(ns.CLASSIC_EVENTS_ABOVE) do eventsAbove[id] = true end
-        for _, id in ipairs(ns.NEW_QUESTS_BELOW) do newBelow[id] = true end
     end
-    if questID > ns.CLASSIC_LAST_QUEST then return not eventsAbove[questID] end
-    return newBelow[questID] or false
+    return questID > ns.CLASSIC_LAST_QUEST and not eventsAbove[questID]
 end
 
 -- Teal like Forever's logo; the glyph is white line art tinted by the markup.
@@ -465,46 +463,43 @@ end
 
 -- Spoken's Play button (addon Spoken_Quests) on quests a voice pack voices.
 -- Spoken's public API (Spoken:IsCompatible) has no tracker part; this uses the
--- functions its own tracker buttons call, so every call is guarded and a
--- changed Spoken only loses the button. Spoken's setting "Play in the tracker"
--- decides through ShowsTrackerButton.
-local function spokenUI()
+-- functions its own tracker buttons call. Spoken's setting "Play in the
+-- tracker" decides through ShowsTrackerButton.
+local function placePlay(row, q, titleSize, right)
     local spoken, vo = rawget(_G, "Spoken"), rawget(_G, "VoiceOver")
     local ui = type(vo) == "table" and rawget(vo, "QuestOverlayUI")
-    if type(ui) ~= "table" or not (ui.ShowsTrackerButton and ui.BindPlayButton and ui.MakePlayButton) then return nil end
-    local ok, compatible = pcall(spoken.IsCompatible, spoken, 1)
-    return ok and compatible and ui or nil
-end
-Rows.SpokenUI = spokenUI
-
--- Lays out the row's Play button; returns the width it takes from the title.
-local function layoutPlay(row, q, size, right)
-    local ui = spokenUI()
-    local ok, shows = false, false
-    if ui then ok, shows = pcall(ui.ShowsTrackerButton, ui, q.id) end
-    if not (ok and shows) then
-        if row.play then row.play:Hide() end
-        return 0
-    end
+    if type(spoken) ~= "table" or type(ui) ~= "table" then return 0 end
+    if not (spoken:IsCompatible(1) and ui:ShowsTrackerButton(q.id)) then return 0 end
     if not row.play then
-        local made, button = pcall(ui.MakePlayButton, ui, row)
-        if not made then return 0 end
+        local button = ui:MakePlayButton(row)
         -- Stop and replay like Spoken's own tracker buttons.
         button.setPlayState = ui.FollowQueue
         row.play = button
     end
-    local button = row.play
+    local button, size = row.play, titleSize + 4
     button:SetSize(size, size)
     button:SetFrameLevel(row:GetFrameLevel() + 2)
     button:ClearAllPoints()
-    button:SetPoint("RIGHT", row, "TOPRIGHT", -right, -size / 2)
-    if button.questID ~= q.id then
+    button:SetPoint("RIGHT", row, "TOPRIGHT", -right, -titleSize / 2)
+    -- Bound once per quest, by our own note: rebinding drops the line it plays.
+    if row.playQuest ~= q.id then
+        row.playQuest = nil
         button.soundData = nil
-        pcall(ui.BindPlayButton, ui, button, q.id, q.title, "Forever Quest Log")
+        ui:BindPlayButton(button, q.id, q.title, "Forever Quest Log")
+        row.playQuest = q.id
     end
-    pcall(ui.SetPlayButtonState, ui, button)
+    ui:SetPlayButtonState(button)
     button:Show()
     return size + 4
+end
+
+-- Lays out the row's Play button; returns the width it takes from the title.
+-- Guarded as a whole: a changed Spoken only loses the button, never the row.
+local function layoutPlay(row, q, titleSize, right)
+    local ok, width = pcall(placePlay, row, q, titleSize, right)
+    if ok and width > 0 then return width end
+    if row.play then row.play:Hide() end
+    return 0
 end
 
 -- quest or recipe row. Returns height and whether it wants an item button.
@@ -530,7 +525,7 @@ function Rows.LayoutQuest(row, q, width, index, cfg)
     Media.ApplyText(row.title, titleStyle)
     row.titleColor = titleStyle.color
     local tagW = layoutTag(row.tag, cfg.get("showTags") and q.tag or nil, titleStyle)
-    local playW = layoutPlay(row, q, titleStyle.size + 4, hasItem and Rows.ITEM_W or 0)
+    local playW = layoutPlay(row, q, titleStyle.size, hasItem and Rows.ITEM_W or 0)
     row.title:SetText(Rows.TitleText(q, cfg))
     local titleW = colW - playW - (tagW > 0 and (tagW + 6) or 0)
     row.title:SetWidth(0)

@@ -741,6 +741,12 @@ function Tracker.Layout()
 end
 
 -- Many events come in bursts: one layout on the next frame.
+-- Tracker and focus frame, which share the quest rows.
+function Tracker.RefreshAll()
+    Tracker.Refresh()
+    ns.Focus.Refresh()
+end
+
 function Tracker.Refresh()
     if not frame or Tracker.queued then return end
     Tracker.queued = true
@@ -1026,7 +1032,7 @@ ns.On("PLAYER_LOGIN", function()
     -- quest is voiced and the rows drawn so far carry no Play button.
     local spoken = rawget(_G, "Spoken")
     if type(spoken) == "table" and spoken.RegisterCallback then
-        pcall(spoken.RegisterCallback, spoken, "VOICE_PACKS_LOADED", Tracker.Refresh)
+        pcall(spoken.RegisterCallback, spoken, "VOICE_PACKS_LOADED", Tracker.RefreshAll)
     end
 end)
 
