@@ -154,7 +154,9 @@ Themes.SPECS = Lib.Specs({
             wedgeColor = Lib.THEMES.PITWALL.wedgeColor,
             rule = { 0.137, 0.149, 0.173, 1 } } },
     },
-})
+}, true)
+-- Glass HD is there to show its glass: the shade over it at 60 % (Glass: 90 %).
+Themes.SPECS.GLASS_HD.art.shade[4] = 0.6
 
 -- Raised whenever SPECS change a look: theme sets made before are made anew
 -- from CLASSIC (Themes.Upgrade), so a changed theme shows as it is now.
@@ -217,6 +219,16 @@ function Themes.BackColor(textureName)
     local p = palette()
     if not p or textureName ~= Themes.Spec(Themes.Current()).look.bgTexture then return nil end
     return p
+end
+
+-- The HD theme's backdrop file for textureName (Media.ApplyBackground): while
+-- it is the current HD theme's own, its colour's finished texture, drawn
+-- white (no grey, no tint); else nil.
+function Themes.HDBack(textureName)
+    local id = Themes.Current()
+    local spec = Themes.Spec(id)
+    if not (spec.art and spec.art.tile) or textureName ~= spec.look.bgTexture then return nil end
+    return Lib.Texture(Lib.Back(spec.art, id, Themes.Color()))
 end
 
 -- The header colour to draw: the colour's accent, or color as stored.
@@ -367,7 +379,8 @@ function Themes.Switch(id)
         local base = sets[CLASSIC] or ns.DB()
         nextSet = id == CLASSIC and copy(base) or seed(id, base)
         local first = Themes.Spec(id).firstColor
-        if first and chosen()[id] == nil then chosen()[id] = first end
+        -- An HD theme inherits its base's firstColor, which it may not have.
+        if first and chosen()[id] == nil and Lib.Colour(id, first) then chosen()[id] = first end
     end
     put(nextSet, "theme", id)
     -- The live set is the profile: no stale copy stays behind.

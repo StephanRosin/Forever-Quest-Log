@@ -235,7 +235,7 @@ end
 -- TEXTURE (tiled, alpha only). alpha 0..1.
 -- A theme colour (Themes.BackColor) on the theme's own backdrop: a comic
 -- paper tints the paper; any other colour draws the grey version tinted
--- to that colour (Lib.GreyTint).
+-- to that colour (Lib.GreyTint). An HD theme draws its colour's own file.
 local function themeArt(name)
     for _, f in ipairs(Media.OWN.background) do
         if f.name == name then return f end
@@ -244,13 +244,17 @@ end
 
 function Media.ApplyBackground(tex, mode, color, alpha, textureName)
     if mode == "TEXTURE" then
-        local c = ns.Themes.BackColor(textureName)
+        -- An HD file tiles at its own size (TILE_HD) like every backdrop here.
+        local hd = ns.Themes.HDBack(textureName)
+        local c = not hd and ns.Themes.BackColor(textureName)
         local art = c and c.back and themeArt(textureName)
         local t = art and Lib.GreyTint(art.back, c.back)
-        tex:SetTexture(t and art.grey or Media.Path("background", textureName), "REPEAT", "REPEAT")
+        tex:SetTexture(hd or t and art.grey or Media.Path("background", textureName), "REPEAT", "REPEAT")
         tex:SetHorizTile(true)
         tex:SetVertTile(true)
-        if t then
+        if hd then
+            tex:SetVertexColor(1, 1, 1, alpha)
+        elseif t then
             tex:SetVertexColor(t[1], t[2], t[3], alpha)
         elseif c and c.paper then
             tex:SetVertexColor(c.paper[1], c.paper[2], c.paper[3], alpha)

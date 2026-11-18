@@ -103,6 +103,15 @@ check("glass: content shaded", frame.themeArt.shade:IsShown(), true)
 Themes.Switch("COMIC")
 M.RunTimers()
 check("comic first time: black paper (the shipped look)", registry.Color(), "BLACK")
+-- COMIC_HD inherits firstColor BLACK, a colour it lacks: nothing stored, its own first.
+do
+    local had = sets().COMIC_HD
+    Themes.Switch("COMIC_HD")
+    check("comic HD first time: no foreign colour stored", (sets().themeColors or {}).COMIC_HD, nil)
+    check("comic HD first time: its own first", registry.Color(), "NEWSPRINT")
+    Themes.Switch("COMIC")
+    sets().COMIC_HD = had
+end
 registry.SetColor("GREY")
 M.RunTimers()
 check("comic: display outline, not thick (pixelated)", S("titleFlag"), "OUTLINE")
@@ -255,8 +264,18 @@ for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
         registry.SetColor(registry.Colors()[1])
         M.RunTimers()
         local back = Themes.Spec(id).look.bgTexture
-        check(id .. ": first colour as before", ns.Media.Path("background", back):match("[^\\]+$") == texture()
-            and frame.bg._vertex[1] == ns.Media.Tint(back), true)
+        if Themes.Spec(id).art.tile then
+            -- HD: no theme before it; each colour its own file, drawn white at the set's alpha.
+            for _, c in ipairs(LibForeverThemes.COLORS[id]) do
+                registry.SetColor(c.id)
+                M.RunTimers()
+                check(id .. " " .. c.id .. ": its own HD file, white", texture() .. " " .. table.concat(frame.bg._vertex, "/"),
+                    c.texture .. " 1/1/1/" .. S("bgAlpha") / 100)
+            end
+        else
+            check(id .. ": first colour as before", ns.Media.Path("background", back):match("[^\\]+$") == texture()
+                and frame.bg._vertex[1] == ns.Media.Tint(back), true)
+        end
     end
 end
 registry.SetColor(picked, "COMIC")
@@ -308,7 +327,18 @@ for _, row in ipairs(ns.Window.PAGES[1].rows()) do
 end
 local listed = {}
 for _, c in ipairs(themeRow.choices()) do listed[#listed + 1] = c.value end
-check("new: in the options' list, appended", table.concat(listed, " ", 10), "SWISS CONSOLE PITWALL")
+check("new: in the options' list, appended", table.concat(listed, " ", 10, 12), "SWISS CONSOLE PITWALL")
+check("HD: in the options' list after them", table.concat(listed, " ", 13),
+    "WOOD_HD TECH_HD PARCHMENT_HD RUNESTONE_HD GLASS_HD COMIC_HD FROST_HD")
+-- Every theme and colour the menus offer has its name in every language.
+for code, strings in pairs(ns.Locales) do
+    for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
+        check(code .. ": THEME_" .. id, strings["THEME_" .. id] ~= nil, true)
+        for _, c in ipairs(LibForeverThemes.Colors(id)) do
+            check(code .. ": THEME_COLOR_" .. id .. "_" .. c, strings["THEME_COLOR_" .. id .. "_" .. c] ~= nil, true)
+        end
+    end
+end
 check("new: their names", themeRow.choices()[10].label, "Swiss Clean")
 local titleSize = S("titleSize")
 Themes.Switch("SWISS")
@@ -429,7 +459,7 @@ for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
         for _, colour in ipairs(registry.Colors()) do
             registry.SetColor(colour)
             M.RunTimers()
-            local want = (RING_OVERRIDES[id] or {})[colour] or RINGS[id]
+            local want = (RING_OVERRIDES[id] or {})[colour] or RINGS[LibForeverThemes.BaseTheme(id)]
             for i, win in ipairs(windows) do
                 if i > 1 then ns.Notes.LayoutWindow(win) end
                 check(id .. " " .. colour .. ": ring of window " .. i, drawnRing(win, S("borderStyle")), want)
