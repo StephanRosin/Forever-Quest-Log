@@ -2011,6 +2011,8 @@ do
     local addQuest
     for _, e in ipairs(M.menus[#M.menus].entries) do if e.text == list.name then addQuest = e end end
     check("quest: the menu offers the list", addQuest ~= nil, true)
+    check("quest menu: Blizzard's tag for other addons", M.menus[#M.menus].tag, "MENU_QUEST_MAP_LOG_TITLE")
+    check("quest menu: owner carries the quest", qrow.questID, qrow.quest.id)
     addQuest.fn()
     local qe = list.entries[#list.entries]
     check("quest: symbol, title, level", ns.Tasks.Line(qe).text:gsub("|cff%x+", ""):gsub("|r", ""),

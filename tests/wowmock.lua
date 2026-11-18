@@ -395,6 +395,7 @@ ChatFrameUtil = {
 MenuUtil = { CreateContextMenu = function(owner, build)
     local menu = { entries = {} }
     local root = {
+        SetTag = function(_, tag) menu.tag = tag end,
         CreateTitle = function(_, t) menu.entries[#menu.entries + 1] = { text = t } end,
         CreateButton = function(self, t, fn)
             menu.entries[#menu.entries + 1] = { text = t, fn = fn }

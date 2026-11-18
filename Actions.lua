@@ -67,7 +67,11 @@ end
 -- The right-click menu, Blizzard's entries in Blizzard's order.
 local function questMenu(owner, questID)
     if not (MenuUtil and MenuUtil.CreateContextMenu) then return end
+    -- Blizzard's quest log tag and owner.questID: addons extending its menu (Shortest Path Forever's
+    -- "Plan journey") add their entries here too.
+    owner.questID = questID
     MenuUtil.CreateContextMenu(owner, function(_, root)
+        root:SetTag("MENU_QUEST_MAP_LOG_TITLE")
         root:CreateTitle(C_QuestLog.GetTitleForQuestID(questID) or "")
         if C_SuperTrack.GetSuperTrackedQuestID() ~= questID then
             root:CreateButton(SUPER_TRACK_QUEST, function() Actions.Focus(questID) end)
