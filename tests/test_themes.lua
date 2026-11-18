@@ -108,7 +108,7 @@ do
     local had = sets().COMIC_HD
     Themes.Switch("COMIC_HD")
     check("comic HD first time: no foreign colour stored", (sets().themeColors or {}).COMIC_HD, nil)
-    check("comic HD first time: its own first", registry.Color(), "NEWSPRINT")
+    check("comic HD first time: its own first", registry.Color(), "NOIR")
     Themes.Switch("COMIC")
     sets().COMIC_HD = had
 end
