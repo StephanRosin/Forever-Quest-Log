@@ -624,6 +624,8 @@ local function placeItems(itemRows)
 end
 
 local itemRows = {}
+local layoutVisible, hiddenByRules = false, false
+local applyVisibility
 
 function Tracker.Layout()
     if not frame then return end
@@ -730,8 +732,9 @@ function Tracker.Layout()
     -- Nothing tracked and locked: out of the way, as Blizzard's tracker.
     -- Unlocked always shows, so a hidden frame can be found again.
     local hasContent = #entries > 0 or (st.instance and st.onlyHere and #quests > 0)
-    local visible = unlocked or (hasContent and not (st.collapsed and S("collapseHides")))
-    frame:SetShown(visible and true or false)
+    layoutVisible = unlocked or (hasContent and not (st.collapsed and S("collapseHides")))
+    hiddenByRules = Tracker.HiddenByRules()
+    applyVisibility()
     place()
     applyLook()
     layoutUnlocked()
@@ -912,7 +915,7 @@ function Tracker.UpdateAlpha()
         alpha = S("fadeAlpha") / 100
     end
     frame:SetAlpha(alpha)
-    Items.SetAlpha(state().collapsed and 0 or alpha)
+    Items.SetAlpha((state().collapsed or not frame:IsShown()) and 0 or alpha)
     -- Hidden buttons stay clickable: the mouse over one is over the tracker,
     -- which shows them.
     local icons = (S("headerIcons") ~= "HOVER" or frame:IsMouseOver() or frame.moving or resizing) and 1 or 0
@@ -1014,6 +1017,50 @@ Settings.OnChange(function(key)
     Tracker.Refresh()
 end)
 
+-- Visibility rules ------------------------------------------------------------
+
+-- Checkbox -> macro condition. Several conditions in a row match when any does.
+Tracker.HIDE_RULES = {
+    { "hideInCombat", "[combat]" }, { "hideOutOfCombat", "[nocombat]" },
+    { "hideWithTarget", "[@target,exists]" }, { "hideWithoutTarget", "[@target,noexists]" },
+    { "hideInGroup", "[group]" }, { "hideSolo", "[nogroup]" },
+}
+local RULE_CHECK = 0.1  -- seconds between checks; conditions like [mounted] have no event of their own
+
+-- The rules as one macro text, "" without any: the checked conditions hide,
+-- then the player's own text. Own conditions without "hide"/"show" hide too.
+function Tracker.HideMacro()
+    local conds = ""
+    for _, rule in ipairs(Tracker.HIDE_RULES) do
+        if S(rule[1]) then conds = conds .. rule[2] end
+    end
+    local own = (S("hideConditions") or ""):match("^%s*(.-)%s*$")
+    if own ~= "" and not (own:find("hide") or own:find("show")) then own = own .. " hide" end
+    if conds == "" then return own end
+    return conds .. " hide" .. (own ~= "" and "; " .. own or "")
+end
+
+function Tracker.HiddenByRules()
+    local macro = Tracker.HideMacro()
+    return macro ~= "" and SecureCmdOptionParse(macro) == "hide"
+end
+
+-- The tracker is an ordinary frame (Items.lua keeps the secure buttons
+-- apart), so showing and hiding works in combat; the buttons only fade.
+function applyVisibility()
+    frame:SetShown(layoutVisible and (not S("locked") or not hiddenByRules))
+    Tracker.UpdateAlpha()
+end
+
+local function checkRules()
+    if not frame then return end
+    local hidden = Tracker.HiddenByRules()
+    if hidden == hiddenByRules then return end
+    hiddenByRules = hidden
+    -- Out of combat the layout also takes the item buttons away.
+    if InCombatLockdown() then applyVisibility() else Tracker.Refresh() end
+end
+
 -- Events ----------------------------------------------------------------------
 
 local REFRESH_EVENTS = {
@@ -1028,6 +1075,7 @@ ns.On("PLAYER_LOGIN", function()
     ns.RebuildPresets()
     ns.Themes.Upgrade()
     Tracker.Build()
+    C_Timer.NewTicker(RULE_CHECK, checkRules)
     -- Spoken loads its voice packs after entering the world; until then no
     -- quest is voiced and the rows drawn so far carry no Play button.
     local spoken = rawget(_G, "Spoken")
@@ -1064,6 +1112,7 @@ ns.On("PLAYER_REGEN_ENABLED", function()
 end)
 
 function Tracker.IsLayoutPending() return layoutPending end
+
 
 -- Right under the minimap, its right edges in line.
 function Tracker.SnapBelowMinimap()

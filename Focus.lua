@@ -21,10 +21,21 @@ local GRIP = 16
 local frame, row, grip, outline
 local resizing
 
--- The quest to show: the focused one, else (if set) the first tracked one.
+-- The quest whose objective moved last (QUEST_WATCH_UPDATE), for
+-- followProgress. Only shown, never focused: C_SuperTrack in combat taints
+-- the map pins (see Actions.Focus).
+local progressed
+
+-- The quest to show: the one that progressed last (if set), the focused
+-- one, else (if set) the first tracked one.
 function Focus.Quest()
     local id = C_SuperTrack and C_SuperTrack.GetSuperTrackedQuestID and C_SuperTrack.GetSuperTrackedQuestID() or 0
     local headers = ns.Data.QuestHeaders()
+    if progressed and G("followProgress") then
+        local q = ns.Data.Quest(progressed, 0, headers, id)
+        if q then return q end
+        progressed = nil  -- left the log
+    end
     if id and id > 0 then
         local q = ns.Data.Quest(id, 0, headers, id)
         if q then return q end
@@ -217,6 +228,11 @@ function Focus.Build()
 end
 
 ns.On("PLAYER_LOGIN", function() Focus.Build() end)
+
+ns.On("QUEST_WATCH_UPDATE", function(_, questID)
+    progressed = questID
+    Focus.Refresh()
+end)
 
 for _, event in ipairs({ "SUPER_TRACKING_CHANGED", "QUEST_LOG_UPDATE", "QUEST_WATCH_LIST_CHANGED",
     "QUEST_TURNED_IN", "PLAYER_MONEY", "ZONE_CHANGED_NEW_AREA", "PLAYER_REGEN_ENABLED",

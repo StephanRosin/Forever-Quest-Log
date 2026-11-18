@@ -465,6 +465,45 @@ M.RunTimers()
 check("open again after combat", ns.CharState().collapsed, false)
 Settings.Set("combatCollapse", nil)
 
+section("Visibility rules")
+local tick = M.tickers[1]
+check("one rule ticker", #M.tickers, 1)
+check("no rules: nothing to check", ns.Tracker.HideMacro(), "")
+Settings.Set("hideInCombat", true)
+Settings.Set("hideWithTarget", true)
+check("checked rules in one clause", ns.Tracker.HideMacro(), "[combat][@target,exists] hide")
+Settings.Set("hideConditions", " [mounted] ")
+check("own conditions hide too", ns.Tracker.HideMacro(), "[combat][@target,exists] hide; [mounted] hide")
+Settings.Set("hideInCombat", nil)
+Settings.Set("hideWithTarget", nil)
+Settings.Set("hideConditions", "[mod:shift] show; hide")
+check("own text with an action stays", ns.Tracker.HideMacro(), "[mod:shift] show; hide")
+check("own text: hidden without shift", ns.Tracker.HiddenByRules(), true)
+M.conditions["mod:shift"] = true
+check("own text: shown with shift", ns.Tracker.HiddenByRules(), false)
+M.conditions["mod:shift"] = nil
+Settings.Set("hideConditions", nil)
+Settings.Set("hideInCombat", true)
+relayout()
+check("rule not met: shown", frame._shown, true)
+check("item button visible", ns.Items.Buttons()[1]._alpha, 1)
+M.state.combat, M.conditions.combat = true, true
+tick()
+check("in combat: hidden at once", frame._shown, false)
+check("in combat: item button only fades", ns.Items.Count() == 1 and ns.Items.Buttons()[1]._alpha, 0)
+Settings.Set("locked", false)
+M.RunTimers()
+check("unlocked: always shown", frame._shown, true)
+Settings.Set("locked", true)
+M.RunTimers()
+check("locked again: hidden", frame._shown, false)
+M.state.combat, M.conditions.combat = false, nil
+M.Fire("PLAYER_REGEN_ENABLED")
+tick()
+M.RunTimers()
+check("after combat: back", frame._shown, true)
+Settings.Set("hideInCombat", nil)
+
 section("Dungeons")
 M.state.instance = { name = "The Deadmines", kind = "party" }
 M.watches = { 185, 605, 189, 56, 228, 214 }
@@ -1260,6 +1299,16 @@ Settings.Set("focusFallback", "FIRST")
 ns.Focus.Layout()
 check("fallback: first tracked quest", focus._shown and ns.Focus.Quest().title, "Tiger Mastery")
 Settings.Set("focusFallback", nil)
+M.Fire("QUEST_WATCH_UPDATE", 189)
+check("progress: ignored while off", ns.Focus.Quest(), nil)
+Settings.Set("focusFollowProgress", true)
+check("progress: the quest that moved", ns.Focus.Quest().id, 189)
+M.superTracked = 56
+check("progress: before the focused one", ns.Focus.Quest().id, 189)
+M.Fire("QUEST_WATCH_UPDATE", 424242)
+check("progress: a quest not in the log falls back", ns.Focus.Quest().id, 56)
+M.superTracked = 0
+Settings.Set("focusFollowProgress", nil)
 M.superTracked = 56
 M.Fire("SUPER_TRACKING_CHANGED")
 M.RunTimers()

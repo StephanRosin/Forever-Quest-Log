@@ -58,6 +58,15 @@ Settings.DEFAULTS = {
     instanceCollapse = true,
     instanceOnlyHere = true,
     combatCollapse = false,
+    -- Visibility rules (locked only): the tracker hides while one matches.
+    -- They are macro conditions, so they also work in combat.
+    hideInCombat = false,
+    hideOutOfCombat = false,
+    hideWithTarget = false,
+    hideWithoutTarget = false,
+    hideInGroup = false,
+    hideSolo = false,
+    hideConditions = "",    -- own macro conditions, e.g. "[mounted]" or "[mod:shift] show; hide"
     fadeAlpha = 100,        -- percent, while the mouse is not over it
 
     -- Frame look
@@ -162,6 +171,7 @@ Settings.DEFAULTS = {
     focusLocked = true,
     focusFallback = "NONE",     -- nothing focused: NONE (hide) or FIRST (first tracked quest)
     focusHideInCombat = false,
+    focusFollowProgress = false, -- show the quest whose objective moved last (the focus itself stays)
     focusPoint = "TOPRIGHT",
     focusX = -533,
     focusY = -427,

@@ -432,6 +432,7 @@ local function focusRows()
         check(k("locked"), "OPT_LOCK"),
         focusPos[1], focusPos[2],
         choice(k("fallback"), "OPT_FOCUS_FALLBACK", { "NONE", "FIRST" }, "FALLBACK_"),
+        check(k("followProgress"), "OPT_FOCUS_FOLLOW_PROGRESS"),
         check(k("hideInCombat"), "OPT_FOCUS_HIDE_COMBAT"),
         { type = "header", label = "OPT_POSITION" },
         num(k("width"), "OPT_WIDTH"),
@@ -487,6 +488,8 @@ local function focusRows()
     return rows
 end
 
+local HIDE_CONDITIONS_MAX = 200  -- letters; a macro line's room
+
 local function instanceRows()
     return {
         { type = "header", label = "OPT_INSTANCES" },
@@ -496,6 +499,19 @@ local function instanceRows()
         { type = "header", label = "OPT_COMBAT" },
         check("combatCollapse", "OPT_COMBAT_COLLAPSE"),
         { type = "text", label = "OPT_COMBAT_HINT", height = 40 },
+        { type = "header", label = "OPT_VISIBILITY" },
+        check("hideInCombat", "OPT_HIDE_IN_COMBAT"),
+        check("hideOutOfCombat", "OPT_HIDE_OUT_OF_COMBAT"),
+        check("hideWithTarget", "OPT_HIDE_WITH_TARGET"),
+        check("hideWithoutTarget", "OPT_HIDE_WITHOUT_TARGET"),
+        check("hideInGroup", "OPT_HIDE_IN_GROUP"),
+        check("hideSolo", "OPT_HIDE_SOLO"),
+        {
+            type = "input", label = "OPT_HIDE_CONDITIONS", maxLetters = HIDE_CONDITIONS_MAX,
+            get = function() return S("hideConditions") end,
+            set = function(v) Settings.Set("hideConditions", v:match("^%s*(.-)%s*$")) end,
+        },
+        { type = "text", label = "OPT_HIDE_HINT", height = 56 },
     }
 end
 
@@ -678,6 +694,9 @@ local function widgetFor(page, opt)
     local row
     if kind == "check" then
         row = Widgets.Checkbox(page, o)
+    elseif kind == "input" then
+        o.maxLetters = opt.maxLetters
+        row = Widgets.TextInput(page, o)
     elseif kind == "select" then
         o.items = function()
             local items = {}

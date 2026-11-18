@@ -209,7 +209,29 @@ function StaticPopup_Show(which, a)
     M.popups[#M.popups + 1] = { which = which, text = StaticPopupDialogs[which].text, arg = a }
     return M.popups[#M.popups]
 end
-C_Timer = { After = function(_, fn) M.timers[#M.timers + 1] = fn end }
+C_Timer = {
+    After = function(_, fn) M.timers[#M.timers + 1] = fn end,
+    NewTicker = function(_, fn) M.tickers[#M.tickers + 1] = fn end,
+}
+M.tickers = {}
+-- Macro conditions as the client reads them, for the conditions in
+-- M.conditions (e.g. M.conditions.combat = true): "[a,b][c] x; y".
+M.conditions = {}
+function SecureCmdOptionParse(text)
+    for clause in (text .. ";"):gmatch("%s*([^;]*);") do
+        local action = clause:gsub("%b[]", ""):match("^%s*(.-)%s*$")
+        local any, groups = false, 0
+        for group in clause:gmatch("%[(.-)%]") do
+            groups = groups + 1
+            local all = true
+            for cond in group:gmatch("[^,]+") do
+                if not M.conditions[cond] then all = false end
+            end
+            any = any or all
+        end
+        if groups == 0 or any then return action end
+    end
+end
 function CreateColor(r, g, b, a) return { r = r, g = g, b = b, a = a } end
 InterfaceOptions_AddCategory = function(panel) M.registered[#M.registered + 1] = panel.name end
 PixelUtil = { GetNearestPixelSize = function(v) return v end, GetPixelToUIUnitFactor = function() return 1 end }
