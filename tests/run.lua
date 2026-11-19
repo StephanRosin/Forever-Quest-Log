@@ -562,6 +562,16 @@ check("collapse off: stays open", ns.CharState().collapsed, false)
 M.state.instance = nil
 M.Fire("PLAYER_ENTERING_WORLD")
 Settings.Set("instanceCollapse", nil)
+-- Group finder: one dungeon straight into the next, then out.
+M.state.instance = { name = "The Deadmines", kind = "party" }
+M.Fire("PLAYER_ENTERING_WORLD")
+M.state.instance = { name = "Stratholme", kind = "party" }
+M.Fire("PLAYER_ENTERING_WORLD")
+check("instance to instance: collapsed", ns.CharState().collapsed, true)
+M.state.instance = nil
+M.Fire("PLAYER_ENTERING_WORLD")
+M.RunTimers()
+check("instance to instance: open again outside", ns.CharState().collapsed, false)
 M.watches = { 185, 605, 189, 56, 228 }
 relayout()
 

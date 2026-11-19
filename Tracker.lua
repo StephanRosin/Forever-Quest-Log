@@ -62,12 +62,15 @@ function Tracker.UpdateInstance()
     local st = state()
     local name = Tracker.Instance()
     if name and st.instance ~= name then
+        -- From one instance straight into the next (group finder port): keep
+        -- the state from outside, not the collapse of the first instance.
+        local outside = st.instance == nil
         st.instance = name
         st.onlyHere = S("instanceOnlyHere")
         if S("instanceCollapse") then
-            st.beforeInstance = st.collapsed and true or false
+            if outside then st.beforeInstance = st.collapsed and true or false end
             st.collapsed = true
-        else
+        elseif outside then
             st.beforeInstance = nil
         end
     elseif not name and st.instance then

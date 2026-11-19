@@ -21,6 +21,12 @@ local function status()
         tracker and tracker:GetScale() or 0, tracker and tracker:GetAlpha() or 0)
     ns.Print("%s: %d / %d, %s: %d", L.STATUS_WATCHED, C_QuestLog.GetNumQuestWatches(), ns.Data.MaxWatches(),
         L.STATUS_ITEMS, ns.Items.Count())
+    -- Why the tracker shows or not (raw values, for bug reports).
+    local st, f = ns.CharState(), ns.Tracker.frame
+    ns.Print("profile %s, shown %s, locked %s, collapsed %s, collapseHides %s, instance %s, onlyHere %s, rules \"%s\"",
+        tostring(ns.ActiveProfile()), tostring(f and f:IsShown()), tostring(Settings.Get("locked")),
+        tostring(st.collapsed), tostring(Settings.Get("collapseHides")), tostring(st.instance),
+        tostring(st.onlyHere), ns.Tracker.HideMacro())
     if ns.Tracker.IsLayoutPending() then ns.Print(L.STATUS_PENDING) end
     for _, line in ipairs(ns.Blizzard.TaintReport()) do
         ns.Print("  %s: %s%s", line.name, line.secure and "|cff44dd44secure|r" or "|cffff4444tainted|r",
