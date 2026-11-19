@@ -455,7 +455,9 @@ function Rows.TitleText(q, cfg)
     end
     if not cfg.get("showLevel") or not q.level or q.level <= 0 then return title end
     local level = "[" .. q.level .. "]"
-    if cfg.get("levelColors") and q.levelColor then
+    if cfg.onBanner then  -- the level colours read badly on the banner's red
+        level = "|cff" .. hex(ns.Themes.HeaderInk(q.levelColor or { 1, 1, 1 })) .. level .. "|r"
+    elseif cfg.get("levelColors") and q.levelColor then
         level = "|cff" .. hex(ns.Themes.TitleInk(q.levelColor)) .. level .. "|r"
     end
     return level .. " " .. title
@@ -537,7 +539,7 @@ function Rows.LayoutQuest(row, q, width, index, cfg)
         row.tag:ClearAllPoints()
         row.tag:SetPoint("LEFT", row.title, "TOPRIGHT", 6, -titleStyle.size / 2)
     end
-    local y = row.title:GetStringHeight()
+    local y = row.title:GetStringHeight() + (cfg.titleGap or 0)
 
     local wanted = Rows.QuestLines(q, cfg)
     local pool = lines(row, #wanted)

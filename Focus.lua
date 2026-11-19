@@ -71,7 +71,7 @@ local function savePosition()
         [cfg.key("y")] = math.floor(y + 0.5) })
 end
 
-local function applyLook()
+local function applyLook(top)
     Media.ApplyBackground(frame.bg, G("bgMode"), G("bgColor"), G("bgAlpha") / 100, G("bgTexture"))
     local radius = ns.Corners.Clamp(G("cornerRadius"), frame:GetWidth(), frame:GetHeight())
     ns.Corners.Fit(frame.clip, frame, radius, { frame.bg })
@@ -81,7 +81,7 @@ local function applyLook()
         shadow = G("shadowEnabled"), shadowSize = G("shadowSize"), shadowAlpha = G("shadowAlpha") / 100,
     }
     ns.Border.Draw(frame, frame, look)
-    ns.Themes.DrawArt(frame, frame, look)
+    ns.Themes.DrawArt(frame, frame, look, top)
 end
 
 -- The grip sits at the bottom corner away from the anchor's side: that
@@ -113,14 +113,25 @@ function Focus.Layout()
     local pad = G("padding")
     local width = G("width")
     frame:SetWidth(width)
-    local h = Rows.LayoutQuest(row, q, width - 2 * pad, nil, cfg)
+    -- A theme's banner (Azeroth) behind the title, as the tracker's header:
+    -- the title in the header's colour, past the banner's end, air below it.
+    local banner, left, rowCfg = ns.Themes.Banner(), pad, cfg
+    if banner then
+        rowCfg = setmetatable({ onBanner = true, titleGap = pad + 4, text = function(name)
+            local style = cfg.text(name)
+            if name == "title" then style.color = ns.Themes.Accent(S("headerColor")) end
+            return style
+        end }, { __index = cfg })
+        left = math.max(pad, ns.Themes.TitleIndent(G("titleSize") + 2 * pad))
+    end
+    local h = Rows.LayoutQuest(row, q, width - pad - left, nil, rowCfg)
     row:ClearAllPoints()
-    row:SetPoint("TOPLEFT", frame, "TOPLEFT", pad, -pad)
+    row:SetPoint("TOPLEFT", frame, "TOPLEFT", left, -pad)
     frame:SetHeight(h + 2 * pad)
     frame:Show()
     if G("hideInCombat") and InCombatLockdown() then frame:Hide() end
     place()
-    applyLook()
+    applyLook(banner and math.floor(row.title:GetStringHeight() + 2 * pad + 0.5) or nil)
     layoutUnlocked()
     frame:SetAlpha(G("alpha") / 100)
 end

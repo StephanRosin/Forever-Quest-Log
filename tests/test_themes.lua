@@ -834,9 +834,10 @@ check("azeroth: title past the banner's end", select(4, headerTitle:GetPoint()),
 check("azeroth: gold corners on the frame", art.ornaments[1]:IsShown() and file(art.ornaments[1]), "Bracket")
 local noteArt = windows[2].themeArt
 ns.Notes.LayoutWindow(windows[2])
-check("azeroth: a note without the banner", noteArt.band:IsShown() or noteArt.ends[1]:IsShown(), false)
-check("azeroth: a note's icons in ink", table.concat(Themes.Icons(true).idle, "/"), "0.29/0.18/0.09")
-check("azeroth: the tracker's icons stay gold", Themes.Icons().idle[3] < 0.2, true)
+check("azeroth: a note on the banner, as the tracker", noteArt.band:IsShown() and noteArt.ends[1]:IsShown(), true)
+local gold = Themes.Accent(S("headerColor"))
+local nr, ng = windows[2].name:GetTextColor()
+check("azeroth: a note's title in the header's colour", nr == gold[1] and ng == gold[2], true)
 local amber = Themes.TitleInk({ 1, 1, 0 })
 check("azeroth: yellow levels in dark amber, not olive", amber[1] > amber[2] and amber[1] < 0.6, true)
 local grey = Themes.TitleInk({ 0.5, 0.5, 0.5 })

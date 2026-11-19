@@ -43,9 +43,9 @@ local function applyLook(win)
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
     ns.Border.Draw(win, win, look)
-    ns.Themes.DrawArt(win, win, look, win.titleH or TITLE_H, true)
+    ns.Themes.DrawArt(win, win, look, win.titleH or TITLE_H)
     -- A theme's icon colours (Themes.Icons): its colour's accent, ink on light paper.
-    local ink = ns.Themes.Icons(true) or {}
+    local ink = ns.Themes.Icons() or {}
     local c, g = ink.idle or { 1, 1, 1 }, ink.grip or ACCENT
     win.close.icon:SetTexture(ink.close and Media.Icon(ink.close) or CLOSE)
     for _, b in ipairs({ win.close, win.gear, win.add }) do b.icon:SetVertexColor(c[1], c[2], c[3]) end
@@ -151,6 +151,8 @@ end
 function Notes.LayoutWindow(win)
     local list = win.list
     local style = Settings.TextStyle("zone")
+    -- On a banner (Azeroth) in the header's colour, as the tracker's "Quests".
+    if ns.Themes.Banner() then style.color = ns.Themes.Accent(Settings.Get("headerColor")) end
     local spec = ns.Themes.Spec(ns.Themes.Current())
     Media.ApplyText(win.name, style)
     -- A theme's larger title font gets a taller title row; a shaded theme
@@ -160,9 +162,9 @@ function Notes.LayoutWindow(win)
     local art = spec.art or {}
     local titleH = themed and math.max(TITLE_H, style.size + 12) or TITLE_H
     -- Past the theme's title wedge (Pitwall), as in the tracker.
-    local indent = ns.Themes.TitleIndent(titleH, nil, true)
+    local indent = ns.Themes.TitleIndent(titleH)
     win.name:SetPoint("LEFT", indent > 0 and indent - PAD or 0, 0)
-    local top = titleH + (art.shade and art.shadeInset or art.band and art.band.rule and BAND_AIR or 0)
+    local top = titleH + (art.shade and art.shadeInset or art.band and (art.band.rule or art.banner) and BAND_AIR or 0)
     if win.titleH ~= titleH or win.top ~= top then
         win.titleH, win.top = titleH, top
         win.title:SetHeight(titleH)
