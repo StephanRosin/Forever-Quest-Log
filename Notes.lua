@@ -42,8 +42,9 @@ local function applyLook(win)
         edge = S("borderTexture"), edgeSize = S("borderEdgeSize"), bgExtend = S("bgExtend"),
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
-    ns.Border.Draw(win, win, look)
-    ns.Themes.DrawArt(win, win, look, win.titleH or TITLE_H)
+    local box = ns.Themes.ArtBox(win)
+    ns.Border.Draw(win, box, look)
+    ns.Themes.DrawArt(win, box, look, win.titleH or TITLE_H)
     -- A theme's icon colours (Themes.Icons): its colour's accent, ink on light paper.
     local ink = ns.Themes.Icons() or {}
     local c, g = ink.idle or { 1, 1, 1 }, ink.grip or ACCENT
@@ -163,12 +164,22 @@ function Notes.LayoutWindow(win)
     local titleH = themed and math.max(TITLE_H, style.size + 12) or TITLE_H
     -- Past the theme's title wedge (Pitwall), as in the tracker.
     local indent = ns.Themes.TitleIndent(titleH)
-    win.name:SetPoint("LEFT", indent > 0 and indent - PAD or 0, 0)
+    -- Inside a material frame (Azeroth, Goblin) title, list and grip move in by its width.
+    local inset = ns.Themes.FrameInset(win)
+    local pad = PAD + inset
+    win.name:SetPoint("LEFT", indent > 0 and indent - pad or 0, 0)
     local top = titleH + (art.shade and art.shadeInset or art.band and (art.band.rule or art.banner) and BAND_AIR or 0)
-    if win.titleH ~= titleH or win.top ~= top then
-        win.titleH, win.top = titleH, top
-        win.title:SetHeight(titleH)
-        win.scroll:SetPoint("TOPLEFT", PAD, -top)
+    if win.titleH ~= titleH or win.top ~= top or win.inset ~= inset then
+        win.titleH, win.top, win.inset = titleH, top, inset
+        win.title:ClearAllPoints()
+        win.title:SetPoint("TOPLEFT", pad, -inset)
+        win.title:SetPoint("TOPRIGHT", -pad, -inset)
+        win.title:SetHeight(titleH - inset)
+        win.scroll:ClearAllPoints()
+        win.scroll:SetPoint("TOPLEFT", pad, -top)
+        win.scroll:SetPoint("BOTTOMRIGHT", -pad, pad)
+        win.grip:ClearAllPoints()
+        win.grip:SetPoint("BOTTOMRIGHT", -inset, inset)
         applyLook(win)
     end
     local done = 0

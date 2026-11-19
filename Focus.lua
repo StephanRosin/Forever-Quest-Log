@@ -80,8 +80,9 @@ local function applyLook(top)
         edge = G("borderTexture"), edgeSize = G("borderEdgeSize"), bgExtend = G("bgExtend"),
         shadow = G("shadowEnabled"), shadowSize = G("shadowSize"), shadowAlpha = G("shadowAlpha") / 100,
     }
-    ns.Border.Draw(frame, frame, look)
-    ns.Themes.DrawArt(frame, frame, look, top)
+    local box = ns.Themes.ArtBox(frame)
+    ns.Border.Draw(frame, box, look)
+    ns.Themes.DrawArt(frame, box, look, top)
 end
 
 -- The grip sits at the bottom corner away from the anchor's side: that
@@ -110,7 +111,9 @@ function Focus.Layout()
         frame:Hide()
         return
     end
-    local pad = G("padding")
+    -- Inside a material frame (Azeroth, Goblin) the padding counts from its inner edge.
+    local inset = ns.Themes.FrameInset(frame)
+    local pad = G("padding") + inset
     local width = G("width")
     frame:SetWidth(width)
     -- A theme's banner (Azeroth) behind the title, as the tracker's header:
@@ -131,7 +134,8 @@ function Focus.Layout()
     frame:Show()
     if G("hideInCombat") and InCombatLockdown() then frame:Hide() end
     place()
-    applyLook(banner and math.floor(row.title:GetStringHeight() + 2 * pad + 0.5) or nil)
+    -- The banner from the frame's inner edge, its middle on the title's.
+    applyLook(banner and math.floor(row.title:GetStringHeight() + 2 * pad - inset + 0.5) or nil)
     layoutUnlocked()
     frame:SetAlpha(G("alpha") / 100)
 end

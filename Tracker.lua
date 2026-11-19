@@ -326,8 +326,15 @@ local function layoutHeader(tracked)
     -- Past a theme's wedge the grip (or, locked, the title) comes first.
     local indent = ns.Themes.TitleIndent(topHeight(), HEADER_H / 2)
     local gripX = indent > 0 and indent or 8
-    header.title:SetPoint("LEFT", unlocked and gripX + 18 or (indent > 0 and indent or 10), 0)
-    header.grip:SetPoint("LEFT", gripX, 0)
+    -- Inside a material frame the header's middle is half its width lower;
+    -- below a strip of stripes (Goblin's band.height) the room under it.
+    local inset = ns.Themes.FrameInset(frame)
+    local band = (ns.Themes.Spec(ns.Themes.Current()).art or {}).band
+    local drop = -(inset + (inset > 0 and band and band.height or 0)) / 2
+    header.title:SetPoint("LEFT", unlocked and gripX + 18 or (indent > 0 and indent or 10), drop)
+    header.grip:SetPoint("LEFT", gripX, drop)
+    header.collapse:ClearAllPoints()
+    header.collapse:SetPoint("RIGHT", -5 - inset, drop)
     local g = accent()
     header.grip:SetVertexColor(g[1], g[2], g[3])
     header.grip:SetShown(unlocked)
@@ -369,8 +376,9 @@ local function applyLook()
         edge = S("borderTexture"), edgeSize = S("borderEdgeSize"), bgExtend = S("bgExtend"),
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
-    ns.Border.Draw(frame, frame, look)
-    ns.Themes.DrawArt(frame, frame, look, topHeight())
+    local box = ns.Themes.ArtBox(frame)
+    ns.Border.Draw(frame, box, look)
+    ns.Themes.DrawArt(frame, box, look, topHeight())
 end
 
 -- Unlocked: a blue outline, an arrow in each corner and the size below the frame.

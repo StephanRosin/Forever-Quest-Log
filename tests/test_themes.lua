@@ -830,7 +830,16 @@ local top = art.frame[1]._points.TOPLEFT
 check("azeroth: frame outside the ring, 7 wide", top[3] == -top[4] and top[4] >= 7, true)
 check("azeroth: banner as the title band", art.band:IsShown() and file(art.band), "AzerothBanner")
 check("azeroth: banner ends, the right one mirrored", art.ends[1]:IsShown() and art.ends[2]._texCoord[1], 1)
-check("azeroth: title past the banner's end", select(4, headerTitle:GetPoint()), S("locked") and 16 or 16 + 18)
+-- The frame inside the window's edge (stacked windows flush as under every theme): its box inset by its width.
+local inset = Themes.FrameInset(frame)
+check("azeroth: frame inside the window's edge", inset >= 7 and frame.themeBox._points.TOPLEFT[3] == inset, true)
+local endW = inset + math.floor((32 - inset) * 0.5 + 0.5)
+check("azeroth: title past the banner's end", select(4, headerTitle:GetPoint()), S("locked") and endW or endW + 18)
+Themes.Switch("SWISS")
+M.RunTimers()
+check("swiss: no frame, the box is the window", Themes.FrameInset(frame) .. " " .. frame.themeBox._points.TOPLEFT[3], "0 0")
+Themes.Switch("AZEROTH")
+M.RunTimers()
 check("azeroth: no corner pieces", art.ornaments[1]:IsShown(), false)
 local noteArt = windows[2].themeArt
 ns.Notes.LayoutWindow(windows[2])

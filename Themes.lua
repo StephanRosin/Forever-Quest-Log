@@ -668,9 +668,13 @@ local BANNER_END = 0.5
 function Themes.TitleIndent(top, mid)
     local art = Themes.Spec(Themes.Current()).art
     if not (art and art.band) then return 0 end
+    -- A banner's swallowtail end: the grip or title starts past it (and past
+    -- the material frame it sits inside).
+    if art.banner and art.bannerEnd then
+        local inset = Themes.FrameInset()
+        return inset + math.floor(bandHeight(art, top - inset) * BANNER_END + 0.5)
+    end
     local h = bandHeight(art, top)
-    -- A banner's swallowtail end: the grip or title starts past it.
-    if art.banner and art.bannerEnd then return math.floor(h * BANNER_END + 0.5) end
     if not art.band.wedge then return 0 end
     return Lib.WedgeReach(h, mid or h / 2) + Lib.TITLE_GAP
 end
@@ -776,6 +780,27 @@ local function placeFrame(strips, box, art, extent)
     return w
 end
 
+-- The material frame's width (Azeroth, Goblin), 0 without one. It lies
+-- inside the window's edge (ArtBox): windows stacked edge to edge stay flush
+-- with each other as under every other theme.
+function Themes.FrameInset(owner)
+    local art = Themes.Spec(Themes.Current()).art
+    return art and art.frame and ns.Border.Snap(art.frameSize, 1, owner) or 0
+end
+
+-- The box the ring and the theme's art go round: the window itself, or under
+-- a material frame a region inset by its width (the frame then ends where the
+-- ring of any other theme does).
+function Themes.ArtBox(owner)
+    local inset = Themes.FrameInset(owner)
+    if not owner.themeBox then owner.themeBox = CreateFrame("Frame", nil, owner) end
+    local box = owner.themeBox
+    box:ClearAllPoints()
+    box:SetPoint("TOPLEFT", owner, "TOPLEFT", inset, -inset)
+    box:SetPoint("BOTTOMRIGHT", owner, "BOTTOMRIGHT", -inset, inset)
+    return box
+end
+
 -- owner's art around box for the current theme; look is the one just given
 -- to Border.Draw (the ring's extent), top the height of a header the shade
 -- leaves out.
@@ -784,6 +809,8 @@ function Themes.DrawArt(owner, box, look, top)
     if not art and not owner.themeArt then return end
     art = art or {}
     local a, extent = artOf(owner), ns.Border.Extent(look, owner)
+    -- top is measured from the window's top; the box starts the frame lower.
+    if top and box ~= owner then top = math.max(0, top - Themes.FrameInset(owner)) end
     local frame = placeFrame(a.frame, box, art, extent)
     placeOrnaments(a.ornaments, box, art, extent + frame)
     placeShade(a.shade, box, art, top)
