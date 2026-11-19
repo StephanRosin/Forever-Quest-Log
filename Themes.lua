@@ -170,6 +170,9 @@ Themes.SPECS = Lib.Specs({
             objectiveColor = { 0.2, 0.13, 0.06 }, objectiveDoneColor = { 0.38, 0.33, 0.26 },
             doneColor = { 0.1, 0.3, 0.06 } },
         art = { ornamentSize = 22, ornamentInset = 0, band = {} },
+        -- A note's header without the banner: icons in ink on the page.
+        plainIcons = { idle = { 0.29, 0.18, 0.09 }, hover = { 0.1, 0.06, 0.03 }, on = { 0.6, 0.1, 0.05 },
+            off = { 0.55, 0.5, 0.42 }, grip = { 0.29, 0.18, 0.09 } },
     },
     -- A goblin workshop: sooty sheet metal in a copper frame with rivets, a strip
     -- of warning stripes along the top.
@@ -289,10 +292,13 @@ end
 -- (COMIC: dark on the light paper, light on a dark one) keeps it; every
 -- other draws them in the colour's accent (the title's; on Pitwall the
 -- wedge's, as the colour changes it there), as in every Forever addon.
-function Themes.Icons()
+-- plain: for a window without the theme's banner (a note): ink where the
+-- banner's icons would be lost on the page (plainIcons).
+function Themes.Icons(plain)
     if darkPaper() then return LIGHT_ICONS end
     local id = Themes.Current()
     local spec = Themes.Spec(id)
+    if plain and spec.art and spec.art.bannerEnd and spec.plainIcons then return spec.plainIcons end
     if id == CLASSIC or (spec.icons and spec.icons.idle) then return spec.icons end
     local art = spec.art
     local c = art.band and art.band.wedge and Lib.WedgeColor(art.band, id, Themes.Color())
@@ -658,9 +664,9 @@ local BANNER_END = 0.5
 
 -- How far a header title (its middle mid below the band's top, default the
 -- band's middle) moves right to clear the wedge of a band top high; 0 without one.
-function Themes.TitleIndent(top, mid)
+function Themes.TitleIndent(top, mid, plain)
     local art = Themes.Spec(Themes.Current()).art
-    if not (art and art.band) then return 0 end
+    if not (art and art.band) or (plain and art.bannerEnd) then return 0 end
     local h = bandHeight(art, top)
     -- A banner's swallowtail end: the grip or title starts past it.
     if art.banner and art.bannerEnd then return math.floor(h * BANNER_END + 0.5) end
@@ -768,8 +774,9 @@ end
 
 -- owner's art around box for the current theme; look is the one just given
 -- to Border.Draw (the ring's extent), top the height of a header the shade
--- leaves out.
-function Themes.DrawArt(owner, box, look, top)
+-- leaves out. plain: no banner (a note's small window: its title in ink on the page;
+-- a banner there read badly and shouted).
+function Themes.DrawArt(owner, box, look, top, plain)
     local art = Themes.Spec(Themes.Current()).art
     if not art and not owner.themeArt then return end
     art = art or {}
@@ -777,7 +784,7 @@ function Themes.DrawArt(owner, box, look, top)
     local frame = placeFrame(a.frame, box, art, extent)
     placeOrnaments(a.ornaments, box, art, extent + frame)
     placeShade(a.shade, box, art, top)
-    placeBand(a, box, art, top)
+    placeBand(a, box, art, (plain and art.bannerEnd) and 0 or top)
     for _, strip in ipairs(a.shadow) do strip:SetShown(art.hardShadow ~= nil) end
     if art.hardShadow then placeShadow(a.shadow, box, art.hardShadow) end
 end

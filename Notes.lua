@@ -43,9 +43,9 @@ local function applyLook(win)
         shadow = S("shadowEnabled"), shadowSize = S("shadowSize"), shadowAlpha = S("shadowAlpha") / 100,
     }
     ns.Border.Draw(win, win, look)
-    ns.Themes.DrawArt(win, win, look, win.titleH or TITLE_H)
+    ns.Themes.DrawArt(win, win, look, win.titleH or TITLE_H, true)
     -- A theme's icon colours (Themes.Icons): its colour's accent, ink on light paper.
-    local ink = ns.Themes.Icons() or {}
+    local ink = ns.Themes.Icons(true) or {}
     local c, g = ink.idle or { 1, 1, 1 }, ink.grip or ACCENT
     win.close.icon:SetTexture(ink.close and Media.Icon(ink.close) or CLOSE)
     for _, b in ipairs({ win.close, win.gear, win.add }) do b.icon:SetVertexColor(c[1], c[2], c[3]) end
@@ -160,7 +160,7 @@ function Notes.LayoutWindow(win)
     local art = spec.art or {}
     local titleH = themed and math.max(TITLE_H, style.size + 12) or TITLE_H
     -- Past the theme's title wedge (Pitwall), as in the tracker.
-    local indent = ns.Themes.TitleIndent(titleH)
+    local indent = ns.Themes.TitleIndent(titleH, nil, true)
     win.name:SetPoint("LEFT", indent > 0 and indent - PAD or 0, 0)
     local top = titleH + (art.shade and art.shadeInset or art.band and art.band.rule and BAND_AIR or 0)
     if win.titleH ~= titleH or win.top ~= top then
