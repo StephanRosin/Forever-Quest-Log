@@ -41,6 +41,7 @@ Blizzard.lua
 Data.lua
 Sort.lua
 Actions.lua
+Abandoned.lua
 Items.lua
 Tasks.lua
 Rows.lua

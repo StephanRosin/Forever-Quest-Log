@@ -32,6 +32,12 @@ L.TIP_ONLY_HERE = "Mostrar solo las misiones de esta mazmorra o todas las seguid
 L.TIP_RESIZE = "Arrastra para cambiar el tamaño"
 L.TIP_COUNT = "%d de %d misiones en el registro"
 L.TIP_TRACKED = "%d de ellas seguidas"
+L.TIP_ABANDONED = "Clic: misiones abandonadas (%d)"
+L.ABANDONED_TITLE = "Misiones abandonadas"
+L.ABANDONED_NONE = "Ninguna todavía"
+L.ABANDONED_SHOW_MAP = "Mostrar en el mapa"
+L.ABANDONED_FORGET = "Quitar de la lista"
+L.ABANDONED_CLEAR = "Vaciar la lista"
 
 L.MSG_LOCKED = "Rastreador bloqueado."
 L.MSG_UNLOCKED = "Rastreador desbloqueado: arrastra la cabecera para moverlo y la esquina para cambiar su tamaño."

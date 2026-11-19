@@ -239,7 +239,16 @@ Enum = { UITextureSliceMode = { Stretched = 1 }, SpellBookSpellBank = { Player =
 M.maps = { [1446] = { name = "Tanaris", mapType = 3 }, [1434] = { name = "Stranglethorn Vale", mapType = 3 },
            [1414] = { name = "Kalimdor", mapType = 2 }, [2000] = { name = "Tanaris", mapType = 3 },
            [1440] = { name = "Ashenvale", mapType = 3 } }
-C_Map = { GetMapInfo = function(id) return M.maps[id] end }
+-- M.player = { map = id, x = 0..1, y = 0..1 }: where the player stands.
+C_Map = {
+    GetMapInfo = function(id) return M.maps[id] end,
+    GetBestMapForUnit = function() return M.player and M.player.map end,
+    GetPlayerMapPosition = function(id)
+        local p = M.player
+        if not (p and p.map == id) then return nil end
+        return { GetXY = function() return p.x, p.y end }
+    end,
+}
 function GetTime() return M.state.time or 0 end
 POIButtonUtil = { Style = { QuestInProgress = 1, QuestComplete = 2 } }
 Constants = { QuestWatchConsts = { MAX_QUEST_WATCHES = 25 }, QuestLogConsts = { MAXIMUM_NUM_QUESTS_LOG_CAN_ACCEPT = 40 } }
@@ -342,6 +351,15 @@ C_QuestLog = {
     GetTitleForQuestID = function(id) local q = M.quest(id); return q and q.title end,
     IsComplete = function(id) return M.quest(id).complete or false end,
     IsFailed = function(id) return M.quest(id).failed or false end,
+    -- Blizzard's popup: SetAbandonQuest picks the selected quest, AbandonQuest
+    -- drops it (the server's QUEST_REMOVED comes later; tests fire it).
+    SetAbandonQuest = function() M.abandoning = M.selectedQuest end,
+    GetAbandonQuest = function() return M.abandoning or 0 end,
+    AbandonQuest = function()
+        local i = logIndex(M.abandoning)
+        if i then table.remove(M.log, i) end
+        M.abandoning = nil
+    end,
     GetQuestTagInfo = function(id) local q = M.quest(id); return q.tag and { tagName = q.tag } or nil end,
     GetQuestObjectives = function(id)
         local list = {}

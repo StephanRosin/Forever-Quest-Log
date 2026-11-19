@@ -32,6 +32,12 @@ L.TIP_ONLY_HERE = "Afficher seulement les quêtes de ce donjon, ou toutes les qu
 L.TIP_RESIZE = "Glisser pour redimensionner"
 L.TIP_COUNT = "%d quêtes sur %d dans le journal"
 L.TIP_TRACKED = "dont %d suivies"
+L.TIP_ABANDONED = "Clic : quêtes abandonnées (%d)"
+L.ABANDONED_TITLE = "Quêtes abandonnées"
+L.ABANDONED_NONE = "Aucune pour l'instant"
+L.ABANDONED_SHOW_MAP = "Afficher sur la carte"
+L.ABANDONED_FORGET = "Retirer de la liste"
+L.ABANDONED_CLEAR = "Vider la liste"
 
 L.MSG_LOCKED = "Suivi verrouillé."
 L.MSG_UNLOCKED = "Suivi déverrouillé : glissez l'en-tête pour le déplacer, le coin pour le redimensionner."

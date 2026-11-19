@@ -55,6 +55,12 @@ L.TIP_ONLY_HERE = "Show only this dungeon's quests, or all tracked quests"
 L.TIP_RESIZE = "Drag to resize"
 L.TIP_COUNT = "%d of %d quests in the quest log"
 L.TIP_TRACKED = "%d of them tracked"
+L.TIP_ABANDONED = "Click: abandoned quests (%d)"
+L.ABANDONED_TITLE = "Abandoned quests"
+L.ABANDONED_NONE = "None yet"
+L.ABANDONED_SHOW_MAP = "Show on map"
+L.ABANDONED_FORGET = "Remove from list"
+L.ABANDONED_CLEAR = "Clear list"
 
 -- Chat
 L.MSG_LOCKED = "Tracker locked."
