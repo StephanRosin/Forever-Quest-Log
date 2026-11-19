@@ -174,6 +174,15 @@ local refusedFonts = {}
 -- chosen a second time). Setting it again a little later, through another
 -- font, as that second choice did, draws them. Once per text and font.
 local REDRAW_DELAYS = { 0.5, 2 }
+
+-- Rows were measured while the text had another font (the client's, or none
+-- drawn yet): a much wider theme font (Bungee) then broke titles over the
+-- next line until some later update laid them out again. Once the font is
+-- there, the tracker and focus frame lay out anew (queued: once per frame).
+local function fontArrived()
+    if ns.Tracker and ns.Tracker.RefreshAll then ns.Tracker.RefreshAll() end
+end
+
 local function redrawLater(fs, path, size, flags, wanted)
     if fs.fontDrawn == wanted then return end
     fs.fontDrawn = wanted
@@ -184,6 +193,7 @@ local function redrawLater(fs, path, size, flags, wanted)
             fs:SetFont(path, size, flags)
             local text = fs:GetText()
             if text then fs:SetText(""); fs:SetText(text) end
+            fontArrived()
         end)
     end
 end
@@ -199,6 +209,8 @@ local function setFont(fs, path, size, outline, retries)
     local ok = fs:SetFont(path, size, outline)
     if ok and (not path:find(THEME_FONTS, 1, true) or hasFont(fs, path)) then
         redrawLater(fs, path, size, outline, wanted)
+        -- Taken on a later try: measured with the client's font until now.
+        if retries then fontArrived() end
         return
     end
     fs:SetFont(Media.DEFAULT.font, size, outline)

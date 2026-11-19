@@ -657,10 +657,16 @@ fs.SetFont = function(self, path, ...)
     if refusals > 0 and path == cinzel then refusals = refusals - 1; return false end
     return setFont(self, path, ...)
 end
+local refreshAll, relaid = ns.Tracker.RefreshAll, 0
+ns.Tracker.RefreshAll = function() relaid = relaid + 1 end
 ns.Media.ApplyText(fs, { font = "Cinzel", size = 12, flag = "OUTLINE", color = { 1, 1, 1 } })
 check("refused: the client's font meanwhile", (fs:GetFont()), ns.Media.DEFAULT.font)
+check("refused: no layout yet", relaid, 0)
 M.RunTimers()
 check("tried again: taken", (fs:GetFont()), cinzel)
+-- Measured with the client's font so far (a wide font broke titles over the next line).
+check("taken: tracker and focus laid out anew", relaid > 0, true)
+ns.Tracker.RefreshAll = refreshAll
 check("shipped fonts are listed", cinzel:find("Libs\\LibForeverThemes\\Media\\Fonts\\Cinzel", 1, true) ~= nil, true)
 
 -- "Apply to all Forever addons": only with another addon listed; puts it on
