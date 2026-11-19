@@ -44,7 +44,10 @@ Themes.CLASSIC = CLASSIC
 -- band = a strip { color, height } along the top inside the edge (height
 -- nil: the header's), with wedge = a piece of the library's at its start, as
 -- high and as wide as the band (wedgeColor), and rule = a 1 px line's colour
--- under it (the band is the library's Swiss rule and Pitwall strip). icons:
+-- under it (the band is the library's Swiss rule and Pitwall strip); the
+-- library's banner textures the band instead of its colour, and its frame
+-- runs around the ring's outside (the ornaments then sit on the frame's
+-- corners). icons:
 -- the header icons' colours (idle, hover, on, off), grip = the resize
 -- grips', close = the close button's icon (Media.Icon) instead of the
 -- game's gold X.
@@ -153,6 +156,32 @@ Themes.SPECS = Lib.Specs({
         art = { band = { color = Lib.THEMES.PITWALL.strip, wedge = Lib.THEMES.PITWALL.wedge,
             wedgeColor = Lib.THEMES.PITWALL.wedgeColor,
             rule = { 0.137, 0.149, 0.173, 1 } } },
+    },
+    -- A window of the game's own world: light parchment in a walnut frame, a gold
+    -- ring and corners, the title on a red banner. Dark ink on the page (as on the
+    -- comic's), light on the banner (headerInk: the header count's colour).
+    AZEROTH = {
+        bar = "FQL Parchment", flag = "", bodyFlag = "", ink = 0.55, headerInk = { 0.96, 0.89, 0.72 },
+        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.AZEROTH.rim, cornerRadius = 0,
+            shadowEnabled = true, shadowSize = 12, shadowAlpha = 60, bgMode = "TEXTURE", bgTexture = "FQL Parchment",
+            bgAlpha = 100, headerShine = false, headerLine = false, headerColor = { 1, 0.82, 0 },
+            zoneColor = { 0.42, 0.09, 0.06 }, titleColor = { 0.14, 0.08, 0.04 },
+            objectiveColor = { 0.29, 0.18, 0.09 }, objectiveDoneColor = { 0.45, 0.4, 0.33 },
+            doneColor = { 0.18, 0.36, 0.12 } },
+        art = { ornamentSize = 22, ornamentInset = 0, band = {} },
+    },
+    -- A goblin workshop: sooty sheet metal in a copper frame with rivets, a strip
+    -- of warning stripes along the top.
+    GOBLIN = {
+        -- Bungee runs wide: a point smaller keeps titles on one line.
+        bar = "FQL Tech", fontSizeAdd = -1,
+        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.GOBLIN.rim, cornerRadius = 0,
+            shadowEnabled = true, shadowSize = 12, shadowAlpha = 60, bgMode = "TEXTURE", bgTexture = "FQL Tech",
+            bgAlpha = 100, headerShine = false, headerLine = false, headerColor = { 0.95, 0.76, 0.19 },
+            zoneColor = { 0.95, 0.76, 0.19 }, titleColor = { 0.96, 0.92, 0.85 },
+            objectiveColor = { 0.8, 0.73, 0.6 }, objectiveDoneColor = { 0.55, 0.5, 0.42 },
+            doneColor = { 0.56, 0.82, 0.31 } },
+        art = { ornamentSize = 11, ornamentInset = 0, band = { height = 5 } },
     },
 }, true)
 -- Glass HD is there to show its glass: the shade over it at 60 % (Glass: 90 %).
@@ -272,6 +301,11 @@ function Themes.Icons()
     return tones
 end
 
+-- The header count's colour: light on a theme's banner (headerInk), else color.
+function Themes.HeaderInk(color)
+    return Themes.Spec(Themes.Current()).headerInk or color
+end
+
 -- A colour for body text: darkened on a theme with dark ink (COMIC), so
 -- the client's light level colours stay readable without an outline. On a
 -- dark comic paper they stay light, as they are.
@@ -279,6 +313,14 @@ function Themes.Ink(c)
     local ink = Themes.Spec(Themes.Current()).ink
     if not ink or darkPaper() then return c end
     return { r = c.r * ink, g = c.g * ink, b = c.b * ink }
+end
+
+-- A quest level's colour { r, g, b } in a title: darkened like body text where
+-- the titles are dark ink without an outline (Azeroth), else as it is.
+function Themes.TitleInk(c)
+    local spec = Themes.Spec(Themes.Current())
+    if spec.flag ~= "" or not spec.ink or darkPaper() then return c end
+    return { c[1] * spec.ink, c[2] * spec.ink, c[3] * spec.ink }
 end
 
 -- The active profile's stored sets; stale ones (an older revision) dropped.
@@ -529,7 +571,7 @@ end
 local function artOf(owner)
     local a = owner.themeArt
     if a then return a end
-    a = { ornaments = {}, shadow = {} }
+    a = { ornaments = {}, shadow = {}, frame = {}, ends = {} }
     -- The shadow's two strips, right and below: the frame's own background
     -- covers the rest, so nothing has to lie under it.
     for i = 1, 2 do
@@ -541,7 +583,10 @@ local function artOf(owner)
     a.band = owner:CreateTexture(nil, "BORDER", nil, 1)
     a.rule = owner:CreateTexture(nil, "BORDER", nil, 2)
     a.wedge = owner:CreateTexture(nil, "BORDER", nil, 3)
-    -- Above the ring (OVERLAY sublevels 0 and 1, Border.lua).
+    for i = 1, 2 do a.ends[i] = owner:CreateTexture(nil, "BORDER", nil, 2) end
+    -- Above the ring (OVERLAY sublevels 0 and 1, Border.lua); the frame lies
+    -- outside it, the ornaments over the frame.
+    for i = 1, 4 do a.frame[i] = owner:CreateTexture(nil, "OVERLAY", nil, 6) end
     for i = 1, 4 do a.ornaments[i] = owner:CreateTexture(nil, "OVERLAY", nil, 7) end
     owner.themeArt = a
     return a
@@ -593,12 +638,18 @@ end
 
 local function bandHeight(art, top) return art.band and (art.band.height or top) or 0 end
 
+-- A banner end's width per height of the band (the file is half as wide as high).
+local BANNER_END = 0.5
+
 -- How far a header title (its middle mid below the band's top, default the
 -- band's middle) moves right to clear the wedge of a band top high; 0 without one.
 function Themes.TitleIndent(top, mid)
     local art = Themes.Spec(Themes.Current()).art
-    if not (art and art.band and art.band.wedge) then return 0 end
+    if not (art and art.band) then return 0 end
     local h = bandHeight(art, top)
+    -- A banner's swallowtail end: the grip or title starts past it.
+    if art.banner and art.bannerEnd then return math.floor(h * BANNER_END + 0.5) end
+    if not art.band.wedge then return 0 end
     return Lib.WedgeReach(h, mid or h / 2) + Lib.TITLE_GAP
 end
 
@@ -625,18 +676,79 @@ local function placeRule(rule, band, b)
     rule:SetColorTexture(c[1], c[2], c[3], c[4])
 end
 
+-- The banner's two ends (left as drawn, right mirrored) at the band's ends;
+-- returns how far in the band's middle starts on each side.
+local function placeEnds(ends, box, art, h)
+    local shown = art.band ~= nil and art.banner ~= nil and art.bannerEnd ~= nil and h > 0
+    for _, e in ipairs(ends) do e:SetShown(shown) end
+    if not shown then return 0 end
+    local w = math.floor(h * BANNER_END + 0.5)
+    for i, e in ipairs(ends) do
+        local point = i == 1 and "TOPLEFT" or "TOPRIGHT"
+        e:ClearAllPoints()
+        e:SetPoint(point, box, point, 0, 0)
+        e:SetSize(w, h)
+        e:SetTexture(Lib.Texture(art.bannerEnd))
+        if i == 1 then e:SetTexCoord(0, 1, 0, 1) else e:SetTexCoord(1, 0, 0, 1) end
+        e:SetVertexColor(1, 1, 1, 1)
+    end
+    return w
+end
+
+-- The band's fill: the banner (stretched, or repeated at its own size) or the colour.
+local function paintBand(band, art, b)
+    local tile = art.banner ~= nil and art.bannerTile == true
+    band:SetHorizTile(tile)
+    band:SetVertTile(tile)
+    if art.banner then
+        band:SetTexture(Lib.Texture(art.banner), tile and "REPEAT" or nil, tile and "REPEAT" or nil)
+        band:SetTexCoord(0, 1, 0, 1)
+        band:SetVertexColor(1, 1, 1, 1)
+    else
+        local c = b.color
+        band:SetColorTexture(c[1], c[2], c[3], c[4])
+    end
+end
+
 local function placeBand(a, box, art, top)
     local band, b = a.band, art.band or {}
+    local h = bandHeight(art, top)
     band:SetShown(art.band ~= nil)
-    placeWedge(a.wedge, band, b, bandHeight(art, top))
+    placeWedge(a.wedge, band, b, h)
     placeRule(a.rule, band, b)
+    local inset = placeEnds(a.ends, box, art, h)
     if not art.band then return end
-    local c = b.color
     band:ClearAllPoints()
-    band:SetPoint("TOPLEFT", box, "TOPLEFT", 0, 0)
-    band:SetPoint("TOPRIGHT", box, "TOPRIGHT", 0, 0)
-    band:SetHeight(bandHeight(art, top))
-    band:SetColorTexture(c[1], c[2], c[3], c[4])
+    band:SetPoint("TOPLEFT", box, "TOPLEFT", inset, 0)
+    band:SetPoint("TOPRIGHT", box, "TOPRIGHT", -inset, 0)
+    band:SetHeight(h)
+    paintBand(band, art, b)
+end
+
+-- The frame's four strips around the ring's outside (extent out from box),
+-- the top and bottom ones across the corners; its material repeats at its own size.
+local function placeFrame(strips, box, art, extent)
+    for _, s in ipairs(strips) do s:SetShown(art.frame ~= nil) end
+    if not art.frame then return 0 end
+    local w = ns.Border.Snap(art.frameSize, 1, box)
+    local o = extent + w
+    local spots = {
+        { "TOPLEFT", -o, o, "TOPRIGHT", o, extent },
+        { "BOTTOMLEFT", -o, -extent, "BOTTOMRIGHT", o, -o },
+        { "TOPLEFT", -o, extent, "BOTTOMLEFT", -extent, -extent },
+        { "TOPRIGHT", extent, extent, "BOTTOMRIGHT", o, -extent },
+    }
+    for i, s in ipairs(strips) do
+        local p = spots[i]
+        s:ClearAllPoints()
+        s:SetPoint("TOPLEFT", box, p[1], p[2], p[3])
+        s:SetPoint("BOTTOMRIGHT", box, p[4], p[5], p[6])
+        s:SetTexture(Lib.Texture(art.frame), "REPEAT", "REPEAT")
+        s:SetHorizTile(true)
+        s:SetVertTile(true)
+        s:SetVertexColor(1, 1, 1, 1)
+    end
+    return w
 end
 
 -- owner's art around box for the current theme; look is the one just given
@@ -647,7 +759,8 @@ function Themes.DrawArt(owner, box, look, top)
     if not art and not owner.themeArt then return end
     art = art or {}
     local a, extent = artOf(owner), ns.Border.Extent(look, owner)
-    placeOrnaments(a.ornaments, box, art, extent)
+    local frame = placeFrame(a.frame, box, art, extent)
+    placeOrnaments(a.ornaments, box, art, extent + frame)
     placeShade(a.shade, box, art, top)
     placeBand(a, box, art, top)
     for _, strip in ipairs(a.shadow) do strip:SetShown(art.hardShadow ~= nil) end

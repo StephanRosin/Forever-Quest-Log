@@ -335,7 +335,7 @@ local function layoutHeader(tracked)
         countStyle.flag = S("countFlag")
         countStyle.color = { 0.56, 0.54, 0.5 }
     end
-    countStyle.color = ns.Themes.OnPaper(countStyle.color)
+    countStyle.color = ns.Themes.HeaderInk(ns.Themes.OnPaper(countStyle.color))
     Media.ApplyText(header.count, countStyle)
     local full = max > 0 and inLog >= max
     header.count:SetText((full and "|cffff4040" or "") .. inLog .. " / " .. max .. (full and "|r" or ""))

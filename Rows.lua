@@ -456,7 +456,7 @@ function Rows.TitleText(q, cfg)
     if not cfg.get("showLevel") or not q.level or q.level <= 0 then return title end
     local level = "[" .. q.level .. "]"
     if cfg.get("levelColors") and q.levelColor then
-        level = "|cff" .. hex(q.levelColor) .. level .. "|r"
+        level = "|cff" .. hex(ns.Themes.TitleInk(q.levelColor)) .. level .. "|r"
     end
     return level .. " " .. title
 end

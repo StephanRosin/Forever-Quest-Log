@@ -410,7 +410,8 @@ end
 local listed = {}
 for _, c in ipairs(themeRow.choices()) do listed[#listed + 1] = c.value end
 check("new: in the options' list, appended", table.concat(listed, " ", 10, 12), "SWISS CONSOLE PITWALL")
-check("HD: not in the options' list (colours of their base)", listed[13], nil)
+check("framed: in the options' list, appended", table.concat(listed, " ", 13, 14), "AZEROTH GOBLIN")
+check("HD: not in the options' list (colours of their base)", listed[15], nil)
 -- Every theme and colour the menus offer has its name in every language.
 for code, strings in pairs(ns.Locales) do
     for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
@@ -521,6 +522,7 @@ local RINGS = {
     WOOD = "GOLD", TECH = "0.25/0.88/0.94/0.9", PARCHMENT = "0.29/0.2/0.12/1", RUNESTONE = "0.1/0.1/0.12/1",
     GLASS = "0.07/0.06/0.05/1", COMIC = "0.07/0.07/0.07/1", FROST = "0.86/0.96/1/0.8", PIXEL = "1/0.95/0.91/1",
     SWISS = "0.165/0.165/0.165/1", CONSOLE = "0.306/0.929/0.69/1", PITWALL = "0.043/0.047/0.055/1",
+    AZEROTH = "0.79/0.635/0.29/1", GOBLIN = "0.23/0.11/0.05/1",
 }
 local RING_OVERRIDES = { CONSOLE = { AMBER = "1/0.69/0/1", PHOSPHOR = "0.224/1/0.078/1", VIOLET = "0.627/0.471/1/1" },
     PIXEL = { HANDHELD = "0.784/0.941/0.439/1" } }
@@ -804,3 +806,39 @@ check("stored comic: set unchanged", ns.Share.Export(), mine)
 check("stored comic: colour stays the first", registry.Color(), "GREY")
 Themes.Switch("CLASSIC")
 
+
+-- The framed themes (LibForeverThemes 10): a material frame outside the ring,
+-- a textured title band.
+local function file(tex) return tex._texture and tex._texture:match("[^\\]+$") end
+local art = frame.themeArt
+Themes.Switch("AZEROTH")
+M.RunTimers()
+check("azeroth: fonts", S("titleFont") .. "/" .. S("objectiveFont"), "Cinzel/Alegreya")
+check("azeroth: light parchment from its own file", texture(), "AzerothParchment")
+local framed = 0
+for _, strip in ipairs(art.frame) do
+    if strip:IsShown() and file(strip) == "WoodHDWalnut" then framed = framed + 1 end
+end
+check("azeroth: walnut frame on four sides", framed, 4)
+local top = art.frame[1]._points.TOPLEFT
+check("azeroth: frame outside the ring, 7 wide", top[3] == -top[4] and top[4] >= 7, true)
+check("azeroth: banner as the title band", art.band:IsShown() and file(art.band), "AzerothBanner")
+check("azeroth: banner ends, the right one mirrored", art.ends[1]:IsShown() and art.ends[2]._texCoord[1], 1)
+check("azeroth: title past the banner's end", select(4, headerTitle:GetPoint()), S("locked") and 16 or 16 + 18)
+check("azeroth: gold corners on the frame", art.ornaments[1]:IsShown() and file(art.ornaments[1]), "Bracket")
+check("azeroth: a level in a title in dark ink", table.concat(Themes.TitleInk({ 1, 1, 1 }), "/"), "0.55/0.55/0.55")
+Themes.Switch("GOBLIN")
+M.RunTimers()
+check("goblin: fonts", S("titleFont") .. "/" .. S("objectiveFont"), "Bungee/Rubik Medium")
+check("goblin: copper frame", art.frame[1]:IsShown() and file(art.frame[1]), "GoblinCopper")
+check("goblin: hazard strip 5 high, repeating", file(art.band) .. " " .. art.band:GetHeight() .. " "
+    .. tostring(art.band:GetHorizTile()), "GoblinHazard 5 true")
+check("goblin: no banner ends", art.ends[1]:IsShown(), false)
+check("goblin: a level in a title as it is (outlined light text)", table.concat(Themes.TitleInk({ 1, 1, 1 }), "/"), "1/1/1")
+Themes.Switch("SWISS")
+M.RunTimers()
+check("swiss after them: no frame, no ends", art.frame[1]:IsShown() or art.ends[1]:IsShown(), false)
+check("swiss after them: the band a colour again", art.band:GetHorizTile(), false)
+Themes.Switch("CLASSIC")
+M.RunTimers()
+check("classic after them: no frame", art.frame[1]:IsShown(), false)
