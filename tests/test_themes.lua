@@ -290,10 +290,76 @@ end
 Themes.Switch("PIXEL")
 check("menu: pixel's colours", colorRow.visible() and #colorRow.choices(), 9)
 check("menu: their names", colorRow.choices()[2].label, "Plum")
-check("menu: current checked", colorRow.get(), "NAVY")
-colorRow.set("TEAL")
+check("menu: current checked", colorRow.get(), "PIXEL:NAVY")
+colorRow.set("PIXEL:TEAL")
 check("menu: sets", registry.Color("PIXEL"), "TEAL")
 registry.SetColor("NAVY")
+-- HD is a colour of its base: one set of settings for both.
+local function clone(t)
+    if type(t) ~= "table" then return t end
+    local c = {}
+    for k, v in pairs(t) do c[k] = clone(v) end
+    return c
+end
+local function themeChoice()
+    for _, row in ipairs(ns.Window.PAGES[1].rows()) do
+        if row.label == "OPT_THEME_CHOICE" then return row end
+    end
+end
+check("hd: not in the theme menu", (function()
+    for _, c in ipairs(themeChoice().choices()) do if c.value:find("_HD$") then return c.value end end
+end)(), nil)
+Themes.Switch("WOOD")
+local woodColors = #LibForeverThemes.Colors("WOOD")
+check("hd: wood's colours, then HD", #colorRow.choices() .. " " .. colorRow.choices()[woodColors + 1].label,
+    #LibForeverThemes.Colors("WOOD") + #LibForeverThemes.Colors("WOOD_HD") .. " HD " .. ns.L.THEME_COLOR_WOOD_HD_EBONY)
+ns.DB().width = 222
+colorRow.set("WOOD_HD:EBONY")
+check("wood -> wood hd: settings kept", ns.DB().width, 222)
+check("wood -> wood hd: theme and colour", Themes.Current() .. " " .. registry.Color(), "WOOD_HD EBONY")
+check("wood hd: menus show base and HD colour", themeChoice().get() .. " " .. colorRow.get(), "WOOD WOOD_HD:EBONY")
+check("wood hd: no own set stored", sets().WOOD_HD, nil)
+themeChoice().set("WOOD")
+check("wood hd: choosing wood in the theme menu keeps HD", Themes.Current(), "WOOD_HD")
+Themes.Switch("PIXEL")
+check("wood hd: stored under wood", sets().WOOD.width, 222)
+check("copy from: wood listed, no HD", table.concat(Themes.Stored(), " "):find("_HD") == nil
+    and table.concat(Themes.Stored(), " "):find("WOOD") ~= nil, true)
+Themes.Switch("WOOD")
+check("pixel -> wood: the shared set", ns.DB().width, 222)
+-- Sets kept apart before LibForeverThemes 9, merged once: a customised HD set wins.
+Themes.Switch("WOOD_HD")
+Themes.Reset()
+local plainHD = clone(ns.DB())
+Themes.Switch("PIXEL")
+sets().WOOD_HD = clone(plainHD)
+sets().WOOD.width, sets().WOOD.theme = 210, "WOOD"
+sets().hdMerged = nil
+Themes.Upgrade()
+check("merge: plain HD set, wood's stays", sets().WOOD.width, 210)
+check("merge: HD set gone", sets().WOOD_HD, nil)
+sets().WOOD_HD = clone(plainHD)
+sets().WOOD_HD.width = 333
+sets().hdMerged = nil
+Themes.Upgrade()
+check("merge: customised HD set wins", sets().WOOD.width .. " " .. sets().WOOD.theme, "333 WOOD")
+-- On the HD theme itself: its live settings win when customised, else wood's.
+local function onHD(width)
+    Themes.Switch("WOOD")
+    ns.DB().theme = "WOOD_HD"
+    for k in pairs(ns.DB()) do if k ~= "theme" then ns.DB()[k] = nil end end
+    for k, v in pairs(clone(plainHD)) do if k ~= "theme" then ns.DB()[k] = v end end
+    ns.DB().width = width
+    sets().WOOD = clone(plainHD)
+    sets().WOOD.width, sets().WOOD.theme = 199, "WOOD"
+    sets().hdMerged = nil
+    Themes.Upgrade()
+    return S("width") .. " " .. Themes.Current() .. " " .. tostring(sets().WOOD)
+end
+check("merge: on customised HD, it stays live", onHD(244), "244 WOOD_HD nil")
+check("merge: on plain HD, wood's set goes live", onHD(nil), "199 WOOD_HD nil")
+Themes.Switch("PIXEL")
+sets().WOOD = nil
 Themes.Switch("CLASSIC")
 check("menu: none under classic", colorRow.visible(), false)
 Themes.Switch("COMIC")
@@ -328,8 +394,7 @@ end
 local listed = {}
 for _, c in ipairs(themeRow.choices()) do listed[#listed + 1] = c.value end
 check("new: in the options' list, appended", table.concat(listed, " ", 10, 12), "SWISS CONSOLE PITWALL")
-check("HD: in the options' list after them", table.concat(listed, " ", 13),
-    "WOOD_HD TECH_HD PARCHMENT_HD RUNESTONE_HD GLASS_HD COMIC_HD FROST_HD")
+check("HD: not in the options' list (colours of their base)", listed[13], nil)
 -- Every theme and colour the menus offer has its name in every language.
 for code, strings in pairs(ns.Locales) do
     for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do

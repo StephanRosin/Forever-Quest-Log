@@ -110,11 +110,16 @@ local function themeRows()
             type = "select", label = "OPT_THEME_CHOICE",
             choices = function()
                 local list = {}
-                for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do list[#list + 1] = { label = L["THEME_" .. id], value = id } end
+                -- HD themes are colours of their base (colour menu below).
+                for _, id in ipairs(LibForeverThemes.MenuIds(LibForeverThemes.SpecIds(Themes.SPECS))) do
+                    list[#list + 1] = { label = L["THEME_" .. id], value = id }
+                end
                 return list
             end,
-            get = function() return Themes.Current() end,
+            get = function() return LibForeverThemes.BaseTheme(Themes.Current()) end,
             set = function(v)
+                -- The base already shown (its HD theme in use): HD stays.
+                if v == LibForeverThemes.BaseTheme(Themes.Current()) then return end
                 local ok, why = Themes.Switch(v)
                 if not ok then themeRefused(why) end
             end,
@@ -122,15 +127,19 @@ local function themeRows()
         visibleIf(enabledIf({
             type = "select", label = "OPT_THEME_COLOR",
             choices = function()
-                local list, theme = {}, Themes.Current()
-                for _, id in ipairs(Themes.Colors()) do
-                    list[#list + 1] = { label = L["THEME_COLOR_" .. theme .. "_" .. id], value = id }
+                local Lib, list = LibForeverThemes, {}
+                for _, e in ipairs(Lib.MenuColors(Themes.SPECS, Themes.Current())) do
+                    local label = L["THEME_COLOR_" .. e.theme .. "_" .. e.color]
+                    list[#list + 1] = { label = e.hd and "HD " .. label or label, value = Lib.MenuValue(e.theme, e.color) }
                 end
                 return list
             end,
-            get = function() return Themes.Color() end,
+            get = function() return LibForeverThemes.MenuValue(Themes.Current(), Themes.Color()) end,
+            -- An HD colour switches to the HD theme (same settings), a plain one back.
             set = function(v)
-                local ok, why = Themes.SetColor(v)
+                local theme, color = LibForeverThemes.ParseMenuValue(v)
+                local ok, why = Themes.Switch(theme)
+                if ok then ok, why = Themes.SetColor(color, theme) end
                 if not ok then themeRefused(why) end
             end,
         }, own), function() return #Themes.Colors() > 0 end),

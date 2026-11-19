@@ -344,6 +344,18 @@ local function seed(id, base)
     return set
 end
 
+-- Whether a and b hold the same settings; the theme field does not count.
+local function same(a, b)
+    if type(a) ~= "table" or type(b) ~= "table" then return a == b end
+    for k, v in pairs(a) do
+        if k ~= "theme" and not same(v, b[k]) then return false end
+    end
+    for k in pairs(b) do
+        if k ~= "theme" and a[k] == nil then return false end
+    end
+    return true
+end
+
 -- Replaces the active profile's settings with set.
 local function fill(set)
     local db = ns.DB()
@@ -370,9 +382,15 @@ function Themes.Switch(id)
     if why then return nil, why end
     local current = Themes.Current()
     if id == current then return true end
+    -- A base and its HD theme share their settings: only the look changes.
+    if Lib.SetKey(id) == Lib.SetKey(current) then
+        put(ns.DB(), "theme", id)
+        Settings.Changed(nil)
+        return true
+    end
     local sets = storedSets()
-    sets[current] = copy(ns.DB())
-    local nextSet = sets[id]
+    sets[Lib.SetKey(current)] = copy(ns.DB())
+    local nextSet = sets[Lib.SetKey(id)]
     if not nextSet then
         -- CLASSIC is never made from a theme: without a stored one (a
         -- profile imported with a theme) the settings stay as they are.
@@ -384,7 +402,7 @@ function Themes.Switch(id)
     end
     put(nextSet, "theme", id)
     -- The live set is the profile: no stale copy stays behind.
-    sets[id] = nil
+    sets[Lib.SetKey(id)] = nil
     use(nextSet)
     return true
 end
@@ -414,11 +432,12 @@ function Themes.SetColor(id, themeId)
     return true
 end
 
--- The themes with stored settings to copy from, in IDS order.
+-- The themes with stored settings to copy from, in IDS order; an HD theme's
+-- are its base's.
 function Themes.Stored()
     local sets, list = storedSets(), {}
-    for _, id in ipairs(Lib.SpecIds(Themes.SPECS)) do
-        if sets[id] and id ~= Themes.Current() then list[#list + 1] = id end
+    for _, id in ipairs(Lib.MenuIds(Lib.SpecIds(Themes.SPECS))) do
+        if sets[id] and id ~= Lib.SetKey(Themes.Current()) then list[#list + 1] = id end
     end
     return list
 end
@@ -452,6 +471,13 @@ end
 -- older revision is made anew from CLASSIC, quietly.
 function Themes.Upgrade()
     local sets = ns.ThemeSets()
+    -- Before LibForeverThemes 9 a base and its HD theme had a set each: made one; a
+    -- customised HD set wins.
+    local merged = Lib.MergeHD(sets, Themes.Current(), copy(ns.DB()), function(hdId, set)
+        local classic = sets[CLASSIC] or (Themes.Current() == CLASSIC and ns.DB())
+        return not (classic and same(set, seed(hdId, classic)))
+    end)
+    if merged then fill(merged) end
     if not Lib.NeedsReseed(sets, OWN_REVISION) then return end
     local current, base = Themes.Current(), sets[CLASSIC]
     storedSets()
