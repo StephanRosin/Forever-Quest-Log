@@ -410,8 +410,8 @@ end
 local listed = {}
 for _, c in ipairs(themeRow.choices()) do listed[#listed + 1] = c.value end
 check("new: in the options' list, appended", table.concat(listed, " ", 10, 12), "SWISS CONSOLE PITWALL")
-check("framed: in the options' list, appended", table.concat(listed, " ", 13, 14), "AZEROTH GOBLIN")
-check("HD: not in the options' list (colours of their base)", listed[15], nil)
+check("framed: in the options' list, appended", listed[13], "GOBLIN")
+check("HD: not in the options' list (colours of their base)", listed[14], nil)
 -- Every theme and colour the menus offer has its name in every language.
 for code, strings in pairs(ns.Locales) do
     for _, id in ipairs(LibForeverThemes.SpecIds(Themes.SPECS)) do
@@ -522,7 +522,7 @@ local RINGS = {
     WOOD = "GOLD", TECH = "0.25/0.88/0.94/0.9", PARCHMENT = "0.29/0.2/0.12/1", RUNESTONE = "0.1/0.1/0.12/1",
     GLASS = "0.07/0.06/0.05/1", COMIC = "0.07/0.07/0.07/1", FROST = "0.86/0.96/1/0.8", PIXEL = "1/0.95/0.91/1",
     SWISS = "0.165/0.165/0.165/1", CONSOLE = "0.306/0.929/0.69/1", PITWALL = "0.043/0.047/0.055/1",
-    AZEROTH = "0.79/0.635/0.29/1", GOBLIN = "0.23/0.11/0.05/1",
+    GOBLIN = "0.23/0.11/0.05/1",
 }
 local RING_OVERRIDES = { CONSOLE = { AMBER = "1/0.69/0/1", PHOSPHOR = "0.224/1/0.078/1", VIOLET = "0.627/0.471/1/1" },
     PIXEL = { HANDHELD = "0.784/0.941/0.439/1" } }
@@ -647,6 +647,15 @@ check("upgrade: frost done lines as large as objectives", S("doneSize") .. " " .
     S("objectiveSize") .. " " .. S("focusObjectiveSize"))
 Themes.Switch("CLASSIC")
 check("classic after all of it", snapshot(), classic)
+-- A theme no longer offered (Azeroth, LibForeverThemes 13) still saved: login
+-- falls back to the stored Classic set and drops the gone one.
+Themes.Switch("WOOD")
+ns.DB().theme, ns.DB().titleFont = "AZEROTH", "Cinzel"
+sets().AZEROTH = { theme = "AZEROTH" }
+Themes.Upgrade()
+check("saved azeroth: back to classic", Themes.Current(), "CLASSIC")
+check("saved azeroth: classic as stored", snapshot(), classic)
+check("saved azeroth: its set dropped", sets().AZEROTH, nil)
 
 -- A font the client refuses at first use: the client's font meanwhile,
 -- ours again shortly.
@@ -817,44 +826,6 @@ Themes.Switch("CLASSIC")
 -- a textured title band.
 local function file(tex) return tex._texture and tex._texture:match("[^\\]+$") end
 local art = frame.themeArt
-Themes.Switch("AZEROTH")
-M.RunTimers()
-check("azeroth: fonts", S("titleFont") .. "/" .. S("objectiveFont"), "Cinzel/Alegreya")
-check("azeroth: light parchment from its own file", texture(), "AzerothParchment")
-local framed = 0
-for _, strip in ipairs(art.frame) do
-    if strip:IsShown() and file(strip) == "WoodHDWalnut" then framed = framed + 1 end
-end
-check("azeroth: walnut frame on four sides", framed, 4)
-local top = art.frame[1]._points.TOPLEFT
-check("azeroth: frame outside the ring, 7 wide", top[3] == -top[4] and top[4] >= 7, true)
-check("azeroth: banner as the title band", art.band:IsShown() and file(art.band), "AzerothBanner")
-check("azeroth: banner ends, the right one mirrored", art.ends[1]:IsShown() and art.ends[2]._texCoord[1], 1)
--- The frame inside the window's edge (stacked windows flush as under every theme): its box inset by its width.
-local inset = Themes.FrameInset(frame)
-check("azeroth: frame inside the window's edge", inset >= 7 and frame.themeBox._points.TOPLEFT[3] == inset, true)
-local endW = inset + math.floor((32 - inset) * 0.5 + 0.5)
-check("azeroth: title past the banner's end", select(4, headerTitle:GetPoint()), S("locked") and endW or endW + 18)
-Themes.Switch("SWISS")
-M.RunTimers()
-check("swiss: no frame, the box is the window", Themes.FrameInset(frame) .. " " .. frame.themeBox._points.TOPLEFT[3], "0 0")
-Themes.Switch("AZEROTH")
-M.RunTimers()
-check("azeroth: no corner pieces", art.ornaments[1]:IsShown(), false)
-local noteArt = windows[2].themeArt
-ns.Notes.LayoutWindow(windows[2])
-check("azeroth: a note on the banner, as the tracker", noteArt.band:IsShown() and noteArt.ends[1]:IsShown(), true)
-local gold = Themes.Accent(S("headerColor"))
-local nr, ng = windows[2].name:GetTextColor()
-check("azeroth: a note's title in the header's colour", nr == gold[1] and ng == gold[2], true)
-local amber = Themes.TitleInk({ 1, 1, 0 })
-check("azeroth: yellow levels in dark amber, not olive", amber[1] > amber[2] and amber[1] < 0.6, true)
-local grey = Themes.TitleInk({ 0.5, 0.5, 0.5 })
-check("azeroth: grey levels darkened", grey[1] < 0.45, true)
-check("azeroth: dark already: as it is", table.concat(Themes.TitleInk({ 0.1, 0.2, 0.1 }), "/"), "0.1/0.2/0.1")
-check("azeroth: zone header levels in the same ink", ns.ZoneLevels.Label("Elwynn Forest") == nil
-    or ns.ZoneLevels.Label("Elwynn Forest"):find(("%02x"):format(math.floor(grey[1] * 255)), 1, true) ~= nil
-    or ns.ZoneLevels.Label("Elwynn Forest"):find("ff", 1, true) == nil, true)
 Themes.Switch("GOBLIN")
 M.RunTimers()
 check("goblin: fonts", S("titleFont") .. "/" .. S("objectiveFont"), "Bungee/Rubik Medium")
@@ -862,10 +833,20 @@ check("goblin: copper frame", art.frame[1]:IsShown() and file(art.frame[1]), "Go
 check("goblin: hazard strip 5 high, repeating", file(art.band) .. " " .. art.band:GetHeight() .. " "
     .. tostring(art.band:GetHorizTile()), "GoblinHazard 5 true")
 check("goblin: no banner ends", art.ends[1]:IsShown(), false)
+-- The frame inside the window's edge (stacked windows flush as under every theme): its box inset by its width.
+local inset = Themes.FrameInset(frame)
+check("goblin: frame inside the window's edge", inset >= 7 and frame.themeBox._points.TOPLEFT[3] == inset, true)
+local noteArt = windows[2].themeArt
+ns.Notes.LayoutWindow(windows[2])
+check("goblin: a note on the banner, as the tracker", noteArt.band:IsShown(), true)
+local accent = Themes.Accent(S("headerColor"))
+local nr, ng = windows[2].name:GetTextColor()
+check("goblin: a note's title in the header's colour", nr == accent[1] and ng == accent[2], true)
 check("goblin: a level in a title as it is (outlined light text)", table.concat(Themes.TitleInk({ 1, 1, 1 }), "/"), "1/1/1")
 Themes.Switch("SWISS")
 M.RunTimers()
 check("swiss after them: no frame, no ends", art.frame[1]:IsShown() or art.ends[1]:IsShown(), false)
+check("swiss: no frame, the box is the window", Themes.FrameInset(frame) .. " " .. frame.themeBox._points.TOPLEFT[3], "0 0")
 check("swiss after them: the band a colour again", art.band:GetHorizTile(), false)
 Themes.Switch("CLASSIC")
 M.RunTimers()

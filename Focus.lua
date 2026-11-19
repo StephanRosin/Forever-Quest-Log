@@ -111,12 +111,12 @@ function Focus.Layout()
         frame:Hide()
         return
     end
-    -- Inside a material frame (Azeroth, Goblin) the padding counts from its inner edge.
+    -- Inside a material frame (Goblin) the padding counts from its inner edge.
     local inset = ns.Themes.FrameInset(frame)
     local pad = G("padding") + inset
     local width = G("width")
     frame:SetWidth(width)
-    -- A theme's banner (Azeroth) behind the title, as the tracker's header:
+    -- A theme's banner (Goblin) behind the title, as the tracker's header:
     -- the title in the header's colour, past the banner's end, air below it.
     local banner, left, rowCfg = ns.Themes.Banner(), pad, cfg
     if banner then

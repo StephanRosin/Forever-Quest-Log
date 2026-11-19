@@ -157,20 +157,6 @@ Themes.SPECS = Lib.Specs({
             wedgeColor = Lib.THEMES.PITWALL.wedgeColor,
             rule = { 0.137, 0.149, 0.173, 1 } } },
     },
-    -- A window of the game's own world: light parchment in a walnut frame, a gold
-    -- ring and corners, the title on a red banner. Dark ink on the page (as on the
-    -- comic's; zone headers in ink too: red beside the banner and the red levels
-    -- read badly), light on the banner (headerInk: the header count's colour).
-    AZEROTH = {
-        bar = "FQL Parchment", flag = "", bodyFlag = "", ink = 0.55, headerInk = { 0.96, 0.89, 0.72 },
-        look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.AZEROTH.rim, cornerRadius = 0,
-            shadowEnabled = true, shadowSize = 12, shadowAlpha = 60, bgMode = "TEXTURE", bgTexture = "FQL Parchment",
-            bgAlpha = 100, headerShine = false, headerLine = false, headerColor = { 1, 0.82, 0 },
-            zoneColor = { 0.2, 0.12, 0.05 }, titleColor = { 0.14, 0.08, 0.04 },
-            objectiveColor = { 0.2, 0.13, 0.06 }, objectiveDoneColor = { 0.38, 0.33, 0.26 },
-            doneColor = { 0.1, 0.3, 0.06 } },
-        art = { ornamentSize = 22, ornamentInset = 0, band = {} },
-    },
     -- A goblin workshop: sooty sheet metal in a copper frame with rivets, a strip
     -- of warning stripes along the top.
     GOBLIN = {
@@ -302,7 +288,7 @@ function Themes.Icons()
     return tones
 end
 
--- Whether the theme draws its title band as a banner (Azeroth): headers on it
+-- Whether the theme draws its title band as a banner (Goblin): headers on it
 -- in the header's colour, as the tracker's "Quests".
 function Themes.Banner()
     local art = Themes.Spec(Themes.Current()).art
@@ -324,7 +310,7 @@ function Themes.Ink(c)
 end
 
 -- Dark ink for levels in display text: luminance at most this, about 3:1 on
--- Azeroth's light parchment (large display text). Plain darkening turned the
+-- a light paper (large display text). Plain darkening turned the
 -- client's yellow olive and left it hard to read; yellow goes amber first.
 local INK_LUMINANCE, AMBER = 0.13, 0.68
 local function luminance(r, g, b)
@@ -333,7 +319,7 @@ local function luminance(r, g, b)
 end
 
 -- A level's colour { r, g, b } in display text (quest titles, zone headers):
--- in dark ink where those texts are ink without an outline (Azeroth), else as it is.
+-- in dark ink where those texts are ink without an outline (flag ""), else as it is.
 function Themes.TitleInk(c)
     local spec = Themes.Spec(Themes.Current())
     if spec.flag ~= "" or not spec.ink or darkPaper() then return c end
@@ -535,6 +521,16 @@ end
 -- older revision is made anew from CLASSIC, quietly.
 function Themes.Upgrade()
     local sets = ns.ThemeSets()
+    -- A theme no longer offered (Azeroth, LibForeverThemes 13): back to the
+    -- stored CLASSIC set, without one CLASSIC on the settings as they are.
+    local gone = Themes.Current()
+    if not Themes.SPECS[gone] then
+        sets[gone] = nil
+        local classic = sets[CLASSIC]
+        sets[CLASSIC] = nil
+        if classic then fill(classic) end
+        put(ns.DB(), "theme", CLASSIC)
+    end
     -- Before LibForeverThemes 9 a base and its HD theme had a set each: made one; a
     -- customised HD set wins.
     local merged = Lib.MergeHD(sets, Themes.Current(), copy(ns.DB()), function(hdId, set)
@@ -780,7 +776,7 @@ local function placeFrame(strips, box, art, extent)
     return w
 end
 
--- The material frame's width (Azeroth, Goblin), 0 without one. It lies
+-- The material frame's width (Goblin), 0 without one. It lies
 -- inside the window's edge (ArtBox): windows stacked edge to edge stay flush
 -- with each other as under every other theme.
 function Themes.FrameInset(owner)

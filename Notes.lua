@@ -152,7 +152,7 @@ end
 function Notes.LayoutWindow(win)
     local list = win.list
     local style = Settings.TextStyle("zone")
-    -- On a banner (Azeroth) in the header's colour, as the tracker's "Quests".
+    -- On a banner (Goblin) in the header's colour, as the tracker's "Quests".
     if ns.Themes.Banner() then style.color = ns.Themes.Accent(Settings.Get("headerColor")) end
     local spec = ns.Themes.Spec(ns.Themes.Current())
     Media.ApplyText(win.name, style)
@@ -164,7 +164,7 @@ function Notes.LayoutWindow(win)
     local titleH = themed and math.max(TITLE_H, style.size + 12) or TITLE_H
     -- Past the theme's title wedge (Pitwall), as in the tracker.
     local indent = ns.Themes.TitleIndent(titleH)
-    -- Inside a material frame (Azeroth, Goblin) title, list and grip move in by its width.
+    -- Inside a material frame (Goblin) title, list and grip move in by its width.
     local inset = ns.Themes.FrameInset(win)
     local pad = PAD + inset
     win.name:SetPoint("LEFT", indent > 0 and indent - pad or 0, 0)
