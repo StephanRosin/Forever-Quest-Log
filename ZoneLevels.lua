@@ -16,13 +16,19 @@ function ZoneLevels.Color(lo, hi, level)
 end
 
 -- "Tanaris (40-50)", the range in its colour, or nil: unknown place or the option off.
--- ink: in body text (the task list), coloured as the theme's ink.
+-- ink: in body text (the task list), coloured as the theme's ink; else as a
+-- display text's level (Themes.TitleInk), like the quest titles'.
 function ZoneLevels.Label(name, ink)
     local range = name and ns.Settings.Get("zoneLevels") and ns.ZoneLevelData[name]
     if not range then return nil end
     local lo, hi = range[1], range[2]
     local c = ZoneLevels.Color(lo, hi, UnitLevel("player"))
-    if ink then c = ns.Themes.Ink(c) end
+    if ink then
+        c = ns.Themes.Ink(c)
+    else
+        local t = ns.Themes.TitleInk({ c.r, c.g, c.b })
+        c = { r = t[1], g = t[2], b = t[3] }
+    end
     local span = lo == hi and tostring(lo) or (lo .. "-" .. hi)
     return ("%s |cff%02x%02x%02x(%s)|r"):format(name, c.r * 255, c.g * 255, c.b * 255, span)
 end

@@ -159,15 +159,16 @@ Themes.SPECS = Lib.Specs({
     },
     -- A window of the game's own world: light parchment in a walnut frame, a gold
     -- ring and corners, the title on a red banner. Dark ink on the page (as on the
-    -- comic's), light on the banner (headerInk: the header count's colour).
+    -- comic's; zone headers in ink too: red beside the banner and the red levels
+    -- read badly), light on the banner (headerInk: the header count's colour).
     AZEROTH = {
         bar = "FQL Parchment", flag = "", bodyFlag = "", ink = 0.55, headerInk = { 0.96, 0.89, 0.72 },
         look = { borderStyle = "FLAT", borderSize = 2, borderColor = Lib.THEMES.AZEROTH.rim, cornerRadius = 0,
             shadowEnabled = true, shadowSize = 12, shadowAlpha = 60, bgMode = "TEXTURE", bgTexture = "FQL Parchment",
             bgAlpha = 100, headerShine = false, headerLine = false, headerColor = { 1, 0.82, 0 },
-            zoneColor = { 0.42, 0.09, 0.06 }, titleColor = { 0.14, 0.08, 0.04 },
-            objectiveColor = { 0.29, 0.18, 0.09 }, objectiveDoneColor = { 0.45, 0.4, 0.33 },
-            doneColor = { 0.18, 0.36, 0.12 } },
+            zoneColor = { 0.2, 0.12, 0.05 }, titleColor = { 0.14, 0.08, 0.04 },
+            objectiveColor = { 0.2, 0.13, 0.06 }, objectiveDoneColor = { 0.38, 0.33, 0.26 },
+            doneColor = { 0.1, 0.3, 0.06 } },
         art = { ornamentSize = 22, ornamentInset = 0, band = {} },
     },
     -- A goblin workshop: sooty sheet metal in a copper frame with rivets, a strip
@@ -315,12 +316,26 @@ function Themes.Ink(c)
     return { r = c.r * ink, g = c.g * ink, b = c.b * ink }
 end
 
--- A quest level's colour { r, g, b } in a title: darkened like body text where
--- the titles are dark ink without an outline (Azeroth), else as it is.
+-- Dark ink for levels in display text: luminance at most this, about 3:1 on
+-- Azeroth's light parchment (large display text). Plain darkening turned the
+-- client's yellow olive and left it hard to read; yellow goes amber first.
+local INK_LUMINANCE, AMBER = 0.13, 0.68
+local function luminance(r, g, b)
+    local function lin(v) return v <= 0.04045 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+end
+
+-- A level's colour { r, g, b } in display text (quest titles, zone headers):
+-- in dark ink where those texts are ink without an outline (Azeroth), else as it is.
 function Themes.TitleInk(c)
     local spec = Themes.Spec(Themes.Current())
     if spec.flag ~= "" or not spec.ink or darkPaper() then return c end
-    return { c[1] * spec.ink, c[2] * spec.ink, c[3] * spec.ink }
+    local r, g, b = c[1], c[2], c[3]
+    if r > 0.8 and g > 0.8 and b < 0.3 then g = r * AMBER end
+    local lum = luminance(r, g, b)
+    if lum <= INK_LUMINANCE then return { r, g, b } end
+    local k = (INK_LUMINANCE / lum) ^ (1 / 2.2)
+    return { r * k, g * k, b * k }
 end
 
 -- The active profile's stored sets; stale ones (an older revision) dropped.
