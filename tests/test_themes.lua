@@ -831,7 +831,7 @@ check("azeroth: frame outside the ring, 7 wide", top[3] == -top[4] and top[4] >=
 check("azeroth: banner as the title band", art.band:IsShown() and file(art.band), "AzerothBanner")
 check("azeroth: banner ends, the right one mirrored", art.ends[1]:IsShown() and art.ends[2]._texCoord[1], 1)
 check("azeroth: title past the banner's end", select(4, headerTitle:GetPoint()), S("locked") and 16 or 16 + 18)
-check("azeroth: gold corners on the frame", art.ornaments[1]:IsShown() and file(art.ornaments[1]), "Bracket")
+check("azeroth: no corner pieces", art.ornaments[1]:IsShown(), false)
 local noteArt = windows[2].themeArt
 ns.Notes.LayoutWindow(windows[2])
 check("azeroth: a note on the banner, as the tracker", noteArt.band:IsShown() and noteArt.ends[1]:IsShown(), true)
