@@ -2156,15 +2156,22 @@ do
     check("newest first", A.List()[1].title, "Tiger Hunt")
     check("spot unknown: the zone", A.Place(A.List()[1]), "Stranglethorn Vale")
 
-    headerFrame.countHover:GetScript("OnEnter")(headerFrame.countHover)
-    check("count tooltip: how to get there", GameTooltip._lines[2], "Click: abandoned quests (2)")
-    headerFrame.countHover:GetScript("OnMouseUp")(headerFrame.countHover, "LeftButton")
-    local texts = {}
-    for _, entry in ipairs(M.menus[#M.menus].entries) do texts[#texts + 1] = entry.text end
-    check("menu", table.concat(texts, "|"), "Abandoned quests|[30] Tiger Hunt|Stranglethorn Vale|Remove from list"
-        .. "|[33] Raptor Mastery|Stranglethorn Vale 42, 65|Show on map|Remove from list|Clear list")
-    M.menus[#M.menus].entries[4].fn()
-    check("menu: remove one", A.List()[1].title, "Raptor Mastery")
+    check("count: no click", headerFrame.countHover:GetScript("OnMouseUp"), nil)
+    ns.Window.ShowPage("abandoned")
+    local page = _G.ForeverQuestLogPageabandoned
+    local function rowTexts()
+        local texts = {}
+        for _, row in ipairs(page.entries) do
+            if row:IsShown() then
+                texts[#texts + 1] = row.title._text .. " / " .. row.place._text .. (row.map:IsShown() and " +map" or "")
+            end
+        end
+        return table.concat(texts, "|")
+    end
+    check("options page", rowTexts(), "[30] Tiger Hunt / Stranglethorn Vale|[33] Raptor Mastery / Stranglethorn Vale 42, 65 +map")
+    page.entries[1].remove:GetScript("OnClick")()
+    check("options page: remove one", rowTexts(), "[33] Raptor Mastery / Stranglethorn Vale 42, 65 +map")
+    check("removed from the list too", A.List()[1].title, "Raptor Mastery")
 
     M.player = { map = 1434, x = 0.1, y = 0.1 }
     accept(300, "Raptor Mastery", 33)
@@ -2176,9 +2183,11 @@ do
     for id = 1, A.MAX + 2 do A.Add({ id = id, title = "Q" .. id }) end
     check("only the newest kept", #A.List(), A.MAX)
     check("oldest dropped", A.List()[A.MAX].title, "Q3")
+    ns.Window.ShowPage("abandoned")
+    check("long list: page grows", page.height > 30 * 38, true)
     A.Clear()
-    headerFrame.countHover:GetScript("OnMouseUp")(headerFrame.countHover, "LeftButton")
-    check("empty menu says so", M.menus[#M.menus].entries[2].text, "None yet")
+    ns.Window.ShowPage("abandoned")
+    check("empty page: no rows", rowTexts(), "")
 end
 
 section("Zone levels")

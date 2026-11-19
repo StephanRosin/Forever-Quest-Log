@@ -2,8 +2,8 @@ local ADDON, ns = ...
 local L = ns.L
 
 -- Quests the player abandoned, per character, so they can be found again
--- (wish from CurseForge, GalvinW). Not in the tracker list: a click on the
--- quest count in the header opens them as a menu.
+-- (wish from CurseForge, GalvinW). Not in the tracker list: they have their
+-- own page in the options window.
 --
 -- Every way to abandon in Forever (quest log, map, tracker menus) ends in
 -- Blizzard's popup: C_QuestLog.SetAbandonQuest() picks the quest, the popup's
@@ -99,22 +99,4 @@ function Abandoned.Place(entry)
         return ("%s %.0f, %.0f"):format(map.name, entry.x * 100, entry.y * 100)
     end
     return entry.zone or L.ZONE_OTHER
-end
-
-function Abandoned.Menu(owner)
-    if not (MenuUtil and MenuUtil.CreateContextMenu) then return end
-    MenuUtil.CreateContextMenu(owner, function(_, root)
-        root:CreateTitle(L.ABANDONED_TITLE)
-        local list = Abandoned.List()
-        if #list == 0 then return root:CreateTitle(L.ABANDONED_NONE) end
-        for _, e in ipairs(list) do
-            local item = root:CreateButton((e.level and ("[" .. e.level .. "] ") or "") .. e.title)
-            item:CreateTitle(Abandoned.Place(e))
-            if e.mapID then
-                item:CreateButton(L.ABANDONED_SHOW_MAP, function() ns.Actions.OpenMap(e.mapID) end)
-            end
-            item:CreateButton(L.ABANDONED_FORGET, function() Abandoned.Remove(e.id) end)
-        end
-        root:CreateButton(L.ABANDONED_CLEAR, Abandoned.Clear)
-    end)
 end

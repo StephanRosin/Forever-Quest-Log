@@ -611,6 +611,73 @@ local PAGE_TOP, PAGE_BOTTOM, SECTION_GAP, INSET = 4, 16, 8, 16
 local TEXT_AREA_H, HINT_ROW_H = 70, 26
 local BUTTON_H, BUTTON_W, BUTTON_GAP = 24, 140, 8
 
+-- Abandoned quests: one row per quest, built anew each time the page shows
+-- (the list changes outside the window). Rows are pooled, frames cannot go.
+local ABANDONED_ROW_H, MAP_BUTTON_W, REMOVE_BUTTON_W = 38, 150, 150
+local function buildAbandoned(page)
+    local header = Widgets.Header(page, L.ABANDONED_TITLE)
+    header:SetPoint("TOPLEFT", page, "TOPLEFT", 0, -PAGE_TOP)
+    header:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -PAGE_TOP)
+    local hint = Style.Text(page, 11, "muted")
+    hint:SetPoint("TOPLEFT", header, "BOTTOMLEFT", INSET, -4)
+    hint:SetWidth(CONTENT_W - 2 * INSET)  -- a RIGHT anchor on the page would centre it vertically
+    hint:SetJustifyH("LEFT")
+    hint:SetWordWrap(true)
+    hint:SetText(L.ABANDONED_HINT)
+    local function reshow() Window.ShowPage("abandoned") end
+    local clear = Widgets.Button(page, { text = L.ABANDONED_CLEAR, width = BUTTON_W, onClick = function()
+        ns.Abandoned.Clear()
+        reshow()
+    end })
+    page.entries = {}
+
+    local function newRow()
+        local row = CreateFrame("Frame", nil, page)
+        row:SetHeight(ABANDONED_ROW_H)
+        row.title = Style.Text(row, 12, "text")
+        row.title:SetPoint("TOPLEFT", row, "TOPLEFT", INSET, -4)
+        row.place = Style.Text(row, 11, "muted")
+        row.place:SetPoint("TOPLEFT", row.title, "BOTTOMLEFT", 0, -3)
+        row.remove = Widgets.Button(row, { text = L.ABANDONED_FORGET, width = REMOVE_BUTTON_W, onClick = function()
+            ns.Abandoned.Remove(row.entry.id)
+            reshow()
+        end })
+        row.remove:SetPoint("RIGHT", row, "RIGHT", -INSET, 0)
+        row.map = Widgets.Button(row, { text = L.ABANDONED_SHOW_MAP, width = MAP_BUTTON_W, onClick = function()
+            ns.Actions.OpenMap(row.entry.mapID)
+        end })
+        row.map:SetPoint("RIGHT", row.remove, "LEFT", -BUTTON_GAP, 0)
+        return row
+    end
+
+    function page.rebuild()
+        local list = ns.Abandoned.List()
+        hint:SetText(#list == 0 and L.ABANDONED_NONE or L.ABANDONED_HINT)
+        -- The hint wraps with the language: rows start below its real height.
+        local top = PAGE_TOP + header:GetHeight() + 4 + hint:GetStringHeight() + 12
+        for i, e in ipairs(list) do
+            local row = page.entries[i] or newRow()
+            page.entries[i] = row
+            row.entry = e
+            row.title:SetText((e.level and ("[" .. e.level .. "] ") or "") .. e.title)
+            row.place:SetText(ns.Abandoned.Place(e))
+            row.map:SetShown(e.mapID ~= nil)
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", page, "TOPLEFT", 0, -(top + (i - 1) * ABANDONED_ROW_H))
+            row:SetPoint("TOPRIGHT", page, "TOPRIGHT", 0, -(top + (i - 1) * ABANDONED_ROW_H))
+            row:Show()
+        end
+        for i = #list + 1, #page.entries do page.entries[i]:Hide() end
+        clear:SetShown(#list > 0)
+        clear:ClearAllPoints()
+        clear:SetPoint("TOPLEFT", page, "TOPLEFT", INSET, -(top + #list * ABANDONED_ROW_H + 6))
+        page.height = top + #list * ABANDONED_ROW_H + BUTTON_H + 12 + PAGE_BOTTOM
+    end
+    page.rows = {}
+    page.rebuild()
+end
+table.insert(Window.PAGES, #Window.PAGES, { id = "abandoned", label = "PAGE_ABANDONED", build = buildAbandoned })
+
 -- A label: a locale key or a function (read again on refresh).
 local function labelText(label)
     if type(label) == "function" then return label() end

@@ -260,17 +260,9 @@ local function createHeader()
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
         GameTooltip:SetText(L.TIP_COUNT:format(self.inLog or 0, self.max or 0), 1, 1, 1)
         GameTooltip:AddLine(L.TIP_TRACKED:format(self.tracked or 0), nil, nil, nil, true)
-        GameTooltip:AddLine(L.TIP_ABANDONED:format(#ns.Abandoned.List()), nil, nil, nil, true)
         GameTooltip:Show()
     end)
     header.countHover:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    -- Abandoned quests stay out of the list; the count opens them as a menu.
-    header.countHover:SetScript("OnMouseUp", function(self, mouse)
-        if mouse == "LeftButton" then
-            GameTooltip:Hide()
-            ns.Abandoned.Menu(self)
-        end
-    end)
 
     -- Right to left.
     local collapse = headerButton("ChevronUp", function()
