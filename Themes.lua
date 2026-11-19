@@ -734,11 +734,14 @@ end
 local function placeBand(a, box, art, top)
     local band, b = a.band, art.band or {}
     local h = bandHeight(art, top)
-    band:SetShown(art.band ~= nil)
+    -- No header (focus frame, a note): no band. SetHeight(0) would draw the
+    -- banner file at its own height, over the title and first line.
+    local shown = art.band ~= nil and h > 0
+    band:SetShown(shown)
     placeWedge(a.wedge, band, b, h)
     placeRule(a.rule, band, b)
     local inset = placeEnds(a.ends, box, art, h)
-    if not art.band then return end
+    if not shown then return end
     band:ClearAllPoints()
     band:SetPoint("TOPLEFT", box, "TOPLEFT", inset, 0)
     band:SetPoint("TOPRIGHT", box, "TOPRIGHT", -inset, 0)
