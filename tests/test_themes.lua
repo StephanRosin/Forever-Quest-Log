@@ -358,6 +358,22 @@ local function onHD(width)
 end
 check("merge: on customised HD, it stays live", onHD(244), "244 WOOD_HD nil")
 check("merge: on plain HD, wood's set goes live", onHD(nil), "199 WOOD_HD nil")
+-- A profile made active mid-session is merged at once, as at login.
+do
+    local home = ns.ActiveProfile()
+    Themes.Switch("PIXEL")
+    ns.SwitchProfile("HD merge")
+    sets().WOOD = clone(plainHD)
+    sets().WOOD.width, sets().WOOD.theme = 211, "WOOD"
+    sets().WOOD_HD = clone(plainHD)
+    sets().WOOD_HD.width = 311
+    sets().hdMerged = nil
+    ns.SwitchProfile(home)
+    ns.SwitchProfile("HD merge")
+    check("merge on profile switch: customised HD wins at once", sets().WOOD.width .. " " .. tostring(sets().WOOD_HD), "311 nil")
+    ns.SwitchProfile(home)
+    ns.DeleteProfile("HD merge")
+end
 Themes.Switch("PIXEL")
 sets().WOOD = nil
 Themes.Switch("CLASSIC")
