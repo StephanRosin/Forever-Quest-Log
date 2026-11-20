@@ -955,6 +955,22 @@ Settings.Set("bgMode", "TEXTURE")
 relayout()
 check("texture background", frame.bg._texture, "Interface\\DialogFrame\\UI-DialogBox-Background-Dark")
 Settings.Set("bgMode", "SOLID")
+-- Another background opacity with the mouse over it (wish from CurseForge).
+Settings.Set("bgAlpha", 20)
+relayout()
+local function bgAlpha() return frame.bg._gradient[3].a end
+frame._mouseOver = true
+Tracker.UpdateAlpha()
+check("hover off: opacity stays", bgAlpha(), 0.2)
+Settings.Set("bgHover", true)
+relayout()
+check("hover on: darker with the mouse over it", bgAlpha(), 0.85)
+frame._mouseOver = false
+Tracker.UpdateAlpha()
+check("hover on: back without the mouse", bgAlpha(), 0.2)
+Settings.Set("bgHover", nil)
+Settings.Set("bgAlpha", nil)
+relayout()
 Settings.Set("titleSize", 18)
 relayout()
 check("title size", questRows()[1].title._font[2], 18)

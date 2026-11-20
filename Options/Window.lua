@@ -264,6 +264,8 @@ local function appearanceRows()
         visibleIf(colorRow("bgColor", "OPT_BG_COLOR", true), function() return S("bgMode") ~= "TEXTURE" end),
         visibleIf(media("bgTexture", "OPT_BG_TEXTURE", "background"), function() return S("bgMode") == "TEXTURE" end),
         num("bgAlpha", "OPT_BG_ALPHA", "%"),
+        check("bgHover", "OPT_BG_HOVER"),
+        enabledIf(num("bgHoverAlpha", "OPT_BG_HOVER_ALPHA", "%"), function() return S("bgHover") end),
         check("headerLine", "OPT_HEADER_LINE"),
         check("headerShine", "OPT_HEADER_SHINE"),
         choice("headerIcons", "OPT_HEADER_ICONS", { "ALWAYS", "HOVER" }, "ICONS_"),

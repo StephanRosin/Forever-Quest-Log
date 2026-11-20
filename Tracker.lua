@@ -366,8 +366,16 @@ end
 
 -- Background and border -------------------------------------------------------
 
+-- With the mouse over it, the background can take another opacity (bgHover):
+-- e.g. clear while playing, darker for reading.
+local bgHovered = false
+local function applyBackground()
+    local alpha = (bgHovered and S("bgHover")) and S("bgHoverAlpha") or S("bgAlpha")
+    Media.ApplyBackground(frame.bg, S("bgMode"), S("bgColor"), alpha / 100, S("bgTexture"))
+end
+
 local function applyLook()
-    Media.ApplyBackground(frame.bg, S("bgMode"), S("bgColor"), S("bgAlpha") / 100, S("bgTexture"))
+    applyBackground()
     local w, h = frame:GetWidth(), frame:GetHeight()
     local radius = ns.Corners.Clamp(S("cornerRadius"), w, h)
     ns.Corners.Fit(frame.clip, frame, radius, { frame.bg, header.shine })
@@ -926,6 +934,11 @@ function Tracker.UpdateAlpha()
         alpha = S("fadeAlpha") / 100
     end
     frame:SetAlpha(alpha)
+    local hovered = frame:IsMouseOver() and true or false
+    if hovered ~= bgHovered then
+        bgHovered = hovered
+        if S("bgHover") then applyBackground() end
+    end
     Items.SetAlpha((state().collapsed or not frame:IsShown()) and 0 or alpha)
     -- Hidden buttons stay clickable: the mouse over one is over the tracker,
     -- which shows them.
