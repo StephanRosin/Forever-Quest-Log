@@ -265,6 +265,7 @@ L.LOGSTYLE_OBJECTIVE = "Objetivos"
 -- Selected quest tracker
 L.PAGE_FOCUS = "Misión enfocada"
 L.OPT_FOCUS = "Rastreador de la misión seleccionada"
+L.BROKER_NONE = "Ninguna misión seleccionada"
 L.OPT_FOCUS_ENABLED = "Mostrar la misión enfocada en un marco propio"
 L.OPT_FOCUS_HINT = "La misión que enfocas (su botón de mapa o «Enfocar» en su menú) con título y progreso. Desbloquéalo para arrastrarlo a cualquier sitio y ensancharlo por la esquina."
 L.OPT_FOCUS_FALLBACK = "Nada enfocado"

@@ -291,6 +291,7 @@ L.LOGSTYLE_OBJECTIVE = "Objectives"
 -- Selected quest tracker
 L.PAGE_FOCUS = "Focused quest"
 L.OPT_FOCUS = "Selected quest tracker"
+L.BROKER_NONE = "No quest selected"
 L.OPT_FOCUS_ENABLED = "Show the focused quest in a frame of its own"
 L.OPT_FOCUS_HINT = "The quest you focus (its map button, or “Focus” in its menu) with title and progress. Unlock it to drag it anywhere and to widen it at its corner."
 L.OPT_FOCUS_FALLBACK = "Nothing focused"

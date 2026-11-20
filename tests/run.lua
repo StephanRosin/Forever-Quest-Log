@@ -1388,6 +1388,31 @@ Settings.Set("focusEnabled", nil)
 M.superTracked = 0
 M.RunTimers()
 
+section("Selected quest as a LibDataBroker data source")
+local B = ns.Broker
+check("text: nothing selected", B.Text(nil):find(ns.L.BROKER_NONE, 1, true) ~= nil, true)
+check("text: counts, done ones green", B.Text({ title = "Rats", objectives = { { cur = 3, max = 8 }, { cur = 2, max = 2, done = true },
+    { percent = 45 }, { text = "Talk" } } }), "Rats  3/8 · |cff40ff402/2|r · 45%")
+check("text: nothing to count", B.Text({ title = "Talk to Bob", objectives = { { text = "Talk" } } }), "Talk to Bob")
+check("text: complete", B.Text({ title = "Rats", isComplete = true, objectives = {} }), "Rats  |cff40ff40" .. ns.L.QUEST_COMPLETE .. "|r")
+check("no library: no object", B.object, nil)
+local made = {}
+LibStub = function(name) return name == "LibDataBroker-1.1" and {
+    NewDataObject = function(_, n, o) made[n] = o; return o end } or nil end
+B.Register()
+local feed = made[B.NAME]
+check("registered as a data source", feed and feed.type, "data source")
+M.superTracked = 56
+B.Update()
+check("text follows the selected quest", feed.text:find(ns.Focus.Quest().title, 1, true) == 1, true)
+local lines = {}
+feed.OnTooltipShow({ AddLine = function(_, t) lines[#lines + 1] = t end, AddDoubleLine = function(_, a, b) lines[#lines + 1] = a .. "=" .. b end })
+check("tooltip: title first", lines[1], ns.Focus.Quest().title)
+B.Register()
+check("registered once", B.object, feed)
+LibStub = nil
+M.superTracked = 0
+
 section("World map: more own options")
 Settings.Set("mapStyle", "OWN")
 local titleFs = wmf.BorderFrame.TitleContainer.TitleText
