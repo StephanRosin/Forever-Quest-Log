@@ -585,8 +585,13 @@ local function newTaskRow(parent)
     row:EnableMouse(true)
     row.hover = newHover(row)
     row:SetScript("OnClick", function(self, button)
+        local id = self.task.itemID
         if button == "RightButton" then
             ns.TaskUI.EntryMenu(self, self.list, self.task)
+        elseif id and IsModifiedClick("CHATLINK") then
+            -- Blizzard's shift-click: into the open chat, else the auction house search.
+            local link = select(2, C_Item.GetItemInfo(id))
+            if link then HandleModifiedItemClick(link) end
         else
             ns.Tasks.Toggle(self.task)
         end

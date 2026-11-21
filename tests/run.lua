@@ -2355,6 +2355,21 @@ end
 
 assert(loadfile("test_themes.lua"))(M, ns, check, section)
 
+section("Task row shift-click")
+do
+    -- Shift-click on an item entry: Blizzard's link handling (chat, else auction house search).
+    local row, linked = ns.Rows.NewTaskRow(UIParent), nil
+    row.list, row.task = {}, { itemID = 2589, goal = 5 }
+    local getInfo, handle = C_Item.GetItemInfo, HandleModifiedItemClick
+    C_Item.GetItemInfo = function(id) return "Linen Cloth", "|Hitem:" .. id .. "|h[Linen Cloth]|h" end
+    HandleModifiedItemClick = function(link) linked = link end
+    M.state.modified.CHATLINK = true
+    row:GetScript("OnClick")(row, "LeftButton")
+    M.state.modified.CHATLINK = nil
+    check("shift-click: the item's link handed on", linked, "|Hitem:" .. 2589 .. "|h[Linen Cloth]|h")
+    C_Item.GetItemInfo, HandleModifiedItemClick = getInfo, handle
+end
+
 section("Languages")
 local base = ns.Locales.enUS
 for code, strings in pairs(ns.Locales) do
