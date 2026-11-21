@@ -265,9 +265,9 @@ local LIGHT_ICONS = { idle = { 0.85, 0.85, 0.85 }, hover = { 1, 1, 1 }, off = { 
 local function darkPaper() return Lib.DarkPaper(Themes.Current(), Themes.Color()) end
 
 -- A body text colour on the backdrop: light on a dark comic paper (where
--- the theme's dark ink would vanish), else color.
-function Themes.OnPaper(color)
-    return darkPaper() and LIGHT_TEXT or color
+-- the theme's dark ink would vanish; onDark instead of the grey), else color.
+function Themes.OnPaper(color, onDark)
+    return darkPaper() and (onDark or LIGHT_TEXT) or color
 end
 
 -- The header icons' colours (idle, hover, on, off, grip; close = the close

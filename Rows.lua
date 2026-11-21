@@ -75,7 +75,8 @@ end
 local function layoutLine(row, line, o, x, y, w, style, cfg)
     local isDone = o.done
     local textStyle = cfg.text(style or "objective")
-    textStyle.color = ns.Themes.OnPaper(textStyle.color)
+    -- The turn-in line stays green on a dark comic paper too.
+    textStyle.color = ns.Themes.OnPaper(textStyle.color, style == "done" and ns.Settings.DEFAULTS.doneColor or nil)
     local share = progressShare(o)
     if style == nil and isDone then
         textStyle.color = ns.Themes.OnPaper(cfg.get("objectiveDoneColor"))

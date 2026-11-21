@@ -2389,6 +2389,18 @@ end
 
 assert(loadfile("test_themes.lua"))(M, ns, check, section)
 
+section("Dark comic paper")
+do
+    local dark = LibForeverThemes.DarkPaper
+    LibForeverThemes.DarkPaper = function() return true end
+    local grey, green = { 0.1, 0.1, 0.1 }, { 0, 1, 0 }
+    check("dark paper: body text turns light", ns.Themes.OnPaper(grey)[1], 0.9)
+    check("dark paper: the turn-in line keeps its green", ns.Themes.OnPaper(grey, green), green)
+    LibForeverThemes.DarkPaper = function() return false end
+    check("light paper: the theme's colour", ns.Themes.OnPaper(grey, green), grey)
+    LibForeverThemes.DarkPaper = dark
+end
+
 section("Task row shift-click")
 do
     -- Shift-click on an item entry: Blizzard's link handling (chat, else auction house search).
