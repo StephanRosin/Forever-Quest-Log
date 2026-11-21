@@ -7,8 +7,8 @@ local L, Style, Tasks = ns.L, ns.Style, ns.Tasks
 local TaskUI = {}
 ns.TaskUI = TaskUI
 
-local WIDTH, PAD = 320, 10
-local FIELD_H, AMOUNT_W = 22, 56
+local WIDTH, PAD = 380, 10
+local FIELD_H, AMOUNT_W = 22, 120  -- the amount box holds a sum, see Tasks.Calc
 local STEPPER_W, MAX_AMOUNT = 14, 9999
 local OK_W, OK_H, OK_GAP = 70, 24, 8
 local ROW_H, ICON = 20, 16
@@ -224,7 +224,7 @@ local function createPopup()
 
     p.title = Style.Text(p, 13, "accent")
     p.title:SetPoint("TOPLEFT", PAD, -PAD)
-    p.title:SetPoint("RIGHT", -28, 0)
+    p.title:SetPoint("TOPRIGHT", -28, -PAD)  -- "RIGHT" would pin it to the middle too
     p.title:SetJustifyH("LEFT")
     p.title:SetWordWrap(false)
 
@@ -255,6 +255,9 @@ local function createPopup()
 
     p.ok = ns.Widgets.Button(p, { text = L.TASK_OK, width = OK_W, onClick = submit })
     p.ok:SetPoint("BOTTOMRIGHT", -PAD, PAD)
+    -- A sum's result while it is typed: "= 291".
+    p.result = Style.Text(p, 12, "muted")
+    p.result:SetPoint("LEFT", p, "BOTTOMLEFT", PAD, PAD + OK_H / 2)
 
     p.list = CreateFrame("Frame", nil, p)
     p.list:SetPoint("TOPLEFT", p, "BOTTOMLEFT", 0, 1)
@@ -287,6 +290,13 @@ local function createPopup()
     p.amount:SetScript("OnTabPressed", function() p.edit:SetFocus() end)
     p.amount:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
     -- A sum shows its result once the box is left.
+    local function showResult(self)
+        local text = self:GetText()
+        local n = text:find("[%+%-%*/%(]") and Tasks.Calc(text)
+        p.result:SetText(n and n >= 1 and "= " .. n or "")
+    end
+    p.amount:SetScript("OnTextChanged", showResult)
+    p.edit:HookScript("OnTextChanged", function(self) if p.numeric then showResult(self) else p.result:SetText("") end end)
     p.amount:SetScript("OnEditFocusLost", function(self)
         local n = Tasks.Calc(self:GetText())
         if n and n >= 1 and tostring(n) ~= self:GetText() then self:SetText(tostring(n)) end
