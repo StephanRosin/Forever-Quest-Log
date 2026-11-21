@@ -11,6 +11,7 @@ ns.Tracker = Tracker
 
 local HEADER_H = 32
 local BUTTON = 22
+local BUTTON_TIGHT = 18  -- header buttons moved together when title and count need the room
 local ACCENT = { 0.31, 0.76, 0.97 }          -- the options' blue: unlocked
 local IDLE = { 0.73, 0.64, 0.48 }
 local HOVER = { 1, 0.88, 0.54 }
@@ -210,7 +211,7 @@ local function layoutChip()
     local titleLeft = S("locked") and 10 or 26
     local countRight = titleLeft + header.title:GetStringWidth() + 6 + header.count:GetStringWidth()
     -- Six buttons from the right edge, 5 px in, 1 px apart.
-    local buttonsLeft = S("width") - 5 - 6 * BUTTON - 5
+    local buttonsLeft = S("width") - 5 - 6 * (header.buttonW or BUTTON) - 5
     chip:ClearAllPoints()
     if countRight + 8 + width + 4 <= buttonsLeft then
         chip:SetPoint("LEFT", header, "LEFT", countRight + 8, 0)
@@ -352,12 +353,23 @@ local function layoutHeader(tracked)
     local full = max > 0 and inLog >= max
     header.count:SetText((full and "|cffff4040" or "") .. inLog .. " / " .. max .. (full and "|r" or ""))
     header.countHover.inLog, header.countHover.max, header.countHover.tracked = inLog, max, tracked
-    -- Too narrow for title and count: drop buttons from the left (all three are in the options too).
-    local countRight = titleLeft + header.title:GetStringWidth() + 6 + header.count:GetStringWidth() + 4
-    local buttonsLeft = S("width") - 5 - inset - 3 * (BUTTON + 1)
+    -- Too narrow for title and count: the buttons move together, then the count shrinks, and only
+    -- then buttons drop from the left (new list, zones, sort are in the options too).
+    local function countRight()
+        return titleLeft + header.title:GetStringWidth() + 6 + header.count:GetStringWidth() + 4
+    end
+    local function room(w, n) return S("width") - 5 - inset - n * (w + 1) end
+    local w = countRight() <= room(BUTTON, 6) and BUTTON or BUTTON_TIGHT
+    header.buttonW = w
+    for _, b in ipairs(Tracker.HeaderButtons()) do b:SetWidth(w) end
+    while countRight() > room(w, 6) and countStyle.size > 10 do  -- below 10 it is hard to read
+        countStyle.size = countStyle.size - 1
+        Media.ApplyText(header.count, countStyle)
+    end
+    local left = room(w, 3)
     for _, b in ipairs({ header.sort, header.zones, header.add }) do
-        buttonsLeft = buttonsLeft - BUTTON - 1
-        b:SetShown(countRight <= buttonsLeft)
+        left = left - w - 1
+        b:SetShown(countRight() <= left)
     end
     header.line:SetShown(S("headerLine") and not state().collapsed)
     header.shine:SetShown(S("headerShine"))
