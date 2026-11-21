@@ -191,13 +191,25 @@ end
 -- Recipes -------------------------------------------------------------------
 
 -- An item's name, asking the client to load it when it is not cached yet
--- (GET_ITEM_INFO_RECEIVED then redraws).
+-- (GET_ITEM_INFO_RECEIVED for it then redraws, Data.Awaited).
+local awaited = {}
 local function itemName(itemID)
     local name = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemID)
     if not name and C_Item and C_Item.RequestLoadItemDataByID then
+        awaited[itemID] = true
         C_Item.RequestLoadItemDataByID(itemID)
     end
     return name
+end
+
+-- Whether itemID is one asked for above (then no longer). The event comes
+-- for every item anything loads: loot, other players' gear, tooltips. A
+-- redraw on each one rebuilt the list many times a second in dungeons
+-- (7 ms a frame in combat, 21.11.2026).
+function Data.Awaited(itemID)
+    if not awaited[itemID] then return false end
+    awaited[itemID] = nil
+    return true
 end
 
 -- One tracked recipe: its name and the required reagents with how many the

@@ -607,6 +607,17 @@ for _, row in ipairs(questRows()) do if row.recipe then recipeRow = row end end
 check("recipe row", recipeRow and recipeRow.recipe.name, "Elixir of the Mongoose")
 check("reagents with counts", lineTexts(recipeRow), "Swiftthistle=2/2|Loading...=1/2")
 check("unknown item asked for", lastCall(), "RequestLoadItemDataByID:3820")
+-- Item data for something else (loot, gear, tooltips): no redraw.
+M.RunTimers()
+M.Fire("GET_ITEM_INFO_RECEIVED", 9999, true)
+check("another item: no redraw", ns.Tracker.queued, false)
+M.itemNames[3820] = "Mageroyal"
+M.Fire("GET_ITEM_INFO_RECEIVED", 3820, true)
+check("the awaited item: redraw", ns.Tracker.queued, true)
+M.RunTimers()
+check("its name in the row", lineTexts(recipeRow), "Swiftthistle=2/2|Mageroyal=1/2")
+M.Fire("GET_ITEM_INFO_RECEIVED", 3820, true)
+check("asked once: the next one no redraw", ns.Tracker.queued, false)
 recipeRow:GetScript("OnClick")(recipeRow, "LeftButton")
 check("click opens the recipe", lastCall(), "OpenRecipe:2329")
 M.state.modified.RECIPEWATCHTOGGLE = true

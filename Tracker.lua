@@ -1120,10 +1120,14 @@ end
 local REFRESH_EVENTS = {
     "QUEST_LOG_UPDATE", "QUEST_WATCH_LIST_CHANGED", "QUEST_AUTOCOMPLETE", "SUPER_TRACKING_CHANGED",
     "QUEST_TURNED_IN", "QUEST_POI_UPDATE", "ZONE_CHANGED", "ZONE_CHANGED_NEW_AREA", "PLAYER_MONEY",
-    "TRACKED_RECIPE_UPDATE", "BAG_UPDATE_DELAYED", "CURRENCY_DISPLAY_UPDATE", "GET_ITEM_INFO_RECEIVED",
+    "TRACKED_RECIPE_UPDATE", "BAG_UPDATE_DELAYED", "CURRENCY_DISPLAY_UPDATE",
     "UNIT_QUEST_LOG_CHANGED", "DISPLAY_SIZE_CHANGED", "UI_SCALE_CHANGED", "PLAYER_LEVEL_UP",
 }
 for _, event in ipairs(REFRESH_EVENTS) do ns.On(event, function() Tracker.Refresh() end) end
+-- Only the items the list waits for (Data.Awaited), not every item loaded.
+ns.On("GET_ITEM_INFO_RECEIVED", function(_, itemID)
+    if ns.Data.Awaited(itemID) then Tracker.Refresh() end
+end)
 
 ns.On("PLAYER_LOGIN", function()
     ns.RebuildPresets()
