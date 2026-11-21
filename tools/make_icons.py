@@ -117,6 +117,12 @@ def sort_watch(draw):
     draw.ellipse((scaled(16) - r, scaled(12) - r, scaled(16) + r, scaled(12) + r), fill=WHITE)
 
 
+def sort_recent(draw):
+    # A clock: last progress first.
+    draw.ellipse((scaled(5), scaled(5), scaled(27), scaled(27)), outline=WHITE, width=line_width(2.6))
+    poly(draw, [(16, 9.5), (16, 16), (21, 19)], 2.6)
+
+
 def check(draw):
     poly(draw, [(7, 17), (13, 23), (25, 10)], 3.4)
 
@@ -179,6 +185,7 @@ ICONS = {
     "IconZones": zones,
     "IconSortLevel": sort_level,
     "IconSortWatch": sort_watch,
+    "IconSortRecent": sort_recent,
     "IconCheck": check,
     "IconBox": box,
     "IconBoxChecked": box_checked,

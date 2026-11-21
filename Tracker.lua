@@ -275,9 +275,10 @@ local function createHeader()
     local lock = headerButton("Lock", function()
         return S("locked") and L.TIP_UNLOCK or L.TIP_LOCK
     end, function() Settings.SetLocked(not S("locked")) end)
+    local nextSort = { WATCH = "LEVEL", LEVEL = "RECENT", RECENT = "WATCH" }
     local sort = headerButton("SortWatch", function()
-        return S("sortBy") == "LEVEL" and L.TIP_SORT_LEVEL or L.TIP_SORT_WATCH
-    end, function() Settings.Set("sortBy", S("sortBy") == "LEVEL" and "WATCH" or "LEVEL") end)
+        return L["TIP_SORT_" .. S("sortBy")] or L.TIP_SORT_WATCH
+    end, function() Settings.Set("sortBy", nextSort[S("sortBy")] or "WATCH") end)
     local add = headerButton("Plus", L.OPT_TASK_NEW, function() ns.TaskUI.OpenNewList() end)
     local zones = headerButton("Zones", function()
         return S("groupByZone") and L.TIP_ZONES_ON or L.TIP_ZONES_OFF
@@ -356,7 +357,8 @@ local function layoutHeader(tracked)
     header.lock.icon:SetTexture(Media.Icon(S("locked") and "Lock" or "Unlock"))
     header.lock.activeColor = accent()
     header.lock.isActive = function() return not S("locked") end
-    header.sort.icon:SetTexture(Media.Icon(S("sortBy") == "LEVEL" and "SortLevel" or "SortWatch"))
+    local sortIcon = { LEVEL = "SortLevel", RECENT = "SortRecent" }
+    header.sort.icon:SetTexture(Media.Icon(sortIcon[S("sortBy")] or "SortWatch"))
     for _, b in ipairs(Tracker.HeaderButtons()) do
         paint(b, b.isActive and buttonColor(b) or idle())
     end
@@ -643,6 +645,7 @@ local function placeItems(itemRows)
 end
 
 local itemRows = {}
+local recentMemory = {}
 local layoutVisible, hiddenByRules = false, false
 local applyVisibility
 
@@ -652,6 +655,7 @@ function Tracker.Layout()
     ns.Blizzard.Check()
     ns.Notes.Layout()  -- item counts in the undocked lists follow the same events
     local quests = ns.Data.Quests()
+    ns.Sort.Stamp(quests, recentMemory)
     Tracker.hasTimedQuest = false
     for _, q in ipairs(quests) do
         if q.timeLeft then Tracker.hasTimedQuest = true end

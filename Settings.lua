@@ -38,7 +38,7 @@ Settings.DEFAULTS = {
     -- What the list shows and how it is ordered.
     groupByZone = false,
     currentZoneFirst = true,
-    sortBy = "LEVEL",       -- WATCH (Blizzard's order) or LEVEL
+    sortBy = "LEVEL",       -- WATCH (Blizzard's order), LEVEL or RECENT (last progress first)
     showLevel = true,
     levelColors = true,     -- difficulty colours for "[34]"; else the title colour
     markNewQuests = true,   -- infinity sign behind quests Forever added

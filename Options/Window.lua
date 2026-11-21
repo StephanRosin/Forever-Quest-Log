@@ -196,7 +196,7 @@ local function generalRows()
         { type = "header", label = "OPT_LIST" },
         check("groupByZone", "OPT_GROUP_BY_ZONE"),
         visibleIf(check("currentZoneFirst", "OPT_CURRENT_ZONE_FIRST"), function() return S("groupByZone") end),
-        choice("sortBy", "OPT_SORT_BY", { "WATCH", "LEVEL" }, "SORT_"),
+        choice("sortBy", "OPT_SORT_BY", { "WATCH", "LEVEL", "RECENT" }, "SORT_"),
         { type = "header", label = "OPT_SHOW" },
         check("showLevel", "OPT_SHOW_LEVEL"),
         visibleIf(check("levelColors", "OPT_LEVEL_COLORS"), function() return S("showLevel") end),

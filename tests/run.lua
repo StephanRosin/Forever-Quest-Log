@@ -183,6 +183,24 @@ check("current zone first", e[1].name, "Duskwood")
 e = Sort.Build(quests, { groupByZone = true, collapsedZones = { ["Stranglethorn Vale"] = true } })
 check("collapsed zone: header stays", e[1].collapsed, true)
 check("collapsed zone: no quests", e[2].kind .. ":" .. (e[2].name or ""), "zone:Duskwood")
+
+do
+    local function quest(id, watchIndex, cur)
+        return { id = id, watchIndex = watchIndex, level = 1, objectives = { { cur = cur, done = false } } }
+    end
+    local memory = {}
+    local function order(list)
+        Sort.Stamp(list, memory)
+        local ids = {}
+        for _, x in ipairs(Sort.Build(list, { sortBy = "RECENT" })) do ids[#ids + 1] = x.quest.id end
+        return table.concat(ids, " ")
+    end
+    check("recent: first look keeps the watch order", order({ quest(1, 1, 0), quest(2, 2, 0), quest(3, 3, 0) }), "1 2 3")
+    check("recent: progress goes to the top", order({ quest(1, 1, 0), quest(2, 2, 0), quest(3, 3, 1) }), "3 1 2")
+    check("recent: the next progress beats it", order({ quest(1, 1, 0), quest(2, 2, 1), quest(3, 3, 1) }), "2 3 1")
+    check("recent: no change, same order", order({ quest(1, 1, 0), quest(2, 2, 1), quest(3, 3, 1) }), "2 3 1")
+    check("recent: a new quest counts as progress", order({ quest(1, 1, 0), quest(2, 2, 1), quest(3, 3, 1), quest(4, 4, 0) }), "4 2 3 1")
+end
 e = Sort.Build(quests, { groupByZone = false, onlyZone = "duskwood" })
 check("only one zone (any case)", #e, 2)
 local unknown = { { id = 1, title = "X", level = 1, watchIndex = 1 } }
@@ -263,6 +281,8 @@ check("setting off", S("groupByZone"), false)
 header.sort:GetScript("OnClick")(header.sort)
 M.RunTimers()
 check("sort button: by level", questTitles():sub(1, 9), "Mor'Ladim")
+header.sort:GetScript("OnClick")(header.sort)
+check("sort button: then last progress", S("sortBy"), "RECENT")
 header.sort:GetScript("OnClick")(header.sort)
 header.zones:GetScript("OnClick")(header.zones)
 M.RunTimers()
