@@ -332,7 +332,8 @@ local function layoutHeader(tracked)
     local inset = ns.Themes.FrameInset(frame)
     local band = (ns.Themes.Spec(ns.Themes.Current()).art or {}).band
     local drop = -(inset + (inset > 0 and band and band.height or 0)) / 2
-    header.title:SetPoint("LEFT", unlocked and gripX + 18 or (indent > 0 and indent or 10), drop)
+    local titleLeft = unlocked and gripX + 18 or (indent > 0 and indent or 10)
+    header.title:SetPoint("LEFT", titleLeft, drop)
     header.grip:SetPoint("LEFT", gripX, drop)
     header.collapse:ClearAllPoints()
     header.collapse:SetPoint("RIGHT", -5 - inset, drop)
@@ -351,6 +352,13 @@ local function layoutHeader(tracked)
     local full = max > 0 and inLog >= max
     header.count:SetText((full and "|cffff4040" or "") .. inLog .. " / " .. max .. (full and "|r" or ""))
     header.countHover.inLog, header.countHover.max, header.countHover.tracked = inLog, max, tracked
+    -- Too narrow for title and count: drop buttons from the left (all three are in the options too).
+    local countRight = titleLeft + header.title:GetStringWidth() + 6 + header.count:GetStringWidth() + 4
+    local buttonsLeft = S("width") - 5 - inset - 3 * (BUTTON + 1)
+    for _, b in ipairs({ header.sort, header.zones, header.add }) do
+        buttonsLeft = buttonsLeft - BUTTON - 1
+        b:SetShown(countRight <= buttonsLeft)
+    end
     header.line:SetShown(S("headerLine") and not state().collapsed)
     header.shine:SetShown(S("headerShine"))
     header.collapse.icon:SetTexture(Media.Icon(state().collapsed and "ChevronDown" or "ChevronUp"))
