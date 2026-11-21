@@ -206,7 +206,7 @@ L.TASK_PROMPT_ADD = "Ajouter à %s"
 L.TASK_PROMPT_RENAME = "Nouveau nom"
 L.TASK_PROMPT_EDIT = "Modifier l'entrée"
 L.TASK_PROMPT_AMOUNT = "Quantité de %s"
-L.TASK_HINT = "Choisissez un objet, une zone ou un objectif (« Or » ou « Niveau », le champ de droite est la quantité) dès 3 lettres (une zone va dans le texte) ou appuyez sur Entrée pour une entrée de texte."
+L.TASK_HINT = "Choisissez un objet, une zone ou un objectif (« Or » ou « Niveau », le champ de droite est la quantité) dès 3 lettres (une zone va dans le texte) ou appuyez sur Entrée pour une entrée de texte. La quantité peut être un calcul, p. ex. (35+24)*3."
 
 L.OPT_BARS = "Barres d'objectifs"
 L.OPT_SHOW_BARS = "Une barre sous les objectifs comptés"

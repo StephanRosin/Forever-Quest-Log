@@ -232,7 +232,7 @@ L.TASK_PROMPT_ADD = "Add to %s"
 L.TASK_PROMPT_RENAME = "New name"
 L.TASK_PROMPT_EDIT = "Edit entry"
 L.TASK_PROMPT_AMOUNT = "Amount of %s"
-L.TASK_HINT = "Pick an item, a zone or a goal (\"Gold\" or \"Level\", the box on the right is the amount) from 3 letters on (a zone goes into the text), or press Enter for a text entry."
+L.TASK_HINT = "Pick an item, a zone or a goal (\"Gold\" or \"Level\", the box on the right is the amount) from 3 letters on (a zone goes into the text), or press Enter for a text entry. The amount may be a sum, e.g. (35+24)*3."
 
 L.OPT_BARS = "Objective bars"
 L.OPT_SHOW_BARS = "A bar under counted objectives"

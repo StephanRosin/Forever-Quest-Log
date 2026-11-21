@@ -206,7 +206,7 @@ L.TASK_PROMPT_ADD = "Zu %s hinzufügen"
 L.TASK_PROMPT_RENAME = "Neuer Name"
 L.TASK_PROMPT_EDIT = "Eintrag bearbeiten"
 L.TASK_PROMPT_AMOUNT = "Menge von %s"
-L.TASK_HINT = "Ab 3 Buchstaben ein Item, Gebiet oder Ziel („Gold“ oder „Level“, das Feld rechts ist die Menge) wählen (ein Gebiet kommt in den Text) oder mit Enter als Text eintragen."
+L.TASK_HINT = "Ab 3 Buchstaben ein Item, Gebiet oder Ziel („Gold“ oder „Level“, das Feld rechts ist die Menge) wählen (ein Gebiet kommt in den Text) oder mit Enter als Text eintragen. Die Menge darf gerechnet werden, z. B. (35+24)*3."
 
 L.OPT_BARS = "Fortschrittsbalken"
 L.OPT_SHOW_BARS = "Balken unter gezählten Zielen"

@@ -31,7 +31,7 @@ end
 
 -- Up and down by one, from the arrow keys or the field's arrow buttons.
 local function stepAmount(field, step)
-    local amount = (tonumber(field:GetText()) or 1) + step
+    local amount = (Tasks.Calc(field:GetText()) or 1) + step
     field:SetText(tostring(math.max(1, math.min(MAX_AMOUNT, amount))))
     Style.SetBorderColor(field, "border")
 end
@@ -94,7 +94,7 @@ local function showSuggestions(results)
         row.text:SetPoint("RIGHT", -4, 0)
         row.text:SetJustifyH("LEFT")
         row.text:SetWordWrap(false)
-        row:SetScript("OnClick", function(self) TaskUI.AddSuggestion(self.item) end)
+        row:SetScript("OnClick", function(self) TaskUI.Pick(self.item) end)
         row:SetScript("OnEnter", function(self)
             popup.selection = self.index
             paintSuggestions()
@@ -140,7 +140,7 @@ local function showSuggestions(results)
 end
 
 local function clearEntry()
-    popup.place = nil
+    popup.place, popup.picked = nil, nil
     popup.edit:SetText("")
     popup.amount:SetText("1")
     showSuggestions({})
@@ -168,6 +168,18 @@ function TaskUI.AddSuggestion(item)
     clearEntry()
 end
 
+-- A click only picks: the name goes into the field and the amount box gets
+-- the focus, Enter or OK adds it. A zone goes into the text as before.
+function TaskUI.Pick(item)
+    if item.zone then return TaskUI.AddSuggestion(item) end
+    popup.edit:SetText(item.name)
+    if item.amount then popup.amount:SetText(tostring(item.amount)) end
+    popup.picked = { id = item.id, name = item.name, quality = item.quality, goal = item.goal }
+    showSuggestions({})
+    popup.amount:SetFocus()
+    popup.amount:HighlightText()
+end
+
 local function moveSelection(step)
     local n = #popup.results
     if n == 0 then return end
@@ -182,6 +194,8 @@ local function submit()
     local picked = popup.results[popup.selection or 0]
     if picked and picked.zone then
         TaskUI.AddSuggestion(picked)
+    elseif popup.addTo and popup.picked then
+        TaskUI.AddSuggestion(popup.picked)
     elseif popup.addTo then
         local item = popup.results[popup.selection or 0] or Tasks.FindExact(text)
         if item then
@@ -227,8 +241,7 @@ local function createPopup()
     p.edit:SetAltArrowKeyMode(false)
     addStepper(p.edit)
     p.amount = newField(p, AMOUNT_W)
-    p.amount:SetNumeric(true)
-    p.amount:SetMaxLetters(4)
+    p.amount:SetMaxLetters(40)  -- room for a sum, see Tasks.Calc
     p.amount:SetJustifyH("CENTER")
     p.amount:SetAltArrowKeyMode(false)
     p.amount:SetTextInsets(6, STEPPER_W + 2, 0, 0)
@@ -252,6 +265,7 @@ local function createPopup()
 
     p.edit:SetScript("OnTextChanged", function(self, userInput)
         if not userInput then return end
+        p.picked = nil  -- typing again drops a clicked suggestion
         Style.SetBorderColor(self, "border")
         if p.addTo then
             showSuggestions(Tasks.Search(self:GetText()))
@@ -272,6 +286,11 @@ local function createPopup()
     p.edit:SetScript("OnTabPressed", function() if p.addTo then p.amount:SetFocus() end end)
     p.amount:SetScript("OnTabPressed", function() p.edit:SetFocus() end)
     p.amount:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+    -- A sum shows its result once the box is left.
+    p.amount:SetScript("OnEditFocusLost", function(self)
+        local n = Tasks.Calc(self:GetText())
+        if n and n >= 1 and tostring(n) ~= self:GetText() then self:SetText(tostring(n)) end
+    end)
     for _, field in ipairs({ p.edit, p.amount }) do
         field:SetScript("OnEnterPressed", submit)
         field:SetScript("OnEscapePressed", close)
@@ -284,13 +303,12 @@ end
 local function open(opts)
     if not popup then createPopup() end
     popup.addTo, popup.onSubmit, popup.zones = opts.addTo, opts.onSubmit, opts.zones
-    popup.place = nil
+    popup.place, popup.picked = nil, nil
     popup.title:SetText(opts.title)
     popup.hint:SetText(opts.hint or "")
     popup.amount:SetShown(opts.addTo ~= nil)
     popup.edit:SetWidth(WIDTH - 2 * PAD - (opts.addTo and AMOUNT_W + 6 or 0))
     popup.numeric = opts.numeric and true or false
-    popup.edit:SetNumeric(popup.numeric)
     popup.edit:SetTextInsets(6, popup.numeric and STEPPER_W + 2 or 6, 0, 0)
     popup.edit.stepUp:SetShown(popup.numeric)
     popup.edit.stepDown:SetShown(popup.numeric)

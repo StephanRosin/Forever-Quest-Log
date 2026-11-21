@@ -94,8 +94,55 @@ end
 
 -- Entries -------------------------------------------------------------------
 
+-- An amount may be a sum: "(35+24+38)*3" with + - * / and brackets, a comma
+-- as decimal point; rounded up to whole items (Stephan's wish for /).
+-- Own parser, never loadstring; nil when the text is no sum.
+function Tasks.Calc(text)
+    local s = tostring(text or ""):gsub("%s", ""):gsub(",", ".")
+    local pos, expr = 1, nil
+    local function peek() return s:sub(pos, pos) end
+    local function factor()
+        local c = peek()
+        if c == "(" then
+            pos = pos + 1
+            local v = expr()
+            if not v or peek() ~= ")" then return nil end
+            pos = pos + 1
+            return v
+        elseif c == "-" then
+            pos = pos + 1
+            local v = factor()
+            return v and -v
+        end
+        local num = s:match("^%d+%.?%d*", pos)
+        if not num then return nil end
+        pos = pos + #num
+        return tonumber(num)
+    end
+    local function chain(operand, ops)
+        local v = operand()
+        while v and ops[peek()] do
+            local op = peek()
+            pos = pos + 1
+            local r = operand()
+            if not r or (op == "/" and r == 0) then return nil end
+            v = ops[op](v, r)
+        end
+        return v
+    end
+    local function term()
+        return chain(factor, { ["*"] = function(a, b) return a * b end, ["/"] = function(a, b) return a / b end })
+    end
+    expr = function()
+        return chain(term, { ["+"] = function(a, b) return a + b end, ["-"] = function(a, b) return a - b end })
+    end
+    local v = expr()
+    if not v or pos <= #s then return nil end
+    return math.ceil(v - 1e-9)  -- 0.1 * 30 is 3.0000000000000004
+end
+
 local function validAmount(amount)
-    return math.max(1, math.floor(tonumber(amount) or 1))
+    return math.max(1, Tasks.Calc(amount) or 1)
 end
 
 -- An item already on the list gets the new amount instead of a second line.
@@ -183,7 +230,7 @@ function Tasks.RemoveEntry(list, entry)
 end
 
 function Tasks.SetAmount(entry, amount)
-    local n = tonumber(amount)
+    local n = Tasks.Calc(amount)
     if not n or n < 1 then return false end
     entry.goal = validAmount(n)
     changed()
@@ -232,14 +279,88 @@ function Tasks.Toggle(entry)
 end
 
 -- What the row shows; the fields are those of an objective line (Rows.lua).
+-- Reagents every trade supplier sells: never an auction price, which would be
+-- some reseller's. Their price is learned at the first merchant that sells them.
+Tasks.VENDOR = {}
+for _, id in ipairs({
+    8925, 3372, 3371,                                   -- Crystal, Leaded, Empty Vial
+    2320, 2321, 4291, 8343, 14341,                      -- threads
+    2880, 3466, 2324,                                   -- Weak and Strong Flux, Bleach
+    4340, 2604, 6260, 2605, 2325, 4342, 6261, 4341, 10290, -- dyes
+    2678, 2692, 3713, 4289, 159, 1179, 10284,           -- spices, salt, water, milk, flour
+    6529, 6530, 6217, 5140, 4399, 4400,                 -- bauble, nightcrawlers, copper rod, flash powder, stocks
+    17056, 17033, 17028, 17029, 17030, 17026, 17031, 17032, -- class reagents
+}) do Tasks.VENDOR[id] = true end
+
+-- Merchants' prices, per item in copper, kept account wide: only plain gold,
+-- unlimited stock (a limited recipe or an alt currency is no running price).
+local function learnMerchant()
+    local db = ns.AccountDB()
+    db.vendorPrices = db.vendorPrices or {}
+    for i = 1, GetMerchantNumItems() do
+        local id = GetMerchantItemID(i)
+        local price, stack, available, extended
+        if C_MerchantFrame and C_MerchantFrame.GetItemInfo then
+            local info = C_MerchantFrame.GetItemInfo(i)
+            if info then price, stack, available, extended = info.price, info.stackCount, info.numAvailable, info.hasExtendedCost end
+        else
+            local _
+            _, _, price, stack, available, _, _, extended = GetMerchantItemInfo(i)
+        end
+        if id and price and price > 0 and available == -1 and not extended then
+            db.vendorPrices[id] = price / math.max(1, stack or 1)
+        end
+    end
+end
+Tasks.LearnMerchant = learnMerchant
+
+local merchant = CreateFrame("Frame")
+merchant:RegisterEvent("MERCHANT_SHOW")
+merchant:RegisterEvent("MERCHANT_UPDATE")
+-- A changed merchant API costs only the vendor prices, never the merchant window.
+merchant:SetScript("OnEvent", function() pcall(learnMerchant) end)
+
+-- Price of one item in copper: a merchant's when one was seen selling it; else,
+-- unless every supplier sells it, the auction price: Auctionator's when installed,
+-- else the scan of Forever Loot Finder (its "Scan" button on the auction house).
+-- shortcut: reads Loot Finder's saved prices directly; give it a public API if their format changes.
+function Tasks.UnitPrice(id)
+    local vendor = ns.AccountDB().vendorPrices
+    if vendor and vendor[id] then return vendor[id] end
+    if Tasks.VENDOR[id] then return nil end
+    local api = Auctionator and Auctionator.API and Auctionator.API.v1
+    if api and api.GetAuctionPriceByItemID then
+        local ok, price = pcall(api.GetAuctionPriceByItemID, ADDON, id)
+        if ok and type(price) == "number" then return price end
+    end
+    local prices = type(ForeverLootFinderDB) == "table" and ForeverLootFinderDB.prices
+    local scan = type(prices) == "table" and prices[(GetRealmName() or "?") .. "-" .. (UnitFactionGroup("player") or "?")]
+    local price = type(scan) == "table" and type(scan.items) == "table" and scan.items[id]
+    return type(price) == "number" and price or nil
+end
+
+-- "17g 23s": gold and silver, copper only under a silver.
+function Tasks.Money(copper)
+    copper = math.floor(copper + 0.5)
+    local g, s, c = math.floor(copper / 10000), math.floor(copper / 100) % 100, copper % 100
+    local parts = {}
+    if g > 0 then parts[#parts + 1] = g .. "|cffffd700g|r" end
+    if s > 0 then parts[#parts + 1] = s .. "|cffc7c7cfs|r" end
+    if #parts == 0 then parts[#parts + 1] = c .. "|cffeda55fc|r" end
+    return table.concat(parts, " ")
+end
+
 function Tasks.Line(entry)
     local line
     if entry.itemID then
         local have = C_Item.GetItemCount(entry.itemID, S("taskCountBank"))
         -- The client's name when it has one: the shipped list is English in
         -- languages the addon has no names for.
-        line = { text = C_Item.GetItemNameByID(entry.itemID) or entry.name,
-            cur = have, max = entry.goal, done = have >= entry.goal }
+        local text = C_Item.GetItemNameByID(entry.itemID) or entry.name
+        -- What the missing ones cost at the auction house.
+        local price = have < entry.goal and Tasks.UnitPrice(entry.itemID)
+        if price then text = text .. " (" .. Tasks.Money(price * (entry.goal - have)) .. ")" end
+        line = { text = text, cur = have, max = entry.goal, done = have >= entry.goal }
     elseif entry.goalKind then
         local have = Tasks.GOALS[entry.goalKind]()
         line = { text = ns.L["TASK_GOAL_" .. entry.goalKind:upper()]:format(entry.goal),

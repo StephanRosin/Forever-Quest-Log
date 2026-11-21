@@ -1742,6 +1742,51 @@ do
     check("an item cannot be ticked by hand", Tasks.Line(list.entries[1]).done, false)
     check("amount refused: not a number", Tasks.SetAmount(list.entries[1], "x"), false)
     check("amount refused: zero", Tasks.SetAmount(list.entries[1], "0"), false)
+    local plain = function(t) return (t:gsub("|cff%x+", ""):gsub("|r", "")) end
+    local name = Tasks.Line(list.entries[1]).text
+    check("price: none known, the name alone", name:find("(", 1, true), nil)
+    local realm, faction = GetRealmName, UnitFactionGroup
+    GetRealmName, UnitFactionGroup = function() return "Testrealm" end, function() return "Alliance" end
+    ForeverLootFinderDB = { prices = { ["Testrealm-Alliance"] = { items = { [cloth.id] = 13250 } } } }
+    check("price: the missing 13, gold and silver", plain(Tasks.Line(list.entries[1]).text), name .. " (17g 22s)")
+    check("money: copper only under a silver", Tasks.Money(42), "42|cffeda55fc|r")
+    Settings.Set("taskCountBank", true)
+    check("price: gone once enough", Tasks.Line(list.entries[1]).text, name)
+    Settings.Set("taskCountBank", nil)
+    Auctionator = { API = { v1 = { GetAuctionPriceByItemID = function() return 10000 end } } }
+    check("price: Auctionator first", plain(Tasks.Line(list.entries[1]).text), name .. " (13g)")
+    -- Merchants: plain gold and unlimited stock only; their price beats the auction's.
+    Auctionator = nil
+    ForeverLootFinderDB.prices["Testrealm-Alliance"].items[8925] = 99999
+    check("vendor goods: never an auction price", Tasks.UnitPrice(8925), nil)
+    local goods = {
+        { id = cloth.id, info = { price = 2000, stackCount = 5, numAvailable = -1 } },
+        { id = 8925, info = { price = 400, stackCount = 1, numAvailable = -1 } },
+        { id = 1111, info = { price = 500, stackCount = 1, numAvailable = 1 } },
+        { id = 2222, info = { price = 0, stackCount = 1, numAvailable = -1, hasExtendedCost = true } },
+    }
+    GetMerchantNumItems = function() return #goods end
+    GetMerchantItemID = function(i) return goods[i].id end
+    local merchantFrame = C_MerchantFrame
+    C_MerchantFrame = { GetItemInfo = function(i) return goods[i].info end }
+    Tasks.LearnMerchant()
+    check("vendor: a stack's price per item", Tasks.UnitPrice(cloth.id), 400)
+    check("vendor: vendor goods priced once seen", Tasks.UnitPrice(8925), 400)
+    check("vendor: limited stock not learned", Tasks.UnitPrice(1111), nil)
+    check("vendor: alt currency not learned", Tasks.UnitPrice(2222), nil)
+    ns.AccountDB().vendorPrices = nil
+    C_MerchantFrame, GetMerchantNumItems, GetMerchantItemID = merchantFrame, nil, nil
+    Auctionator, ForeverLootFinderDB, GetRealmName, UnitFactionGroup = nil, nil, realm, faction
+    check("calc: brackets and times", Tasks.Calc("(35+24+38) * 3"), 291)
+    check("calc: divided rounds up", Tasks.Calc("10/3"), 4)
+    check("calc: whole result stays", Tasks.Calc("0.1*30"), 3)
+    check("calc: comma as decimal point", Tasks.Calc("2,5*2"), 5)
+    check("calc: minus and unary minus", Tasks.Calc("10-(-2)"), 12)
+    check("calc: not a sum", Tasks.Calc("3+"), nil)
+    check("calc: open bracket", Tasks.Calc("(3+4"), nil)
+    check("calc: by zero", Tasks.Calc("3/0"), nil)
+    check("calc: no code", Tasks.Calc("os.exit()"), nil)
+    check("amount: a sum", Tasks.SetAmount(list.entries[1], "(2+3)*4") and list.entries[1].goal, 20)
     check("empty text refused", Tasks.AddText(list, " "), false)
     Tasks.AddText(list, "See the trainer")
     local note = list.entries[2]
@@ -1917,6 +1962,15 @@ do
     p.edit:GetScript("OnArrowPressed")(p.edit, "DOWN")
     enter(p.edit)
     check("Enter on a selection: that item", list.entries[before + 3].itemID, 2318)
+    p.edit:SetText("Light Lea")
+    p.edit:GetScript("OnTextChanged")(p.edit, true)
+    p.rows[1]:GetScript("OnClick")(p.rows[1])
+    check("click only picks: no new entry", #list.entries, before + 3)
+    check("click: the name in the field", p.edit:GetText(), list.entries[before + 3].name)
+    p.amount:SetText("(35+24+38)*3/4")
+    enter(p.amount)
+    check("click, then Enter: the sum, rounded up", list.entries[before + 3].goal, 73)
+    check("click, then Enter: field cleared", p.edit:GetText(), "")
     -- Zones: the name goes into the text, Enter then adds the text.
     p.edit:SetText("Quests in tana")
     p.edit:GetScript("OnTextChanged")(p.edit, true)
