@@ -38,6 +38,7 @@ Settings.DEFAULTS = {
     -- What the list shows and how it is ordered.
     groupByZone = false,
     currentZoneFirst = true,
+    currentZoneOnly = false, -- only the quests under the header of the zone the player is in
     sortBy = "LEVEL",       -- WATCH (Blizzard's order), LEVEL or RECENT (last progress first)
     showLevel = true,
     levelColors = true,     -- difficulty colours for "[34]"; else the title colour

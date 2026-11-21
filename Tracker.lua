@@ -593,6 +593,12 @@ local function withTaskLists(quests, st)
     return entries
 end
 
+-- In a dungeon its own chip decides; outside, "only the current zone".
+local function onlyZone(st)
+    if st.instance then return st.onlyHere and st.instance or nil end
+    return S("currentZoneOnly") and GetRealZoneText and GetRealZoneText() or nil
+end
+
 -- The entries to draw: the task lists, quests (grouped / sorted), then the
 -- recipes under their own header.
 function Tracker.Entries(quests, recipes)
@@ -603,7 +609,7 @@ function Tracker.Entries(quests, recipes)
         currentZoneFirst = S("currentZoneFirst"),
         currentZone = GetRealZoneText and GetRealZoneText() or nil,
         collapsedZones = st.zones,
-        onlyZone = st.instance and st.onlyHere and st.instance or nil,
+        onlyZone = onlyZone(st),
         hideComplete = S("hideCompleteQuests"),
     })
     entries = withTaskLists(entries, st)

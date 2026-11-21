@@ -1843,6 +1843,26 @@ do
     st.instance, st.onlyHere = "Duskwood", true
     check("this dungeon: no lists", ns.Tracker.Entries(tracked, {})[1].kind ~= "list", true)
     st.instance, st.onlyHere = nil, nil
+    do
+        local function questZones()
+            local z = {}
+            for _, x in ipairs(ns.Tracker.Entries(tracked, {})) do
+                if x.kind == "quest" then z[#z + 1] = x.quest.zone end
+            end
+            return table.concat(z, ",")
+        end
+        local all = questZones()
+        Settings.Set("currentZoneOnly", true)
+        M.state.zone = "Duskwood"
+        check("current zone only: just its quests", questZones():gsub("Duskwood,?", ""), "")
+        check("current zone only: some left", questZones() ~= "", true)
+        M.state.zone = "Nowhere"
+        check("current zone only: none here, nothing drawn", questZones(), "")
+        st.instance, st.onlyHere = "Deadmines", false
+        check("current zone only: a dungeon's chip on all wins", questZones(), all)
+        st.instance, st.onlyHere, M.state.zone = nil, nil, nil
+        Settings.Set("currentZoneOnly", nil)
+    end
     Settings.Set("groupByZone", true)
     drawn = ns.Tracker.Entries(tracked, {})
     check("zones: no extra quest header", drawn[4].kind, "zone")
