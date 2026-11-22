@@ -1,13 +1,14 @@
 local ADDON, ns = ...
-local L, Settings, Media, Rows = ns.L, ns.Settings, ns.Media, ns.Rows
+local L, Settings, Media, Rows, Items = ns.L, ns.Settings, ns.Media, ns.Rows, ns.Items
 local S = Settings.Get
 
 -- The selected quest tracker: a frame of its own with the focused quest
 -- (super-tracked: Blizzard's map button, "Focus" in the menu), its title and
 -- progress, placed anywhere. It draws the same quest row as the tracker,
 -- from its own settings: every "focus<Name>" key is the tracker's "<name>"
--- for this frame (Settings.Prefixed). No item buttons here (secure buttons
--- would pin the frame in combat); the tracker keeps them.
+-- for this frame (Settings.Prefixed). Its quest item button is a secure
+-- button of its own on UIParent, placed at the row out of combat as the
+-- tracker's (Items.lua): anchored to the frame it would pin it in combat.
 local Focus = {}
 ns.Focus = Focus
 
@@ -18,7 +19,7 @@ local G = cfg.get
 local ACCENT = { 0.31, 0.76, 0.97 }
 local GRIP = 16
 
-local frame, row, grip, outline
+local frame, row, grip, outline, itemButton
 local resizing
 
 -- The quest whose objective moved last (QUEST_WATCH_UPDATE), for
@@ -98,17 +99,38 @@ local function layoutUnlocked()
     grip.icon:SetTexCoord(right and 0 or 1, right and 1 or 0, 0, 1)
 end
 
+-- The quest's item button at the row's top right, or hidden. Out of combat
+-- only: in combat it stays as it was until PLAYER_REGEN_ENABLED lays out again.
+local function placeItem(q, hasItem)
+    if InCombatLockdown() then return end
+    if not (hasItem and frame:IsShown()) then
+        if itemButton then itemButton:Hide(); itemButton.logIndex, itemButton.link = nil, nil end
+        return
+    end
+    itemButton = itemButton or Items.NewButton()
+    Items.SetItem(itemButton, q.item)
+    local es, us = row:GetEffectiveScale(), UIParent:GetEffectiveScale()
+    local scale = frame:GetScale()
+    itemButton:SetScale(scale)
+    itemButton:ClearAllPoints()
+    itemButton:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", row:GetRight() * es / us / scale, row:GetTop() * es / us / scale)
+    itemButton:SetAlpha(frame:GetAlpha())
+    itemButton:Show()
+end
+
 function Focus.Layout()
     if not frame then return end
     Focus.queued = false
     if not S("focusEnabled") or S("useBlizzard") then
         frame:Hide()
+        placeItem()
         return
     end
     local q = Focus.Quest()
     -- Nothing focused: the frame is gone, locked or not.
     if not q then
         frame:Hide()
+        placeItem()
         return
     end
     -- Inside a material frame (Goblin) the padding counts from its inner edge.
@@ -127,7 +149,7 @@ function Focus.Layout()
         end }, { __index = cfg })
         left = math.max(pad, ns.Themes.TitleIndent(G("titleSize") + 2 * pad))
     end
-    local h = Rows.LayoutQuest(row, q, width - pad - left, nil, rowCfg)
+    local h, hasItem = Rows.LayoutQuest(row, q, width - pad - left, nil, rowCfg)
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", frame, "TOPLEFT", left, -pad)
     frame:SetHeight(h + 2 * pad)
@@ -138,6 +160,7 @@ function Focus.Layout()
     applyLook(banner and math.floor(row.title:GetStringHeight() + 2 * pad - inset + 0.5) or nil)
     layoutUnlocked()
     frame:SetAlpha(G("alpha") / 100)
+    placeItem(q, hasItem)
 end
 
 function Focus.Refresh()
@@ -243,6 +266,11 @@ function Focus.Build()
 end
 
 ns.On("PLAYER_LOGIN", function() Focus.Build() end)
+
+-- Fires just before the lockdown: the last moment to hide a secure button.
+ns.On("PLAYER_REGEN_DISABLED", function()
+    if itemButton and G("hideInCombat") then itemButton:Hide() end
+end)
 
 ns.On("QUEST_WATCH_UPDATE", function(_, questID)
     progressed = questID

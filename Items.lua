@@ -48,7 +48,7 @@ local function update(self, elapsed)
     end
 end
 
-local function newButton()
+function Items.NewButton()
     count = count + 1
     local b = CreateFrame("Button", "ForeverQuestLogItem" .. count, UIParent, "SecureActionButtonTemplate")
     b:SetSize(Items.SIZE, Items.SIZE)
@@ -79,7 +79,7 @@ local function newButton()
     return b
 end
 
-local function setItem(b, item)
+function Items.SetItem(b, item)
     b.logIndex, b.link = item.logIndex, item.link
     local id = itemID(item.link)
     b:SetAttribute("item", id and ("item:" .. id) or nil)
@@ -105,10 +105,10 @@ function Items.Place(wanted)
     for i, w in ipairs(wanted) do
         local b = buttons[i]
         if not b then
-            b = table.remove(pool) or newButton()
+            b = table.remove(pool) or Items.NewButton()
             buttons[i] = b
         end
-        setItem(b, w.item)
+        Items.SetItem(b, w.item)
         b:SetScale(w.scale or 1)
         b:ClearAllPoints()
         b:SetPoint("TOPRIGHT", UIParent, "BOTTOMLEFT", w.x / (w.scale or 1), w.y / (w.scale or 1))

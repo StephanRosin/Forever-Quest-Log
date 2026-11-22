@@ -459,6 +459,7 @@ local function focusRows()
         check(k("showPOI"), "OPT_SHOW_POI"),
         check(k("showDoneObjectives"), "OPT_SHOW_DONE"),
         check(k("showOverview"), "OPT_SHOW_OVERVIEW"),
+        check(k("showItems"), "OPT_SHOW_ITEMS"),
         { type = "header", label = "OPT_BACKGROUND" },
         choice(k("bgMode"), "OPT_BG_MODE", { "SOLID", "GRADIENT", "TEXTURE" }, "BG_"),
         visibleIf(colorRow(k("bgColor"), "OPT_BG_COLOR", true), function() return S(k("bgMode")) ~= "TEXTURE" end),

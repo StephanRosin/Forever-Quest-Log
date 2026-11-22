@@ -1378,6 +1378,35 @@ check("own title size", frow.title._font[2], S("focusTitleSize"))
 Settings.Set("focusTitleSize", 22)
 M.RunTimers()
 check("title size setting", frow.title._font[2], 22)
+
+-- Its quest item button: own secure button on UIParent at the row's top right.
+local function focusItem()
+    for _, f in ipairs(M.frames) do
+        if f._secure and f._parent == UIParent and f._shown and f:GetAttribute("item") and f._lastPoint
+            and f._lastPoint[4] == 900 then return f end
+    end
+end
+frow._rect = { 600, 700, 300, 50 }
+M.superTracked = 605
+M.Fire("SUPER_TRACKING_CHANGED")
+M.RunTimers()
+check("focus item: shown for a quest with an item", focusItem() and focusItem():GetAttribute("item"), "item:3912")
+Settings.Set("focusShowItems", false)
+M.RunTimers()
+check("focus item: off by setting", focusItem(), nil)
+Settings.Set("focusShowItems", nil)
+M.RunTimers()
+Settings.Set("focusHideInCombat", true)
+M.Fire("PLAYER_REGEN_DISABLED")
+check("focus item: hidden before the lockdown", focusItem(), nil)
+M.Fire("PLAYER_REGEN_ENABLED")
+M.RunTimers()
+Settings.Set("focusHideInCombat", nil)
+M.RunTimers()
+M.superTracked = 56
+M.Fire("SUPER_TRACKING_CHANGED")
+M.RunTimers()
+check("focus item: gone for a quest without one", focusItem(), nil)
 check("tracker's titles keep theirs", questRows()[1].title._font[2] ~= 22, true)
 Settings.Set("focusTitleSize", nil)
 Settings.Set("focusAlpha", 60)
