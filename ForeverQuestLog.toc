@@ -59,5 +59,6 @@ Options\Panel.lua
 Options\MinimapButton.lua
 Broker.lua
 TaskUI.lua
+ProfessionTasks.lua
 Commands.lua
 News.lua

@@ -158,6 +158,30 @@ function Tasks.AddItem(list, item, amount)
     changed()
 end
 
+-- A recipe's reagents for `count` crafts; an item already on the list gets
+-- them on top, so two recipes sharing a reagent add up. Returns how many
+-- items it added, 0 when the client does not know the recipe.
+function Tasks.AddRecipe(list, recipeID, count)
+    local recipe = ns.Data.Recipe(recipeID, false)
+    local added = 0
+    for _, g in ipairs(recipe and recipe.reagents or {}) do
+        if g.itemID then
+            local need, entry = g.max * count, nil
+            for _, e in ipairs(list.entries) do
+                if e.itemID == g.itemID then entry = e end
+            end
+            if entry then
+                entry.goal = entry.goal + need
+            else
+                table.insert(list.entries, { itemID = g.itemID, name = g.text, goal = need })
+            end
+            added = added + 1
+        end
+    end
+    if added > 0 then changed() end
+    return added
+end
+
 -- A zone, dungeon or raid picked from the suggestions, kept while its name
 -- is in the text: the row shows its symbol, a zone opens on the map.
 local function placeIn(text, place)

@@ -242,6 +242,7 @@ function Data.Recipe(recipeID, isRecraft)
                 local have = ProfessionsUtil.AccumulateReagentsInPossession(slot.reagents) or 0
                 r.reagents[#r.reagents + 1] = {
                     text = text or L.LOADING, cur = math.min(have, need), max = need, done = have >= need,
+                    itemID = reagent.itemID,
                 }
             end
         end

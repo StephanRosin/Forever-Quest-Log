@@ -2389,6 +2389,45 @@ end
 
 assert(loadfile("test_themes.lua"))(M, ns, check, section)
 
+section("Recipe onto a task list")
+do
+    M.recipes = { { id = 2329, name = "Elixir of the Mongoose", reagents = {
+        { itemID = 2452, have = 2, need = 2 }, { itemID = 3820, have = 1, need = 1 } } } }
+    local Tasks, PT = ns.Tasks, ns.ProfessionTasks
+    local before = #Tasks.Lists()
+    local function goals(list)
+        local t = {}
+        for _, e in ipairs(list.entries) do t[#t + 1] = e.itemID .. "=" .. e.goal end
+        return table.concat(t, " ")
+    end
+    PT.Menu(UIParent, 2329, "Elixir of the Mongoose", 3)
+    local menu = M.menus[#M.menus]
+    check("recipe menu: title with the amount", menu.entries[1].text, "Elixir of the Mongoose x3")
+    check("recipe menu: a new list last", menu.entries[#menu.entries].text, ns.L.TASK_RECIPE_NEW_LIST)
+    menu.entries[#menu.entries].fn()
+    local list = Tasks.Lists()[before + 1]
+    check("new list: named after the recipe", list and list.name, "Elixir of the Mongoose")
+    check("new list: reagents times the amount", goals(list), "2452=6 3820=3")
+    PT.Menu(UIParent, 2329, "Elixir of the Mongoose", 1)
+    menu = M.menus[#M.menus]
+    for _, e in ipairs(menu.entries) do if e.text == list.name and e.fn then e.fn() end end
+    check("existing list: shared reagents add up", goals(list), "2452=8 3820=4")
+    check("unknown recipe adds nothing", Tasks.AddRecipe(list, 999999, 1), 0)
+    local form = CreateFrame("Frame", nil, UIParent)
+    form.TrackRecipeCheckbox = CreateFrame("CheckButton", nil, form)
+    function form:GetRecipeInfo() return { recipeID = 2329, name = "Elixir of the Mongoose" } end
+    local box = CreateFrame("EditBox", nil, UIParent)
+    function box:GetValue() return 2 end
+    ProfessionsFrame = { CraftingPage = { SchematicForm = form, CreateMultipleInputBox = box } }
+    PT.Build()
+    check("button: beside Track recipe", PT.button and PT.button._points.RIGHT[1], form.TrackRecipeCheckbox)
+    PT.button:GetScript("OnClick")(PT.button)
+    check("button: the menu takes the craft amount", M.menus[#M.menus].entries[1].text, "Elixir of the Mongoose x2")
+    ProfessionsFrame = nil
+    Tasks.RemoveList(list)
+    M.recipes = {}
+end
+
 section("Dark comic paper")
 do
     local dark = LibForeverThemes.DarkPaper

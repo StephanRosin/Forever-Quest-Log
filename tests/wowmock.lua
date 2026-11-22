@@ -27,6 +27,7 @@ local function newWidget(name, kind)
         self._scripts[s] = function(...) if old then old(...) end return fn(...) end
     end
     function w:SetText(t) self._text = t end
+    function w:GetTextWidth() return #(self._text or "") * 6 end
     function w:GetText() return self._text end
     function w:SetValue(v) self._value = v end
     function w:GetValue() return self._value end
@@ -455,6 +456,7 @@ local function recipe(id) for _, r in ipairs(M.recipes) do if r.id == id then re
 ProfessionsUtil = {
     GetRecipeSchematic = function(id)
         local r = recipe(id)
+        if not r then return nil end
         local slots = {}
         for _, g in ipairs(r.reagents) do
             slots[#slots + 1] = { required = true, reagents = { { itemID = g.itemID } }, quantityRequired = g.need,
