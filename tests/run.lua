@@ -1558,6 +1558,19 @@ do
     check("objective indent 25: check mark right before it", icon, base + 10)
     Settings.Set("objectiveIndent", nil)
 end
+do
+    local row = ns.Rows.NewQuestRow(UIParent)
+    local line = { text = "Bear Asses", cur = 1, max = 10 }
+    ns.Rows.LayoutQuest(row, { title = "T", objectives = { line } }, 200, 1)
+    local l = row.lines[1]
+    local base = l.text._points.TOPLEFT[3]
+    check("count first: off by default, count on the right", l.count._points.TOPRIGHT ~= nil, true)
+    Settings.Set("countFirst", true)
+    ns.Rows.LayoutQuest(row, { title = "T", objectives = { line } }, 200, 1)
+    check("count first: count where the text began", l.count._points.TOPLEFT[3], base)
+    check("count first: text after it", l.text._points.TOPLEFT[3] > base, true)
+    Settings.Set("countFirst", nil)
+end
 local all = Data.Quests()
 check("hide completed quests: one less", #Sort.Build(all, { hideComplete = true }), #all - 1)
 for _, entry in ipairs(Sort.Build(all, { hideComplete = true })) do

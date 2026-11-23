@@ -103,13 +103,18 @@ local function layoutLine(row, line, o, x, y, w, style, cfg)
     else
         line.icon:Hide()
     end
-    local countW = 0
+    local countW, textLeft = 0, left
     if countText then
         Media.ApplyText(line.count, textStyle)
         line.count:SetText(countText)
         countW = line.count:GetStringWidth()
         line.count:ClearAllPoints()
-        line.count:SetPoint("TOPRIGHT", row, "TOPLEFT", x + w, -y)
+        if cfg.get("countFirst") then
+            line.count:SetPoint("TOPLEFT", row, "TOPLEFT", left, -y)
+            textLeft = left + countW + COUNT_GAP
+        else
+            line.count:SetPoint("TOPRIGHT", row, "TOPLEFT", x + w, -y)
+        end
         line.count:Show()
     else
         line.count:Hide()
@@ -119,7 +124,7 @@ local function layoutLine(row, line, o, x, y, w, style, cfg)
     line.text:SetWidth(math.max(20, textW))
     line.text:SetText(o.text or "")
     line.text:ClearAllPoints()
-    line.text:SetPoint("TOPLEFT", row, "TOPLEFT", left, -y)
+    line.text:SetPoint("TOPLEFT", row, "TOPLEFT", textLeft, -y)
     line.text:Show()
     local h = math.max(line.text:GetStringHeight(), countText and line.count:GetStringHeight() or 0)
     local showBar = cfg.get("showBars") and not isDone and (o.percent or (o.max and o.max > 1))
