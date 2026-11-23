@@ -814,22 +814,61 @@ end
 function Tracker.UpdateScrollbar()
     local thumb = frame.thumb
     local range = content - view
-    if range < 2 or view <= 0 or state().collapsed or not S("showScrollbar") then thumb:Hide(); return end
+    if range < 2 or view <= 0 or state().collapsed or not S("showScrollbar") then
+        thumb:Hide(); frame.grip:Hide(); return
+    end
     local thumbH = math.max(16, view * view / (view + range))
     thumb:SetHeight(thumbH)
     thumb:ClearAllPoints()
     thumb:SetPoint("TOPRIGHT", scroll, "TOPRIGHT", S("padding") - 3, -(view - thumbH) * (scroll:GetVerticalScroll() or 0) / range)
     thumb:Show()
+    frame.grip:Show()
+end
+
+local function scrollTo(v)
+    -- Item buttons cannot follow in combat.
+    if InCombatLockdown() and Items.Count() > 0 then return end
+    scroll:SetVerticalScroll(math.max(0, math.min(math.max(0, content - view), v)))
+    Tracker.UpdateScrollbar()
+    placeItems(itemRows)
 end
 
 local function onWheel(_, delta)
-    -- Item buttons cannot follow in combat.
-    if InCombatLockdown() and Items.Count() > 0 then return end
-    local range = math.max(0, content - view)
-    local v = (scroll:GetVerticalScroll() or 0) - delta * WHEEL_STEP
-    scroll:SetVerticalScroll(math.max(0, math.min(range, v)))
-    Tracker.UpdateScrollbar()
-    placeItems(itemRows)
+    scrollTo((scroll:GetVerticalScroll() or 0) - delta * WHEEL_STEP)
+end
+
+-- The thumb can be dragged as well (reported: a broken mouse wheel). The grip
+-- lies over the thin bar, wider so it can be caught; the bar widens under it.
+local function gripY() return select(2, GetCursorPosition()) / frame.grip:GetEffectiveScale() end
+
+local function followGrip(grip)
+    local free = view - frame.thumb:GetHeight()
+    if free > 0 then scrollTo(grip.startScroll + (grip.startY - gripY()) * (content - view) / free) end
+end
+
+local function createGrip()
+    local grip = CreateFrame("Button", nil, frame)
+    grip:SetFrameLevel(frame:GetFrameLevel() + 20)
+    grip:SetPoint("TOPRIGHT", frame.thumb, "TOPRIGHT", 3, 0)
+    grip:SetPoint("BOTTOMRIGHT", frame.thumb, "BOTTOMRIGHT", 3, 0)
+    grip:SetWidth(9)
+    local function wide(on) frame.thumb:SetWidth((on or grip.startY) and 4 or 2) end
+    grip:SetScript("OnEnter", function() wide(true) end)
+    grip:SetScript("OnLeave", function() wide(false) end)
+    grip:SetScript("OnMouseDown", function(self, button)
+        if button ~= "LeftButton" then return end
+        self.startY, self.startScroll = gripY(), scroll:GetVerticalScroll() or 0
+        self:SetScript("OnUpdate", followGrip)
+    end)
+    grip:SetScript("OnMouseUp", function(self)
+        self.startY = nil
+        self:SetScript("OnUpdate", nil)
+        wide(self:IsMouseOver())
+    end)
+    grip:EnableMouseWheel(true)
+    grip:SetScript("OnMouseWheel", onWheel)
+    grip:Hide()
+    frame.grip = grip
 end
 
 -- Resizing ------------------------------------------------------------------
@@ -1043,6 +1082,7 @@ function Tracker.Build()
     frame.thumb = frame:CreateTexture(nil, "OVERLAY")
     frame.thumb:SetWidth(2)
     frame.thumb:SetColorTexture(0.55, 0.41, 0.1, 0.9)
+    createGrip()
     empty = child:CreateFontString(nil, "OVERLAY")
     empty:SetPoint("TOPLEFT", S("padding"), -S("padding"))
     empty:SetFont(Media.FontPath("Arial Narrow"), 13, "")

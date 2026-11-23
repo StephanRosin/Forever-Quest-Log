@@ -941,6 +941,7 @@ local function createThumb(body)
         self:SetScript("OnUpdate", nil)
         wide(self:IsMouseOver())
     end)
+    thumb:EnableMouseWheel(true)
     thumb:SetScript("OnMouseWheel", function(_, delta) onWheel(frame.scroll, delta) end)
     thumb:Hide()
     return thumb
