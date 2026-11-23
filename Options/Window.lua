@@ -877,7 +877,14 @@ local function pageFor(id)
     return page
 end
 
--- Scrolling: a thin accent thumb, as in Forever Unit Frames.
+-- Scrolling: a thin accent thumb, as in Forever Unit Frames. Besides the
+-- wheel it can be dragged, and a click on the track above or below it turns
+-- a page (reported: a broken wheel left the lower options out of reach).
+local function setScroll(v)
+    local scroll = frame.scroll
+    scroll:SetVerticalScroll(math.max(0, math.min(scroll:GetVerticalScrollRange() or 0, v)))
+end
+
 local function updateScrollbar()
     local scroll, thumb = frame.scroll, frame.scrollThumb
     local range, view = scroll:GetVerticalScrollRange() or 0, scroll:GetHeight() or 0
@@ -885,15 +892,75 @@ local function updateScrollbar()
     local thumbH = view * view / (view + range)
     thumb:SetHeight(thumbH)
     thumb:ClearAllPoints()
-    thumb:SetPoint("TOPRIGHT", scroll, "TOPRIGHT", SCROLLBAR_W - 3,
+    thumb:SetPoint("TOPRIGHT", scroll, "TOPRIGHT", SCROLLBAR_W,
         -(view - thumbH) * (scroll:GetVerticalScroll() or 0) / range)
     thumb:Show()
 end
 
 local function onWheel(scroll, delta)
-    local v = (scroll:GetVerticalScroll() or 0) - delta * WHEEL_STEP
-    scroll:SetVerticalScroll(math.max(0, math.min(scroll:GetVerticalScrollRange() or 0, v)))
+    setScroll((scroll:GetVerticalScroll() or 0) - delta * WHEEL_STEP)
     updateScrollbar()
+end
+
+local function cursorY(region)
+    return select(2, GetCursorPosition()) / region:GetEffectiveScale()
+end
+
+-- While dragging: the thumb moves with the cursor, the page in proportion.
+local function followDrag(thumb)
+    local scroll = frame.scroll
+    local range, view = scroll:GetVerticalScrollRange() or 0, scroll:GetHeight() or 0
+    local free = view - thumb:GetHeight()
+    if free > 0 then
+        setScroll(thumb.startScroll + (thumb.startY - cursorY(thumb)) * range / free)
+        updateScrollbar()
+    end
+end
+
+-- The thumb: wide enough to grab, the visible bar 2 px at its right edge,
+-- 4 px while hovered or dragged.
+local function createThumb(body)
+    local thumb = CreateFrame("Button", nil, body)
+    thumb:SetWidth(SCROLLBAR_W)
+    thumb:SetFrameLevel(body:GetFrameLevel() + 5)
+    thumb.bar = thumb:CreateTexture(nil, "ARTWORK")
+    thumb.bar:SetColorTexture(unpack(Style.COLORS.accent))
+    thumb.bar:SetPoint("TOPRIGHT", -3, 0)
+    thumb.bar:SetPoint("BOTTOMRIGHT", -3, 0)
+    thumb.bar:SetWidth(2)
+    local function wide(on) thumb.bar:SetWidth((on or thumb.dragging) and 4 or 2) end
+    thumb:SetScript("OnEnter", function() wide(true) end)
+    thumb:SetScript("OnLeave", function() wide(false) end)
+    thumb:SetScript("OnMouseDown", function(self, button)
+        if button ~= "LeftButton" then return end
+        self.dragging, self.startY, self.startScroll = true, cursorY(self), frame.scroll:GetVerticalScroll() or 0
+        self:SetScript("OnUpdate", followDrag)
+    end)
+    thumb:SetScript("OnMouseUp", function(self)
+        self.dragging = nil
+        self:SetScript("OnUpdate", nil)
+        wide(self:IsMouseOver())
+    end)
+    thumb:SetScript("OnMouseWheel", function(_, delta) onWheel(frame.scroll, delta) end)
+    thumb:Hide()
+    return thumb
+end
+
+-- The track beside the page: a click above or below the thumb turns a page.
+local function createTrack(body, scroll)
+    local track = CreateFrame("Frame", nil, body)
+    track:SetPoint("TOPLEFT", scroll, "TOPRIGHT", 0, 0)
+    track:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", 0, 0)
+    track:EnableMouse(true)
+    track:EnableMouseWheel(true)
+    track:SetScript("OnMouseWheel", function(_, delta) onWheel(scroll, delta) end)
+    track:SetScript("OnMouseDown", function(self, button)
+        local thumb = frame.scrollThumb
+        if button ~= "LeftButton" or not thumb:IsShown() then return end
+        local down = cursorY(self) < thumb:GetBottom()
+        setScroll((scroll:GetVerticalScroll() or 0) + (down and 1 or -1) * (scroll:GetHeight() - WHEEL_STEP))
+        updateScrollbar()
+    end)
 end
 
 local function createScroll(body)
@@ -906,11 +973,8 @@ local function createScroll(body)
     local child = CreateFrame("Frame", nil, scroll)
     child:SetSize(CONTENT_W, 1)
     scroll:SetScrollChild(child)
-    local thumb = body:CreateTexture(nil, "ARTWORK")
-    thumb:SetColorTexture(unpack(Style.COLORS.accent))
-    thumb:SetWidth(2)
-    thumb:Hide()
-    frame.scroll, frame.scrollChild, frame.scrollThumb = scroll, child, thumb
+    createTrack(body, scroll)
+    frame.scroll, frame.scrollChild, frame.scrollThumb = scroll, child, createThumb(body)
 end
 
 -- Navigation ----------------------------------------------------------------------
