@@ -1104,7 +1104,7 @@ end
 check("interface options page", M.registered[1], "Forever Quest Log")
 
 section("Minimap button and slash command")
-local mb = M.byName["Forever Quest Log"]
+local mb = M.byName["Forever Quest Log Minimap"]
 check("minimap button", mb ~= nil, true)
 mb:GetScript("OnClick")(mb, "RightButton")
 check("right-click unlocks", S("locked"), false)
